@@ -9,15 +9,44 @@
     "url": "https://github.com/kodla-dev/renit.git"
   },
   "scripts": {
+    "build": "vite build",
+    "build:dts": "node ./script/dts.js",
     "lint": "prettier --check . && eslint .",
     "format": "prettier --write ."
   },
   "devDependencies": {
+    "@types/node": "^20.10.5",
     "@typescript-eslint/eslint-plugin": "^6.16.0",
     "@typescript-eslint/parser": "^6.16.0",
+    "dts-buddy": "^0.4.3",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
+    "fast-glob": "^3.3.2",
     "prettier": "^3.1.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vite": "^5.0.10",
+    "vite-plugin-dts": "^3.7.0",
+    "vitest": "^1.1.0"
+  },
+  "files": [
+    "dist",
+    "types",
+    "./*.d.ts"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./is": {
+      "types": "./types/index.d.ts",
+      "default": "./dist/is/index.js"
+    },
+    "./type": {
+      "types": "./types/index.d.ts"
+    }
   }
 }

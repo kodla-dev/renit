@@ -1,5 +1,3 @@
-import { Include } from '../../type';
-
 /**
   Checks if the specified value is an array.
   @tr Belirtilen değerin bir dizi (array) olup olmadığını kontrol eder.

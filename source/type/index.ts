@@ -8,4 +8,4 @@
   ------------------------------------------------------------------------------
 */
 
-export { Include } from './collection/Include';
+export type { Include } from './collection/Include';
