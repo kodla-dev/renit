@@ -7,6 +7,10 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Add prebuild script
+- Set up testing environment
+
+### Fixed
+
 - Fix build script
 
 ## [1.1.0] - 2023-12-27

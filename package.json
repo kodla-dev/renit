@@ -11,17 +11,21 @@
   "scripts": {
     "prebuild": "node ./script/prebuild.js",
     "build": "vite build && node ./script/build.js",
+    "format": "prettier --write .",
     "lint": "prettier --check . && eslint .",
-    "format": "prettier --write ."
+    "test": "vitest",
+    "test:ui": "vitest --ui"
   },
   "devDependencies": {
     "@types/node": "^20.10.5",
     "@typescript-eslint/eslint-plugin": "^6.16.0",
     "@typescript-eslint/parser": "^6.16.0",
+    "@vitest/ui": "^1.1.0",
     "dts-buddy": "^0.4.3",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "fast-glob": "^3.3.2",
+    "happy-dom": "^12.10.3",
     "prettier": "^3.1.1",
     "rimraf": "^5.0.5",
     "typescript": "^5.3.3",

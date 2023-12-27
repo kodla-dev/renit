@@ -30,5 +30,11 @@ export default defineConfig({
       formats: ['cjs', 'es']
     }
   },
-  plugins: [dts()]
+  plugins: [dts()],
+  test: {
+    include: ['source/**/*.{test,spec}.{js,ts}'],
+    environmentMatchGlobs: [
+      ['source/**/*.client.{test,spec}.{js,ts}', 'happy-dom']
+    ]
+  }
 });
