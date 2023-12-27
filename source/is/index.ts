@@ -10,4 +10,8 @@ export { isBoolean } from './helper/isBoolean';
 export { isEqual } from './helper/isEqual';
 export { isFunction } from './helper/isFunction';
 export { isInteger } from './helper/isInteger';
+export { isNil } from './helper/isNil';
+export { isNull } from './helper/isNull';
 export { isNumber } from './helper/isNumber';
+export { isString } from './helper/isString';
+export { isUndefined } from './helper/isUndefined';

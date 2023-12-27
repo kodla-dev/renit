@@ -12,8 +12,9 @@ All notable changes to this project will be documented in this file.
 - Create `define` package
 - Add `FUNCTION`, `BOOLEAN`, `NUMBER` `STRING`, `UNDEFINED` constant to the
   `define` package
-- Add `isBoolean`, `isInteger`, `isNumber`, `isString`, `isUndefined`, `isNull`
-  helper to the `is` package
+- Add `isBoolean`, `isInteger`, `isNumber`, `isString`, `isUndefined`, `isNull`,
+  `isNil` helper to the `is` package
+- Add new constants, types, and helpers
 
 ### Fixed
 
