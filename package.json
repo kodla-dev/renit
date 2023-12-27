@@ -9,8 +9,8 @@
     "url": "https://github.com/kodla-dev/renit.git"
   },
   "scripts": {
-    "build": "vite build",
-    "build:dts": "node ./script/dts.js",
+    "prebuild": "node ./script/prebuild.js",
+    "build": "vite build && node ./script/build.js",
     "lint": "prettier --check . && eslint .",
     "format": "prettier --write ."
   },
@@ -23,6 +23,7 @@
     "eslint-config-prettier": "^9.1.0",
     "fast-glob": "^3.3.2",
     "prettier": "^3.1.1",
+    "rimraf": "^5.0.5",
     "typescript": "^5.3.3",
     "vite": "^5.0.10",
     "vite-plugin-dts": "^3.7.0",
