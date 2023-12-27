@@ -24,10 +24,18 @@ export default defineConfig({
     }
   },
   build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+    minify: true,
     lib: {
       name: 'renit',
       entry: entry,
       formats: ['cjs', 'es']
+    },
+    rollupOptions: {
+      output: {
+        preserveModules: true
+      }
     }
   },
   plugins: [dts()],
