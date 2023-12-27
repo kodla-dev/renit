@@ -4,7 +4,7 @@ import { isEqual } from './isEqual';
 /**
   Checks if the specified value is a function.
 
-  @param {R} value - Value to check.
+  @param {R} value - The value to check.
   @returns {boolean} Returns true if the value is a function, false otherwise.
   
   @example

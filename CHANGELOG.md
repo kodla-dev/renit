@@ -8,10 +8,12 @@ All notable changes to this project will be documented in this file.
 
 - Add prebuild script
 - Set up testing environment
-- Add `isEqual` helper
-- Add `isFunction` helper
+- Add `isEqual`, `isFunction` helper
 - Create `define` package
-- Add `FUNCTION` constant to the `define` package
+- Add `FUNCTION`, `BOOLEAN`, `NUMBER` `STRING`, `UNDEFINED` constant to the
+  `define` package
+- Add `isBoolean`, `isInteger`, `isNumber`, `isString`, `isUndefined`, `isNull`
+  helper to the `is` package
 
 ### Fixed
 

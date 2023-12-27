@@ -5,4 +5,8 @@
   ------------------------------------------------------------------------------
 */
 
+export { BOOLEAN } from './constant/BOOLEAN';
 export { FUNCTION } from './constant/FUNCTION';
+export { NUMBER } from './constant/NUMBER';
+export { STRING } from './constant/STRING';
+export { UNDEFINED } from './constant/UNDEFINED';
