@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Add prebuild script
+- Fix build script
+
 ## [1.1.0] - 2023-12-27
 
 ### Added

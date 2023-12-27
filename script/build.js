@@ -28,7 +28,7 @@ await createBundle({
 
 const moduleTypes = [
   {
-    name: 'renit/is',
+    name: `${pkg.name}/is`,
     types: ['Include']
   }
 ];
@@ -39,7 +39,7 @@ for await (const module of Object.values(moduleTypes)) {
   lines.splice(
     line + 1,
     0,
-    `  import type { ${module.types.join()} } from "renit/type";`
+    `  import type { ${module.types.join()} } from "${pkg.name}/type";`
   );
   var text = lines.join('\n');
   fs.writeFileSync(output, text);
