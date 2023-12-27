@@ -1,4 +1,4 @@
 /**
-  It represents the "class" expression in object-oriented programming.
+  Represents the "class" expression in object-oriented programming.
 */
 export const CLASS: string = 'class';

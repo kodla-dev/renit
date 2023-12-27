@@ -16,6 +16,10 @@ All notable changes to this project will be documented in this file.
   `isNil` helper to the `is` package
 - Add new constants, types, and helpers
 
+## Changed
+
+- Refactor JSDoc comments
+
 ### Fixed
 
 - Fix build script

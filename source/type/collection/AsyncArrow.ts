@@ -4,7 +4,7 @@ import { Arrow } from './Arrow';
 import { List } from './List';
 
 /**
-  Alias to create a async function.
+  Alias to create an async function.
 
   @template R - The type of parameters.
   @template N - The return type.

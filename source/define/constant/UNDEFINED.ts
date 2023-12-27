@@ -1,4 +1,4 @@
 /**
-  It represents the undefined value.
+  Represents the undefined value.
 */
 export const UNDEFINED: string = 'undefined';

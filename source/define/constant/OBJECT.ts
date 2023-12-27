@@ -1,4 +1,4 @@
 /**
-  It represents objects.
+  Represents objects.
 */
 export const OBJECT: string = 'object';

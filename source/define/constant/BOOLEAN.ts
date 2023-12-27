@@ -1,4 +1,4 @@
 /**
-  It represents boolean values.
+  Represents boolean values.
 */
 export const BOOLEAN: string = 'boolean';
