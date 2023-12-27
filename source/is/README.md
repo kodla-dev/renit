@@ -38,6 +38,16 @@ import { isArray } from 'renit/is';
 
 Checks if the specified value is an array.
 
+```ts
+/**
+  isArray(value)
+  @param {R} value - The value to check.
+  @returns {boolean} Returns true if the value is an array, false otherwise.
+*/
+```
+
+Sample:
+
 ```js
 isArray(['pear', 'grape', 'cherry', 'lemon']);
 //=> true

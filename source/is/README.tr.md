@@ -38,6 +38,16 @@ import { isArray } from 'renit/is';
 
 Belirtilen değerin bir dizi (array) olup olmadığını kontrol eder.
 
+```ts
+/**
+  isArray(value)
+  @param {R} value - Kontrol edilecek değer.
+  @returns {boolean} Değer bir dizi ise true, değilse false.
+*/
+```
+
+Örnek:
+
 ```js
 isArray(['pear', 'grape', 'cherry', 'lemon']);
 //=> true
