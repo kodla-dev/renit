@@ -15,6 +15,9 @@ All notable changes to this project will be documented in this file.
 - Add `isBoolean`, `isInteger`, `isNumber`, `isString`, `isUndefined`, `isNull`,
   `isNil` helper to the `is` package
 - Add new constants, types, and helpers
+- Add new functions to 'is' package: `isArrayLike`, `isAsyncIterable`,
+  `isClient`, `isDOM`, `isFloat`, `isIterable`, `isLocalStorage`, `isNaN`,
+  `isPromise`, `isRegExp`, `isServer`, `isSymbol`
 
 ## Changed
 

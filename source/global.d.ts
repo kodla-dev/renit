@@ -3,6 +3,13 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-type-constraint */
 
 /**
+  Represents a type that behaves like an array by having a 'length' property.
+*/
+interface ArrayLikeLiteral {
+  readonly length: number;
+}
+
+/**
   Alias to create a function.
 
   @template R - The type of parameters.

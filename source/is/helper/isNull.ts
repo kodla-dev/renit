@@ -3,7 +3,7 @@ import { isEqual } from './isEqual';
 /**
   Checks if the specified value is null.
 
-  @param {*} value - The value to check.
+  @param {R} value - The value to check.
   @returns {boolean} Returns true if the value is null, false otherwise.
   
   @example
