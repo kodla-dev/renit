@@ -8,4 +8,4 @@
   sistemin çalışma ortamıyla desteklenen özellikler hakkında bilgi sağlar.
   ------------------------------------------------------------------------------
 */
-export { isArray } from './helpers/isArray';
+export { isArray } from './helper/isArray';
