@@ -46,6 +46,10 @@
       "types": "./types/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./define": {
+      "types": "./types/index.d.ts",
+      "default": "./dist/define/index.js"
+    },
     "./is": {
       "types": "./types/index.d.ts",
       "default": "./dist/is/index.js"

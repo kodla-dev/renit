@@ -6,3 +6,5 @@
   ------------------------------------------------------------------------------
 */
 export { isArray } from './helper/isArray';
+export { isEqual } from './helper/isEqual';
+export { isFunction } from './helper/isFunction';

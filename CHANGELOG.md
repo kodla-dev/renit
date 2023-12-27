@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file.
 
 - Add prebuild script
 - Set up testing environment
+- Add `isEqual` helper
+- Add `isFunction` helper
+- Create `define` package
+- Add `FUNCTION` constant to the `define` package
 
 ### Fixed
 
@@ -18,8 +22,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Initial configurations set up
-- Add 'Include' type
-- Add 'isArray' function to the 'is' package
+- Add `Include` type
+- Add `isArray` function to the `is` package
 - Configure package build
 
 [1.1.0]: https://github.com/kodla-dev/renit/releases/tag/v1.1.0

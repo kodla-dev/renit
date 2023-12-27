@@ -7,7 +7,7 @@ const pkg = JSON.parse(fs.readFileSync(`${dir}/package.json`, 'utf-8'));
 
 const output = `${dir}/types/index.d.ts`;
 
-for (const name of ['is', 'type']) {
+for (const name of ['define', 'is', 'type']) {
   fs.writeFileSync(`${dir}/${name}.d.ts`, "import './types/index.js';");
 }
 
@@ -21,6 +21,7 @@ await createBundle({
   },
   modules: {
     [pkg.name]: `${dir}/dist/index.d.ts`,
+    [`${pkg.name}/define`]: `${dir}/dist/define/index.d.ts`,
     [`${pkg.name}/is`]: `${dir}/dist/is/index.d.ts`,
     [`${pkg.name}/type`]: `${dir}/dist/type/index.d.ts`
   }
