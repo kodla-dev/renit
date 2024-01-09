@@ -1,20 +1,25 @@
 {
-  "name": "renit",
-  "version": "1.1.0",
-  "description": "",
+  "name": "renit-monorepo",
+  "version": "1.0.0",
+  "description": "monorepo for renit",
+  "private": true,
   "license": "MIT",
+  "packageManager": "pnpm@8.13.1",
+  "engines": {
+    "pnpm": "^8.0.0"
+  },
   "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/kodla-dev/renit.git"
   },
   "scripts": {
-    "prebuild": "node ./script/prebuild.js",
-    "build": "vite build && node ./script/build.js",
+    "prebuild": "pnpm --filter renit prebuild",
+    "build": "pnpm --filter renit build",
+    "test": "pnpm --filter renit test",
+    "test:ui": "pnpm --filter renit test:ui",
     "format": "prettier --write .",
-    "lint": "prettier --check . && eslint .",
-    "test": "vitest",
-    "test:ui": "vitest --ui"
+    "lint": "prettier --check . && eslint ."
   },
   "devDependencies": {
     "@types/node": "^20.10.5",
@@ -32,30 +37,5 @@
     "vite": "^5.0.10",
     "vite-plugin-dts": "^3.7.0",
     "vitest": "^1.1.0"
-  },
-  "files": [
-    "dist",
-    "types",
-    "./*.d.ts"
-  ],
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./types/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./types/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./define": {
-      "types": "./types/index.d.ts",
-      "default": "./dist/define/index.js"
-    },
-    "./is": {
-      "types": "./types/index.d.ts",
-      "default": "./dist/is/index.js"
-    },
-    "./type": {
-      "types": "./types/index.d.ts"
-    }
   }
 }

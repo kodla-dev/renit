@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/ban-types */
-/* eslint-disable @typescript-eslint/no-unnecessary-type-constraint */
-
 /**
   Represents a type that behaves like an array by having a 'length' property.
 */

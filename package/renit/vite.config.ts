@@ -40,9 +40,9 @@ export default defineConfig({
   },
   plugins: [dts()],
   test: {
-    include: ['source/**/*.{test,spec}.{js,ts}'],
+    include: ['test/**/*.{test,spec}.{js,ts}'],
     environmentMatchGlobs: [
-      ['source/**/*.client.{test,spec}.{js,ts}', 'happy-dom']
+      ['test/**/*.client.{test,spec}.{js,ts}', 'happy-dom']
     ]
   }
 });

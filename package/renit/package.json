@@ -1,0 +1,43 @@
+{
+  "name": "renit",
+  "version": "1.1.0",
+  "description": "",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kodla-dev/renit.git",
+    "directory": "package/renit"
+  },
+  "scripts": {
+    "prebuild": "node ./script/prebuild.js",
+    "build": "vite build && node ./script/build.js",
+    "test": "vitest",
+    "test:ui": "vitest --ui"
+  },
+  "files": [
+    "dist",
+    "types",
+    "./*.d.ts"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./define": {
+      "types": "./types/index.d.ts",
+      "default": "./dist/define/index.js"
+    },
+    "./is": {
+      "types": "./types/index.d.ts",
+      "default": "./dist/is/index.js"
+    },
+    "./type": {
+      "types": "./types/index.d.ts"
+    }
+  }
+}
