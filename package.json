@@ -1,0 +1,11 @@
+{
+  "name": "renit",
+  "version": "0.0.0",
+  "repository": {
+    "url": "https://github.com/kodla-dev/renit",
+    "type": "git"
+  },
+  "license": "MIT",
+  "type": "module",
+  "main": "index.js"
+}
