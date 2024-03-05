@@ -6,6 +6,18 @@
 */
 
 /**
+ * Indicates whether the current environment is development.
+ * @type {boolean}
+ */
+export const DEV = process.env.NODE_ENV == 'development';
+
+/**
+ * Indicates whether the current environment is server-side rendering (SSR).
+ * @type {string}
+ */
+export const SSR = process.env.SSR == 'true';
+
+/**
  * Represents the maximum safe integer.
  * @type {number}
  */
