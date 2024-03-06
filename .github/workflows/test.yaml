@@ -13,6 +13,8 @@ jobs:
     strategy:
       matrix:
         env:
+          - { node: 21, os: 'ubuntu-22.04' }
+          - { node: 20, os: 'ubuntu-22.04' }
           - { node: 18, os: 'ubuntu-22.04' }
           - { node: 18, os: 'windows-2022' }
           - { node: 18, os: 'macos-12' }
@@ -23,5 +25,5 @@ jobs:
         with:
           node-version: ${{ matrix.env.node }}
           cache: npm
-      - run: npm install --no-save vitest jsdom
-      - run: node node_modules/vitest/dist/cli.js run
+      - run: npm ci
+      - run: npm run test -- run
