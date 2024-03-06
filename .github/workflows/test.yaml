@@ -1,4 +1,4 @@
-name: CI
+name: Test
 on:
   push:
     branches:
@@ -9,17 +9,17 @@ on:
   workflow_dispatch:
 
 jobs:
-  Test:
+  test:
     strategy:
       matrix:
         env:
-          - { os: 'ubuntu-22.04', node: 18 }
-          - { os: 'windows-2022', node: 18 }
-          - { os: 'macos-12', node: 18 }
+          - { node: 18, os: 'ubuntu-22.04' }
+          - { node: 18, os: 'windows-2022' }
+          - { node: 18, os: 'macos-12' }
     runs-on: ${{ matrix.env.os }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.env.node }}
           cache: npm
