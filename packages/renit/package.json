@@ -25,12 +25,20 @@
       "default": "./src/fault.js",
       "types": "./type/index.d.ts"
     },
+    "./helper": {
+      "default": "./src/helper.js",
+      "types": "./type/index.d.ts"
+    },
     "./is": {
       "default": "./src/is.js",
       "types": "./type/index.d.ts"
     },
     "./math": {
       "default": "./src/math.js",
+      "types": "./type/index.d.ts"
+    },
+    "./to": {
+      "default": "./src/to.js",
       "types": "./type/index.d.ts"
     }
   },

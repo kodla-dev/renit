@@ -24,8 +24,10 @@ async function types() {
       [`${pkg.name}/collect`]: `${dir}/src/collect.js`,
       [`${pkg.name}/define`]: `${dir}/src/define.js`,
       [`${pkg.name}/fault`]: `${dir}/src/fault.js`,
+      [`${pkg.name}/helper`]: `${dir}/src/helper.js`,
       [`${pkg.name}/is`]: `${dir}/src/is.js`,
       [`${pkg.name}/math`]: `${dir}/src/math.js`,
+      [`${pkg.name}/to`]: `${dir}/src/to.js`,
     },
   });
 }
