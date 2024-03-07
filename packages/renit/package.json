@@ -8,5 +8,45 @@
   },
   "license": "MIT",
   "type": "module",
-  "main": "./src/index.js"
+  "exports": {
+    ".": {
+      "default": "./src/index.js",
+      "types": "./type/index.d.ts"
+    },
+    "./collect": {
+      "default": "./src/collect.js",
+      "types": "./type/index.d.ts"
+    },
+    "./define": {
+      "default": "./src/define.js",
+      "types": "./type/index.d.ts"
+    },
+    "./fault": {
+      "default": "./src/fault.js",
+      "types": "./type/index.d.ts"
+    },
+    "./is": {
+      "default": "./src/is.js",
+      "types": "./type/index.d.ts"
+    },
+    "./math": {
+      "default": "./src/math.js",
+      "types": "./type/index.d.ts"
+    }
+  },
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "types": "./type/index.d.ts",
+  "files": [
+    "src",
+    "type",
+    "./*.d.ts"
+  ],
+  "scripts": {
+    "prebuild": "rimraf type *.d.ts -g",
+    "build": "node build"
+  },
+  "engines": {
+    "node": ">= 18"
+  }
 }
