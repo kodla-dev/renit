@@ -6,6 +6,7 @@
   --------------------------------------------------------------------------------------------------
 */
 
+import { keys } from './collect.js';
 import {
   MAX_SAFE_INTEGER,
   RAW_ASYNC,
@@ -22,6 +23,8 @@ import {
   RAW_SYMBOL,
   RAW_UNDEFINED,
 } from './define.js';
+import { size } from './math.js';
+import { toStringify } from './to.js';
 
 /**
  * Checks if the specified value is an array.
@@ -159,7 +162,31 @@ export function isElement(value) {
 export function isEqual(test1, test2) {
   if (test1 === test2) return true;
   if (typeof test1 !== typeof test2 || test1 !== Object(test1) || !test1 || !test2) return false;
-  return true;
+  if (isArray(test1) && isArray(test2)) {
+    const len = size(test1);
+    if (len !== size(test2)) return false;
+
+    for (let i = 0; i < len; i++) {
+      if (!isEqual(test1[i], test2[i])) return false;
+    }
+
+    return true;
+  }
+  if (isObject(test1) && isObject(test2)) {
+    const test1Keys = keys(test1);
+    const len = size(test1Keys);
+    if (len !== size(keys(test2))) return false;
+    for (let i = 0; i < len; i++) {
+      const key = test1Keys[i];
+      // prettier-ignore
+      if (!(
+        Object.prototype.hasOwnProperty.call(test2, key) &&
+        isEqual(test1[key], test2[key])
+        )) return false;
+    }
+    return true;
+  }
+  return toStringify(test1) === toStringify(test2);
 }
 
 /**
