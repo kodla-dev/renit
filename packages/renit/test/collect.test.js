@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   apply,
+  diff,
   each,
   entries,
   every,
@@ -689,5 +690,54 @@ describe('splice', () => {
     const result = spliced(data);
     expect(data).toEqual([1, 2]);
     expect(result).toEqual([3, 4, 5]);
+  });
+});
+
+describe('diff', () => {
+  it('diff:array', () => {
+    const data1 = [1, 2, 3, 4, 7];
+    const data2 = [1, 2, 3, 4, 5, 6, 7];
+    const result = [5, 6];
+    expect(diff(data1, data2)).toEqual(result);
+    expect(data1).toEqual([1, 2, 3, 4, 7]);
+    expect(data2).toEqual([1, 2, 3, 4, 5, 6, 7]);
+  });
+
+  it('diff:object', () => {
+    const data1 = { name: 'Of Mice and Men' };
+    const data2 = { name: 'Of Mice and Men', writer: 'John Steinbeck' };
+    const result = { writer: 'John Steinbeck' };
+    expect(diff(data1, data2)).toEqual(result);
+    expect(data1).toEqual({ name: 'Of Mice and Men' });
+    expect(data2).toEqual({ name: 'Of Mice and Men', writer: 'John Steinbeck' });
+  });
+
+  it('diff:object:notEqualKey', () => {
+    const data1 = { name: 'Of Mice and Men', page: 325 };
+    const data2 = {
+      name: 'Of Mice and Men',
+      writer: 'John Steinbeck',
+      page: 612,
+    };
+    const result = { writer: 'John Steinbeck', page: 612 };
+    expect(diff(data1, data2)).toEqual(result);
+  });
+
+  it('diff:promise', async () => {
+    const data1 = Promise.resolve([1, 2, 3, 4, 7]);
+    const data2 = Promise.resolve([1, 2, 3, 4, 5, 6, 7]);
+    const result = [5, 6];
+    expect(await diff(data1, data2)).toEqual(result);
+  });
+
+  it('diff:create', () => {
+    const data1 = [1, 2, 3, 4, 7];
+    const compare = diff(data1);
+
+    const result = compare([1, 2, 3, 4, 5, 6, 7]);
+    const result2 = compare([1, 2, 3, 4, 12, 15]);
+
+    expect(result).toEqual([5, 6]);
+    expect(result2).toEqual([12, 15]);
   });
 });

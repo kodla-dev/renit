@@ -7,6 +7,7 @@ import {
   isAsync,
   isCollect,
   isEmpty,
+  isEqual,
   isFunction,
   isNil,
   isNumber,
@@ -434,4 +435,46 @@ export function last(fn, collect) {
   }
   if (isPromise(collect)) return collect.then(c => last(fn, c));
   if (DEVELOPMENT) throw new Renit("Type error in 'last' function");
+}
+
+/**
+ * Finds the difference between two collections. This method returns the values
+ * from the original collection that are not found in the given collection.
+ *
+ * @param {Array|Object|Promise} values - The first collection.
+ * @param {number|Array|Object|Promise} [type] - The second argument or collection.
+ * @param {Array|Object|Promise} [collect] - The second collection.
+ * @returns {Array|Object|Promise} Returns the difference between the two collections.
+ * @throws {Renit} - Throws a Renit error if development mode.
+ */
+export function diff(values, type, collect) {
+  if (isUndefined(collect)) {
+    if (isUndefined(type)) return collect => diff(values, 1, collect);
+    if (isCollect(type) || isPromise(type)) return diff(values, 1, type);
+    return collect => diff(values, type, collect);
+  }
+
+  if (isArray(values) && isArray(collect)) {
+    return filter(item => values.indexOf(item) === -1, collect);
+  }
+
+  if (isObject(values) && isObject(collect)) {
+    const collection = {};
+
+    if (type == 1) {
+      // value diff
+      each((key, value) => {
+        // prettier-ignore
+        if (isUndefined(values[key]) || !isEqual(values[key], value)) push(key, value, collection);
+      }, collect);
+    }
+
+    // TODO: Add finding difference based on object keys
+
+    return collection;
+  }
+
+  if (isPromise(values)) return values.then(v => diff(v, collect));
+  if (isPromise(collect)) return collect.then(c => diff(values, c));
+  if (DEVELOPMENT) throw new Renit("Type error in 'diff' function");
 }
