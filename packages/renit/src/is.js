@@ -538,3 +538,26 @@ export function isType(value) {
 export function isUndefined(value) {
   return isEqual(typeof value, RAW_UNDEFINED);
 }
+
+/**
+ * Checks if a value is empty.
+ *
+ * @param {unknown} value - The value to check.
+ * @returns {boolean|Promise<boolean>} Returns true if the value is empty, false otherwise.
+ */
+export function isEmpty(value) {
+  if (isNil(value)) return true;
+  if (isArrayLike(value)) return !size(value);
+  const type = isType(value);
+  if (type === RAW_OBJECT) {
+    for (const i in value) return false;
+    return !size(value);
+  }
+  if (type === RAW_SYMBOL) {
+    const desc = Object(value).description;
+    if (isUndefined(desc)) return true;
+    return !size(desc);
+  }
+  if (isPromise(value)) return value.then(v => isEmpty(v));
+  return isPrimitive(value) || !size(value);
+}
