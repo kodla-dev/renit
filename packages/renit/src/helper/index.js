@@ -1,5 +1,5 @@
 import { reduce } from '../collect/index.js';
-import { DEVELOPMENT } from '../define.js';
+import { dev } from '../env.js';
 import { Renit } from '../fault.js';
 import { isArray, isFunction, isPromise } from '../is/index.js';
 
@@ -20,7 +20,7 @@ export function pipe(collect, ...fns) {
 function run(a, f) {
   if (isFunction(f)) return isPromise(a) ? a.then(f) : f(a);
   if (isArray(f)) return pipe(a, ...f);
-  if (DEVELOPMENT) throw new Renit("Type error in 'pipe' function");
+  if (dev) throw new Renit("Type error in 'pipe' function");
 }
 
 /**
