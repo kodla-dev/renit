@@ -1,3 +1,10 @@
+/**
+  Collection Interactions
+  ------------------------------------------------------------------------------
+  Useful helpers for interacting with arrays and objects.
+  ------------------------------------------------------------------------------
+*/
+
 import { dev } from '../env.js';
 import { Renit } from '../fault.js';
 import { clone } from '../helper/index.js';
