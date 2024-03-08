@@ -1,5 +1,5 @@
-import { keys } from './collect.js';
-import { isArrayLike, isObject, isPromise, isUndefined } from './is.js';
+import { keys } from '../collect/index.js';
+import { isArrayLike, isObject, isPromise, isUndefined } from '../is/index.js';
 
 /**
  * Returns the size of the specified collection.

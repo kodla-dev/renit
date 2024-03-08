@@ -5,7 +5,7 @@
   ------------------------------------------------------------------------------
 */
 
-import { isObject, isUndefined } from './is.js';
+import { isObject, isUndefined } from '../is/index.js';
 
 /**
  * Converts the specified collection to a string representation.

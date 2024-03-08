@@ -1,7 +1,7 @@
-import { reduce } from './collect.js';
-import { DEVELOPMENT } from './define.js';
-import { Renit } from './fault.js';
-import { isArray, isFunction, isPromise } from './is.js';
+import { reduce } from '../collect/index.js';
+import { DEVELOPMENT } from '../define.js';
+import { Renit } from '../fault.js';
+import { isArray, isFunction, isPromise } from '../is/index.js';
 
 /**
  * It's a structure that connects functions by passing the output of one function as the arguments

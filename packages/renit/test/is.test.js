@@ -14,7 +14,7 @@ import {
   isRegExp,
   isServer,
   isType,
-} from '../src/is.js';
+} from '../src/is/index.js';
 import { data } from './data.js';
 
 let entries = Object.entries(data);

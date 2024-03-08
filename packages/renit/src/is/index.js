@@ -6,7 +6,7 @@
   --------------------------------------------------------------------------------------------------
 */
 
-import { keys } from './collect.js';
+import { keys } from '../collect/index.js';
 import {
   MAX_SAFE_INTEGER,
   RAW_ASYNC,
@@ -22,16 +22,16 @@ import {
   RAW_STRING,
   RAW_SYMBOL,
   RAW_UNDEFINED,
-} from './define.js';
-import { size } from './math.js';
-import { toStringify } from './to.js';
+} from '../define.js';
+import { size } from '../math/index.js';
+import { toStringify } from '../to/index.js';
 
 /**
  * Checks if the specified value is an array.
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, unknown[] | Readonly<unknown[]>>}
+ * @returns {value is import('../type.js').Include<R, unknown[] | Readonly<unknown[]>>}
  * Returns true if the value is an array, false otherwise.
  */
 export function isArray(value) {
@@ -43,7 +43,7 @@ export function isArray(value) {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, import('./type.js').ArrayLikeLiteral>}
+ * @returns {value is import('../type.js').Include<R, import('../type.js').ArrayLikeLiteral>}
  * Returns true if the value is array-like, false otherwise.
  */
 export function isArrayLike(value) {
@@ -64,7 +64,7 @@ export function isArrayLike(value) {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, import('./type.js').AsyncArrow>}
+ * @returns {value is import('../type.js').Include<R, import('../type.js').AsyncArrow>}
  * Returns true if the value is an asynchronous function, false otherwise.
  */
 export function isAsync(value) {
@@ -76,7 +76,7 @@ export function isAsync(value) {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, AsyncIterator<R>>}
+ * @returns {value is import('../type.js').Include<R, AsyncIterator<R>>}
  * Returns true if the value is an asynchronous iterable, false otherwise.
  */
 export function isAsyncIterable(value) {
@@ -88,7 +88,7 @@ export function isAsyncIterable(value) {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, boolean>}
+ * @returns {value is import('../type.js').Include<R, boolean>}
  * Returns true if the value is a boolean, false otherwise.
  */
 export function isBoolean(value) {
@@ -100,7 +100,7 @@ export function isBoolean(value) {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, import('./type.js').ClassLiteral>}
+ * @returns {value is import('../type.js').Include<R, import('../type.js').ClassLiteral>}
  * Returns true if the value is a class, false otherwise.
  */
 export function isClass(value) {
@@ -123,7 +123,7 @@ export function isClient() {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, import('./type.js').$collect>}
+ * @returns {value is import('../type.js').Include<R, import('../type.js').$collect>}
  * Returns true if the value is an array or an object, false otherwise.
  */
 export function isCollect(value) {
@@ -135,7 +135,7 @@ export function isCollect(value) {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, Date>}
+ * @returns {value is import('../type.js').Include<R, Date>}
  * Returns true if the value is date, false otherwise.
  */
 export function isDate(value) {
@@ -194,7 +194,7 @@ export function isEqual(test1, test2) {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, Error>}
+ * @returns {value is import('../type.js').Include<R, Error>}
  * Returns true if the value is an Error instance, false otherwise.
  */
 export function isError(value) {
@@ -206,7 +206,7 @@ export function isError(value) {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, number>}
+ * @returns {value is import('../type.js').Include<R, number>}
  * Returns true if the value is an even number, false otherwise.
  */
 export function isEven(value) {
@@ -218,7 +218,7 @@ export function isEven(value) {
  * Checks if a given value is equal to false.
  *
  * @param {*} value - The value to check.
- * @returns {value is import('./type.js').Include<R, false>}
+ * @returns {value is import('../type.js').Include<R, false>}
  * Returns true if the value is equal to false, otherwise false.
  */
 export function isFalse(value) {
@@ -240,7 +240,7 @@ export function isFalsy(value) {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, number>}
+ * @returns {value is import('../type.js').Include<R, number>}
  * Returns true if the value is a floating-point number, false otherwise.
  */
 export function isFloat(value) {
@@ -252,7 +252,7 @@ export function isFloat(value) {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, CallableFunction>}
+ * @returns {value is import('../type.js').Include<R, CallableFunction>}
  * Returns true if the value is a function, false otherwise.
  */
 export function isFunction(value) {
@@ -264,7 +264,7 @@ export function isFunction(value) {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, number>}
+ * @returns {value is import('../type.js').Include<R, number>}
  * Returns true if the value is an integer, false otherwise.
  */
 export function isInteger(value) {
@@ -276,7 +276,7 @@ export function isInteger(value) {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, Iterator<R>>}
+ * @returns {value is import('../type.js').Include<R, Iterator<R>>}
  * Returns true if the value is iterable, false otherwise.
  */
 export function isIterable(value) {
@@ -311,7 +311,7 @@ export function isLocalStorage() {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, number>}
+ * @returns {value is import('../type.js').Include<R, number>}
  * Returns true if the value is NaN, false otherwise.
  */
 export function isNaN(value) {
@@ -323,7 +323,7 @@ export function isNaN(value) {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, null | undefined>}
+ * @returns {value is import('../type.js').Include<R, null | undefined>}
  * Returns true if the value is null or undefined, false otherwise.
  */
 export function isNil(value) {
@@ -355,7 +355,7 @@ export function isNodeValue(value) {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, null>}
+ * @returns {value is import('../type.js').Include<R, null>}
  * Returns true if the value is null, false otherwise.
  */
 export function isNull(value) {
@@ -367,7 +367,7 @@ export function isNull(value) {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, number>}
+ * @returns {value is import('../type.js').Include<R, number>}
  * Returns true if the value is a number, false otherwise.
  */
 export function isNumber(value) {
@@ -378,7 +378,7 @@ export function isNumber(value) {
  * Checks if the specified value is a real object.
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, import('./type.js').$object>}
+ * @returns {value is import('../type.js').Include<R, import('../type.js').$object>}
  * Returns true if the value is a object, false otherwise.
  */
 export function isObject(value) {
@@ -390,7 +390,7 @@ export function isObject(value) {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, object>}
+ * @returns {value is import('../type.js').Include<R, object>}
  * Returns true if the value is a object, false otherwise.
  */
 export function isObjects(value) {
@@ -402,7 +402,7 @@ export function isObjects(value) {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, number>}
+ * @returns {value is import('../type.js').Include<R, number>}
  * Returns true if the value is an odd number, false otherwise.
  */
 export function isOdd(value) {
@@ -425,7 +425,7 @@ export function isPrimitive(value) {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, Promise<unknown>>}
+ * @returns {value is import('../type.js').Include<R, Promise<unknown>>}
  * Returns true if the value is a Promise, false otherwise.
  */
 export function isPromise(value) {
@@ -438,7 +438,7 @@ export function isPromise(value) {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, RegExp>}
+ * @returns {value is import('../type.js').Include<R, RegExp>}
  * Returns true if the value is a regular expression, false otherwise.
  */
 export function isRegExp(value) {
@@ -462,7 +462,7 @@ export function isServer() {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, string>}
+ * @returns {value is import('../type.js').Include<R, string>}
  * Returns true if the value is a string, false otherwise.
  */
 export function isString(value) {
@@ -474,7 +474,7 @@ export function isString(value) {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, symbol>}
+ * @returns {value is import('../type.js').Include<R, symbol>}
  * Returns true if the value is a symbol, false otherwise.
  */
 export function isSymbol(value) {
@@ -485,7 +485,7 @@ export function isSymbol(value) {
  * Checks if a given value is equal to true.
  *
  * @param {*} value - The value to check.
- * @returns {value is import('./type.js').Include<R, true>}
+ * @returns {value is import('../type.js').Include<R, true>}
  * Returns true if the value is equal to true, otherwise false.
  */
 export function isTrue(value) {
@@ -532,7 +532,7 @@ export function isType(value) {
  *
  * @template R
  * @param {R} value - The value to check.
- * @returns {value is import('./type.js').Include<R, undefined>}
+ * @returns {value is import('../type.js').Include<R, undefined>}
  * Returns true if the value is undefined, false otherwise.
  */
 export function isUndefined(value) {

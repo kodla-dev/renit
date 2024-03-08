@@ -1,6 +1,6 @@
-import { DEVELOPMENT } from './define.js';
-import { Renit } from './fault.js';
-import { clone } from './helper.js';
+import { dev } from '../env.js';
+import { Renit } from '../fault.js';
+import { clone } from '../helper/index.js';
 import {
   isArray,
   isArrayLike,
@@ -16,8 +16,8 @@ import {
   isPromise,
   isString,
   isUndefined,
-} from './is.js';
-import { size } from './math.js';
+} from '../is/index.js';
+import { size } from '../math/index.js';
 
 /**
  * Returns an array containing the keys of the specified object.
@@ -30,7 +30,7 @@ export function keys(collect) {
   if (isUndefined(collect)) return collect => keys(collect);
   if (isObject(collect)) return Object.keys(collect);
   if (isPromise(collect)) return collect.then(c => keys(c));
-  if (DEVELOPMENT) throw new Renit("Type error in 'keys' function");
+  if (dev) throw new Renit("Type error in 'keys' function");
 }
 
 /**
@@ -45,7 +45,7 @@ export function values(collect) {
   if (isArray(collect)) return collect;
   if (isObject(collect)) return Object.values(collect);
   if (isPromise(collect)) return collect.then(c => values(c));
-  if (DEVELOPMENT) throw new Renit("Type error in 'values' function");
+  if (dev) throw new Renit("Type error in 'values' function");
 }
 
 /**
@@ -60,7 +60,7 @@ export function apply(fn, collect) {
   if (isUndefined(collect)) return collect => apply(fn, collect);
   if (isCollect(collect)) return fn(...values(collect));
   if (isPromise(collect)) return collect.then(c => apply(fn, c));
-  if (DEVELOPMENT) throw new Renit("Type error in 'apply' function");
+  if (dev) throw new Renit("Type error in 'apply' function");
 }
 
 /**
@@ -103,7 +103,7 @@ export function each(fn, collect) {
       fn(key, value, index);
     }, object);
   } else if (isPromise(collect)) return collect.then(c => each(fn, c));
-  else if (DEVELOPMENT) throw new Renit("Type error in 'each' function");
+  else if (dev) throw new Renit("Type error in 'each' function");
 }
 
 /**
@@ -136,7 +136,7 @@ export function reduce(fn, seed, collect) {
     return seed;
   }
 
-  if (DEVELOPMENT) throw new Renit("Type error in 'reduce' function");
+  if (dev) throw new Renit("Type error in 'reduce' function");
 }
 
 /**
@@ -150,7 +150,7 @@ export function entries(collect) {
   if (isUndefined(collect)) return collect => entries(collect);
   if (isObject(collect)) return Object.entries(collect);
   if (isPromise(collect)) return collect.then(c => entries(c));
-  if (DEVELOPMENT) throw new Renit("Type error in 'entries' function");
+  if (dev) throw new Renit("Type error in 'entries' function");
 }
 
 /**
@@ -183,7 +183,7 @@ export function push(key, value, collect) {
 
   if (isPromise(collect)) return collect.then(c => push(key, value, c));
 
-  if (DEVELOPMENT) throw new Renit("Type error in 'push' function");
+  if (dev) throw new Renit("Type error in 'push' function");
 }
 
 /**
@@ -198,7 +198,7 @@ export function has(items, collect) {
   if (isUndefined(collect)) return collect => has(collect);
   if (isArray(collect) || isString(collect)) return collect.includes(items);
   // TODO: Add support for multiple items
-  if (DEVELOPMENT) throw new Renit("Type error in 'has' function");
+  if (dev) throw new Renit("Type error in 'has' function");
 }
 
 /**
@@ -218,7 +218,7 @@ export function merge(seed, collect) {
 
   if (isPromise(seed)) return seed.then(s => merge(s, collect));
   if (isPromise(collect)) return collect.then(c => merge(seed, c));
-  if (DEVELOPMENT) throw new Renit("Type error in 'merge' function");
+  if (dev) throw new Renit("Type error in 'merge' function");
 }
 
 /**
@@ -238,7 +238,7 @@ export function map(fn, collect) {
     return collection;
   }
   if (isPromise(collect)) return collect.then(c => map(fn, c));
-  if (DEVELOPMENT) throw new Renit("Type error in 'map' function");
+  if (dev) throw new Renit("Type error in 'map' function");
 }
 
 /**
@@ -251,7 +251,7 @@ export function map(fn, collect) {
 export function reverse(collect) {
   if (isUndefined(collect)) return collect => reverse(collect);
   if (isArray(collect)) return clone(collect).reverse();
-  if (DEVELOPMENT) throw new Renit("Type error in 'reverse' function");
+  if (dev) throw new Renit("Type error in 'reverse' function");
 }
 
 /**
@@ -283,7 +283,7 @@ export function slice(key, collect) {
     return collection;
   }
 
-  if (DEVELOPMENT) throw new Renit("Type error in 'slice' function");
+  if (dev) throw new Renit("Type error in 'slice' function");
 }
 
 /**
@@ -320,7 +320,7 @@ export function splice(key, collect) {
 
   if (isPromise(collect)) return collect.then(c => splice(key, c));
 
-  if (DEVELOPMENT) throw new Renit("Type error in 'splice' function");
+  if (dev) throw new Renit("Type error in 'splice' function");
 }
 
 /**
@@ -340,7 +340,7 @@ export function flat(depth, collect) {
 
   if (isCollect(collect)) return values(collect).flat(depth);
   if (isPromise(collect)) return collect.then(c => flat(depth, c));
-  if (DEVELOPMENT) throw new Renit("Type error in 'flat' function");
+  if (dev) throw new Renit("Type error in 'flat' function");
 }
 
 /**
@@ -381,7 +381,7 @@ export function filter(fn, collect) {
 
   if (isPromise(collect)) return collect.then(c => filter(fn, c));
 
-  if (DEVELOPMENT) throw new Renit("Type error in 'filter' function");
+  if (dev) throw new Renit("Type error in 'filter' function");
 }
 
 /**
@@ -410,7 +410,7 @@ export function every(fn, collect) {
   if (isUndefined(collect)) return collect => every(fn, collect);
   if (isCollect(collect)) return values(collect).every(fn);
   if (isPromise(collect)) return collect.then(c => every(fn, c));
-  if (DEVELOPMENT) throw new Renit("Type error in 'every' function");
+  if (dev) throw new Renit("Type error in 'every' function");
 }
 
 /**
@@ -434,7 +434,7 @@ export function last(fn, collect) {
     return collect[key[size(key) - 1]];
   }
   if (isPromise(collect)) return collect.then(c => last(fn, c));
-  if (DEVELOPMENT) throw new Renit("Type error in 'last' function");
+  if (dev) throw new Renit("Type error in 'last' function");
 }
 
 /**
@@ -476,5 +476,5 @@ export function diff(values, type, collect) {
 
   if (isPromise(values)) return values.then(v => diff(v, collect));
   if (isPromise(collect)) return collect.then(c => diff(values, c));
-  if (DEVELOPMENT) throw new Renit("Type error in 'diff' function");
+  if (dev) throw new Renit("Type error in 'diff' function");
 }

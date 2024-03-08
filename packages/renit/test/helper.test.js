@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clone, pipe } from '../src/helper.js';
+import { clone, pipe } from '../src/helper/index.js';
 
 describe('pipe', () => {
   it('pipe:default', () => {
