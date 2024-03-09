@@ -8,7 +8,16 @@ export function TextNode(text) {
 }
 
 /**
- * Creates and returns an ElementNode object with the specified properties.
+ * Creates and returns a CommentNode object.
+ * @param {string} comment
+ * @returns {Object}
+ */
+export function CommentNode(comment) {
+  return { type: 'Comment', comment };
+}
+
+/**
+ * Creates and returns a ElementNode object.
  * @param {string} text
  * @param {boolean} voidElement
  * @param {Array} attributes
@@ -20,7 +29,7 @@ export function ElementNode(name = '', voidElement = false, attributes = [], chi
 }
 
 /**
- * Creates and returns an AttributeNode object with the specified name and value.
+ * Creates and returns an AttributeNode object.
  * @param {string} name
  * @param {string} value
  * @returns {object}

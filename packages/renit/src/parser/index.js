@@ -7,8 +7,8 @@ import { parseTag } from './parse/tag.js';
 
 /**
  * Parses the given HTML program and returns the abstract syntax tree (AST).
- * @param {string} program
- * @returns
+ * @param {string} program The HTML program to parse.
+ * @returns {Array} The abstract syntax tree representing the HTML structure.
  */
 export function parse(program) {
   // Initialize an empty array to store the AST and a tree to keep track of nested elements.
@@ -22,6 +22,9 @@ export function parse(program) {
     // Determine if the tag is an opening tag or a closing tag.
     const isOpen = tag.charAt(1) !== '/';
 
+    // Determine if the tag is a comment.
+    const isComment = tag.startsWith('<!--');
+
     // Calculate the start index of the tag's content.
     const start = index + size(tag);
 
@@ -29,6 +32,24 @@ export function parse(program) {
     const nextChar = program.charAt(start);
 
     let parent;
+
+    // If it's a comment, parse it as a tag and handle separately.
+    if (isComment) {
+      const comment = parseTag(tag);
+
+      // If it's at root level, add the comment directly to the AST.
+      if (level < 0) {
+        push(comment, ast);
+        return ast;
+      }
+
+      // Otherwise, add the comment as a child of the current parent.
+      parent = tree[level];
+      if (parent && parent.children && isArray(parent.children)) {
+        parent.children.push(comment);
+      }
+      return ast;
+    }
 
     // If it's an opening tag, increment the nesting level and parse the tag.
     if (isOpen) {
@@ -70,18 +91,21 @@ export function parse(program) {
   return ast;
 }
 
-/*
-const ast = parse(`
-<img src="./assets/logo.jpg" />
-<br>
-<script>
-  const try = 1;
-</script>
-<h1 class=title style="color:red" :var={try}>Title</h1>
-<p>desc</p>
-<div>
-  <p>hi!</p>
-</div>
+const ast = parse(/*html*/ `
+  <div>
+    <p>text</p>
+  </div>
+  <!-- comment line -->
+  <p>text</p>
+  <div>
+    <!-- nested comment line -->
+    <p attr="value">text</p>
+    <!--
+      multiple comment line
+      multiple comment line
+      multiple comment line
+    -->
+  </div>
 `);
+
 console.log(JSON.stringify(ast, null, 2));
-*/

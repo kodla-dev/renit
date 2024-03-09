@@ -2,7 +2,7 @@ import { push } from '../../collect/index.js';
 import { HTML_VOID_ELEMENTS, RGX_HTML_TAG_ATTRIBUTES, RGX_HTML_TAG_NAME } from '../../define.js';
 import { isNull } from '../../is/index.js';
 import { size } from '../../math/index.js';
-import { AttributeNode, ElementNode } from '../ast.js';
+import { AttributeNode, CommentNode, ElementNode } from '../ast.js';
 
 /**
  * This function parses an HTML tag and returns an ElementNode representing it.
@@ -20,6 +20,12 @@ export function parseTag(tag) {
   if (name) {
     node.name = name;
     node.voidElement = HTML_VOID_ELEMENTS.includes(name) || tag.charAt(size(tag) - 2) === '/';
+
+    // If it's a comment node, create a CommentNode with the comment text and return it.
+    if (node.name.startsWith('!--')) {
+      const endIndex = tag.indexOf('-->');
+      return CommentNode(endIndex !== -1 ? tag.slice(4, endIndex) : '');
+    }
   }
 
   // Regular expression to match attributes in the tag.
