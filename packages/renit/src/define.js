@@ -111,3 +111,31 @@ export const RAW_SYMBOL = 'symbol';
  * @type {string}
  */
 export const RAW_UNDEFINED = 'undefined';
+
+/**
+ * Regular expression pattern to match HTML tags.
+ * @type {RegExp}
+ */
+export const RGX_HTML_TAGS = /<[a-zA-Z0-9\-\!\/](?:"[^"]*"|'[^']*'|[^'">])*>/g; // eslint-disable-line
+
+/**
+ * Regular expression pattern to match the name of an HTML tag.
+ * @type {RegExp}
+ */
+export const RGX_HTML_TAG_NAME = /<\/?([^\s]+?)[/\s>]/;
+
+/**
+ * Regular expression pattern to match attributes of an HTML tag.
+ * @type {RegExp}
+ */
+export const RGX_HTML_TAG_ATTRIBUTES = /\s([^'"/\s><]+?)[\s/>]|([^\s=]+)=\s?(".*?"|'.*?')/g;
+
+/**
+ * Array containing names of HTML void elements.
+ * @type {string[]}
+ */
+// prettier-multiline-arrays-next-line-pattern: 12
+export const HTML_VOID_ELEMENTS = [
+  'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source',
+  'track', 'wbr',
+];

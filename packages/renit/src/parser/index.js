@@ -1,0 +1,87 @@
+import { push } from '../collect/index.js';
+import { RGX_HTML_TAGS } from '../define.js';
+import { isArray, isEqual } from '../is/index.js';
+import { size } from '../math/index.js';
+import { TextNode } from './ast.js';
+import { parseTag } from './parse/tag.js';
+
+/**
+ * Parses the given HTML program and returns the abstract syntax tree (AST).
+ * @param {string} program
+ * @returns
+ */
+export function parse(program) {
+  // Initialize an empty array to store the AST and a tree to keep track of nested elements.
+  const ast = [];
+  const tree = [];
+  let current;
+  let level = -1;
+
+  // Use regular expression to match HTML tags in the program string.
+  program.replace(RGX_HTML_TAGS, (tag, index) => {
+    // Determine if the tag is an opening tag or a closing tag.
+    const isOpen = tag.charAt(1) !== '/';
+
+    // Calculate the start index of the tag's content.
+    const start = index + size(tag);
+
+    // Get the next character after the tag.
+    const nextChar = program.charAt(start);
+
+    let parent;
+
+    // If it's an opening tag, increment the nesting level and parse the tag.
+    if (isOpen) {
+      level++;
+      current = parseTag(tag);
+
+      // If the tag is not a void element and there is content following the tag,
+      // parse the content and add it as a child of the current element.
+      if (
+        !current.voidElement &&
+        nextChar &&
+        !isEqual(nextChar, '<') &&
+        isArray(current.children)
+      ) {
+        const text = program.slice(start, program.indexOf('<', start));
+        push(TextNode(text), current.children);
+      }
+
+      // If it's the root level, add the current element to the AST.
+      if (level === 0) push(current, ast);
+
+      // Get the parent element from the tree and add the current element as its child.
+      parent = tree[level - 1];
+      if (parent && parent.children) push(current, parent.children);
+
+      // Update the current element in the tree.
+      tree[level] = current;
+    }
+
+    // If it's a closing tag or a void element, decrement the nesting level.
+    if (!isOpen || current.voidElement) {
+      if (level > -1 && (current.voidElement || isEqual(current.name, tag.slice(2, -1)))) {
+        level--;
+      }
+    }
+  });
+
+  // Return the AST.
+  return ast;
+}
+
+/*
+const ast = parse(`
+<img src="./assets/logo.jpg" />
+<br>
+<script>
+  const try = 1;
+</script>
+<h1 class=title style="color:red" :var={try}>Title</h1>
+<p>desc</p>
+<div>
+  <p>hi!</p>
+</div>
+`);
+console.log(JSON.stringify(ast, null, 2));
+*/
