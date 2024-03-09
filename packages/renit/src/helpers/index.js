@@ -1,7 +1,7 @@
-import { reduce } from '../collect/index.js';
-import { dev } from '../env.js';
-import { Renit } from '../fault.js';
-import { isArray, isFunction, isPromise } from '../is/index.js';
+import { reduce } from '../libraries/collect/index.js';
+import { DEV } from '../core/env.js';
+import { Renit } from '../core/fault.js';
+import { isArray, isFunction, isPromise } from '../libraries/is/index.js';
 
 /**
  * It's a structure that connects functions by passing the output of one function as the arguments
@@ -20,7 +20,7 @@ export function pipe(collect, ...fns) {
 function run(a, f) {
   if (isFunction(f)) return isPromise(a) ? a.then(f) : f(a);
   if (isArray(f)) return pipe(a, ...f);
-  if (dev) throw new Renit("Type error in 'pipe' function");
+  if (DEV) throw new Renit("Type error in 'pipe' function");
 }
 
 /**

@@ -19,8 +19,8 @@ import {
   slice,
   splice,
   values,
-} from '../src/collect/index.js';
-import { pipe } from '../src/helper/index.js';
+} from '../src/libraries/collect/index.js';
+import { pipe } from '../src/helpers/index.js';
 
 describe('keys', () => {
   const data = {

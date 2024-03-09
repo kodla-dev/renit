@@ -1,7 +1,7 @@
-import { push } from '../../collect/index.js';
+import { push } from '../../../libraries/collect/index.js';
+import { isNull } from '../../../libraries/is/index.js';
+import { size } from '../../../libraries/math/index.js';
 import { HTML_VOID_ELEMENTS, RGX_HTML_TAG_ATTRIBUTES, RGX_HTML_TAG_NAME } from '../../define.js';
-import { isNull } from '../../is/index.js';
-import { size } from '../../math/index.js';
 import { AttributeNode, CommentNode, ElementNode } from '../ast.js';
 
 /**

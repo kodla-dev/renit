@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { isClient, isLocalStorage } from '../src/is/index.js';
+import { isClient, isLocalStorage } from '../src/libraries/is/index.js';
 
 test('isLocalStorage', () => {
   expect(isLocalStorage()).toBe(true);

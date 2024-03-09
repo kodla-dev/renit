@@ -6,7 +6,6 @@
   --------------------------------------------------------------------------------------------------
 */
 
-import { keys } from '../collect/index.js';
 import {
   MAX_SAFE_INTEGER,
   RAW_ASYNC,
@@ -22,7 +21,8 @@ import {
   RAW_STRING,
   RAW_SYMBOL,
   RAW_UNDEFINED,
-} from '../define.js';
+} from '../../core/define.js';
+import { keys } from '../collect/index.js';
 import { size } from '../math/index.js';
 import { toStringify } from '../to/index.js';
 
