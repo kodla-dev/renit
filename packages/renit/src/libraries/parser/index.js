@@ -1,7 +1,7 @@
-import { push } from '../../libraries/collect/index.js';
-import { isArray, isEqual } from '../../libraries/is/index.js';
-import { size } from '../../libraries/math/index.js';
-import { RGX_HTML_TAGS } from '../define.js';
+import { push } from '../collect/index.js';
+import { isArray, isEqual } from '../is/index.js';
+import { size } from '../math/index.js';
+import { RGX_HTML_TAGS } from '../../core/define.js';
 import { TextNode } from './ast.js';
 import { parseTag } from './parse/tag.js';
 

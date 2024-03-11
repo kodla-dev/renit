@@ -1,13 +1,13 @@
-import { push } from '../../../libraries/collect/index.js';
-import { isNull } from '../../../libraries/is/index.js';
-import { size } from '../../../libraries/math/index.js';
+import { push } from '../../collect/index.js';
+import { isNull } from '../../is/index.js';
+import { size } from '../../math/index.js';
 import {
   HTML_SPECIAL_ELEMENTS,
   HTML_VOID_ELEMENTS,
   RGX_HTML_SPECIAL_ELEMENTS_RAW,
   RGX_HTML_TAG_ATTRIBUTES,
   RGX_HTML_TAG_NAME,
-} from '../../define.js';
+} from '../../../core/define.js';
 import { AttributeNode, CommentNode, ElementNode, TextNode } from '../ast.js';
 
 /**
