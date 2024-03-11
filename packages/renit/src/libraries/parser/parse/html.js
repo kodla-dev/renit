@@ -1,8 +1,9 @@
-import { RGX_HTML_TAGS } from '../../../core/define.js';
-import { push } from '../../collect/index.js';
+import { RGX_WHITESPACE } from '../../../core/define.js';
+import { push, some } from '../../collect/index.js';
 import { isArray, isEqual } from '../../is/index.js';
 import { size } from '../../math/index.js';
 import { TextNode } from '../ast.js';
+import { parseHtmlOptions } from '../utils.js';
 import { parseHtmlTag } from './html-tag.js';
 
 /**
@@ -10,7 +11,13 @@ import { parseHtmlTag } from './html-tag.js';
  * @param {string} program The HTML program to parse.
  * @returns {Array} The abstract syntax tree representing the HTML structure.
  */
-export function parseHtml(program) {
+export function parseHtml(program, options = {}) {
+  // Merge the provided options with default options
+  options = parseHtmlOptions(options);
+
+  // Add comments to special tags list
+  push('!--', options.tags.special);
+
   // Initialize an empty array to store the AST and a tree to keep track of nested elements.
   const ast = [];
   const tree = [];
@@ -18,17 +25,16 @@ export function parseHtml(program) {
   let level = -1;
 
   // Use regular expression to match HTML tags in the program string.
-  program.replace(RGX_HTML_TAGS, (tag, index) => {
+  program.replace(options.rgx.tags, (tag, ...args) => {
+    const index = args[3];
+
     // Determine if the tag is an opening tag or a closing tag.
     const isOpen = tag.charAt(1) !== '/';
 
     // Determine if the tag is a special tag like comment, script, style, template, or textarea.
-    const isComment = tag.startsWith('<!--');
-    const isScript = tag.startsWith('<script');
-    const isStyle = tag.startsWith('<style');
-    const isTemplate = tag.startsWith('<template');
-    const isTextarea = tag.startsWith('<textarea');
-    const isSpecial = isComment || isScript || isStyle || isTemplate || isTextarea;
+    const isSpecial = some(specialTag => {
+      return tag.startsWith('<' + specialTag);
+    }, options.tags.special);
 
     // Calculate the start index of the tag's content.
     const start = index + size(tag);
@@ -40,7 +46,7 @@ export function parseHtml(program) {
 
     // If it's a special tag, parse it as a tag and handle it separately.
     if (isSpecial) {
-      const special = parseHtmlTag(tag);
+      const special = parseHtmlTag(tag, options);
 
       // If it's at root level, add the special tag directly to the AST.
       if (level < 0) {
@@ -59,7 +65,7 @@ export function parseHtml(program) {
     // If it's an opening tag, increment the nesting level and parse the tag.
     if (isOpen) {
       level++;
-      current = parseHtmlTag(tag);
+      current = parseHtmlTag(tag, options);
 
       // If the tag is not a void element and there is content following the tag,
       // parse the content and add it as a child of the current element.
@@ -88,6 +94,20 @@ export function parseHtml(program) {
     if (!isOpen || current.voidElement) {
       if (level > -1 && (current.voidElement || isEqual(current.name, tag.slice(2, -1)))) {
         level--;
+        current = level === -1 ? ast : tree[level];
+      }
+      if (nextChar !== '<' && nextChar) {
+        parent = level === -1 ? ast : tree[level];
+        const end = program.indexOf('<', start);
+        let content = program.slice(start, end === -1 ? undefined : end);
+        if (RGX_WHITESPACE.test(content)) {
+          content = ' ';
+        }
+        if ((end > -1 && level + parent.length >= 0) || content !== ' ') {
+          if (parent && isArray(parent)) {
+            push(TextNode(content), parent);
+          }
+        }
       }
     }
   });

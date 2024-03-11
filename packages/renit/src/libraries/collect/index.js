@@ -7,7 +7,7 @@
 
 import { DEV } from '../../core/env.js';
 import { Renit } from '../../core/fault.js';
-import { clone } from '../../helpers/index.js';
+import { clone, pipe } from '../../helpers/index.js';
 import {
   isArray,
   isArrayLike,
@@ -25,6 +25,7 @@ import {
   isUndefined,
 } from '../is/index.js';
 import { size } from '../math/index.js';
+import { toArray } from '../to/index.js';
 
 /**
  * Returns an array containing the keys of the specified object.
@@ -484,4 +485,51 @@ export function diff(values, type, collect) {
   if (isPromise(values)) return values.then(v => diff(v, collect));
   if (isPromise(collect)) return collect.then(c => diff(values, c));
   if (DEV) throw new Renit("Type error in 'diff' function");
+}
+
+export function some(key, value, collect) {
+  if (isUndefined(collect)) {
+    if (isUndefined(value)) {
+      return collect => some(key, collect);
+    }
+
+    if (!isCollect(value)) {
+      return collect => some(key, value, collect);
+    }
+
+    return some(key, void 0, value);
+  }
+
+  if (!isUndefined(value)) {
+    if (isArray(collect)) {
+      return (
+        pipe(
+          collect,
+          filter(items => !isUndefined(items[key]) && items[key] === value),
+          size
+        ) > 0
+      );
+    }
+
+    return !isUndefined(collect[key]) && collect[key] === value;
+  }
+
+  if (isFunction(key)) {
+    return (
+      pipe(
+        collect,
+        filter((item, index) => key(item, index)),
+        toArray,
+        size
+      ) > 0
+    );
+  }
+
+  if (isArray(collect)) {
+    return collect.indexOf(key) !== -1;
+  }
+
+  const keysAndValues = values(collect);
+  push(keys(collect), 1, keysAndValues);
+  return keysAndValues.indexOf(key) !== -1;
 }

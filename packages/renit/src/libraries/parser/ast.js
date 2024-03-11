@@ -1,7 +1,7 @@
 /**
  * Creates and returns a TextNode object.
  * @param {string} text
- * @returns {object}
+ * @returns {Object}
  */
 export function TextNode(text) {
   return { type: 'Text', text };
@@ -22,7 +22,7 @@ export function CommentNode(comment) {
  * @param {boolean} voidElement
  * @param {Array} attributes
  * @param {Array} children
- * @returns {object}
+ * @returns {Object}
  */
 export function ElementNode(name = '', voidElement = false, attributes = [], children = []) {
   return { type: 'Element', name, voidElement, attributes, children };
@@ -32,7 +32,7 @@ export function ElementNode(name = '', voidElement = false, attributes = [], chi
  * Creates and returns an AttributeNode object.
  * @param {string} name
  * @param {string} value
- * @returns {object}
+ * @returns {Object}
  */
 export function AttributeNode(name, value) {
   return { type: 'Attribute', name, value };

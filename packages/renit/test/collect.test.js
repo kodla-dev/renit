@@ -18,6 +18,7 @@ import {
   reduce,
   reverse,
   slice,
+  some,
   splice,
   values,
 } from '../src/libraries/collect/index.js';
@@ -739,5 +740,50 @@ describe('diff', () => {
 
     expect(result).toEqual([5, 6]);
     expect(result2).toEqual([12, 15]);
+  });
+});
+
+describe('some', () => {
+  it('some:array', () => {
+    const result = some(3, [1, 2, 3]);
+    expect(result).toBe(true);
+  });
+
+  it('some:array:fn', () => {
+    const result = some(value => value > 5, [1, 2, 3, 4, 5]);
+    expect(result).toBe(false);
+  });
+
+  it('some:object:key', () => {
+    const result = some('name', { name: 'Aristokles', last: 'Platon' });
+    expect(result).toBe(true);
+  });
+
+  it('some:object:value', () => {
+    const result = some('Platon', { name: 'Aristokles', last: 'Platon' });
+    expect(result).toBe(true);
+  });
+
+  it('some:object:key:value', () => {
+    const result = some('name', 'Pisagor', {
+      name: 'Theano',
+      year: 570,
+    });
+    expect(result).toBe(false);
+  });
+
+  it('some:object:fn', () => {
+    const result = some(item => item > 0, {
+      books: 194,
+      users: 1458,
+      collections: 0,
+    });
+    expect(result).toBe(true);
+    const result2 = some(item => item > 0, {
+      books: 0,
+      users: 0,
+      collections: 0,
+    });
+    expect(result2).toBe(false);
   });
 });
