@@ -116,7 +116,15 @@ export const RAW_UNDEFINED = 'undefined';
  * Regular expression pattern to match HTML tags.
  * @type {RegExp}
  */
-export const RGX_HTML_TAGS = /<[a-zA-Z0-9\-\!\/](?:"[^"]*"|'[^']*'|[^'">])*>/g; // eslint-disable-line
+export const RGX_HTML_TAGS =
+  /(?:(?:<!--[\s\S]*?-->)|(?:<(?<e>script|style|template|textarea)(?:"[^"]*"|'[^']*'|[^'">])*>[^]*?<\/(\k<e>)>)|(?:<(?:\/|)(?!(script|style|template|textarea))[a-zA-Z0-9](?:"[^"]*"|'[^']*'|[^'">])*>))/g;
+
+/**
+ * Regular expression pattern to match raw content within HTML special elements.
+ * @type {RegExp}
+ */
+export const RGX_HTML_SPECIAL_ELEMENTS_RAW =
+  /(?:<(?<e>script|style|template|textarea)(?:"[^"]*"|'[^']*'|[^'">])*>(?<raw>[^]*?)<\/(\k<e>)>)/g;
 
 /**
  * Regular expression pattern to match the name of an HTML tag.
@@ -139,3 +147,9 @@ export const HTML_VOID_ELEMENTS = [
   'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source',
   'track', 'wbr',
 ];
+
+/**
+ * Array containing names of HTML special elements.
+ * @type {string[]}
+ */
+export const HTML_SPECIAL_ELEMENTS = ['script', 'style', 'template', 'textarea'];

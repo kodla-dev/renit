@@ -1,6 +1,6 @@
-import { reduce } from '../libraries/collect/index.js';
 import { DEV } from '../core/env.js';
 import { Renit } from '../core/fault.js';
+import { reduce } from '../libraries/collect/index.js';
 import { isArray, isFunction, isPromise } from '../libraries/is/index.js';
 
 /**

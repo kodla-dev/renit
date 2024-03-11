@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { pipe } from '../src/helpers/index.js';
 import {
   apply,
   diff,
@@ -20,7 +21,6 @@ import {
   splice,
   values,
 } from '../src/libraries/collect/index.js';
-import { pipe } from '../src/helpers/index.js';
 
 describe('keys', () => {
   const data = {

@@ -1,11 +1,17 @@
 import { push } from '../../../libraries/collect/index.js';
 import { isNull } from '../../../libraries/is/index.js';
 import { size } from '../../../libraries/math/index.js';
-import { HTML_VOID_ELEMENTS, RGX_HTML_TAG_ATTRIBUTES, RGX_HTML_TAG_NAME } from '../../define.js';
-import { AttributeNode, CommentNode, ElementNode } from '../ast.js';
+import {
+  HTML_SPECIAL_ELEMENTS,
+  HTML_VOID_ELEMENTS,
+  RGX_HTML_SPECIAL_ELEMENTS_RAW,
+  RGX_HTML_TAG_ATTRIBUTES,
+  RGX_HTML_TAG_NAME,
+} from '../../define.js';
+import { AttributeNode, CommentNode, ElementNode, TextNode } from '../ast.js';
 
 /**
- * This function parses an HTML tag and returns an ElementNode representing it.
+ * Parses an HTML tag
  * @param {string} tag
  * @returns
  */
@@ -28,6 +34,9 @@ export function parseTag(tag) {
     }
   }
 
+  // Determine if the tag is a special element like script, style, template, etc.
+  const isSpecial = HTML_SPECIAL_ELEMENTS.includes(node.name);
+
   // Regular expression to match attributes in the tag.
   const rgxAttr = new RegExp(RGX_HTML_TAG_ATTRIBUTES);
   let tree;
@@ -43,7 +52,7 @@ export function parseTag(tag) {
     if (!tree[0].trim()) continue;
 
     // If the match contains attribute name and value, parse and add it to the node's attributes.
-    if (tree[1]) {
+    if (tree[1] && !isSpecial) {
       const attr = tree[1].trim();
       let temp = [attr, ''];
       if (attr.indexOf('=') > -1) {
@@ -54,6 +63,13 @@ export function parseTag(tag) {
     } else if (tree[2]) {
       push(AttributeNode(tree[2], tree[3].trim().substring(1, size(tree[3]) - 1)), node.attributes);
     }
+  }
+
+  // If it's a special element, extract its raw content and add it as a child node.
+  if (isSpecial) {
+    const rgxRaw = new RegExp(RGX_HTML_SPECIAL_ELEMENTS_RAW);
+    const raw = rgxRaw.exec(tag);
+    push(TextNode(raw ? raw.groups.raw : ''), node.children);
   }
 
   // Return the parsed ElementNode.

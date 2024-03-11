@@ -22,8 +22,13 @@ export function parse(program) {
     // Determine if the tag is an opening tag or a closing tag.
     const isOpen = tag.charAt(1) !== '/';
 
-    // Determine if the tag is a comment.
+    // Determine if the tag is a special tag like comment, script, style, template, or textarea.
     const isComment = tag.startsWith('<!--');
+    const isScript = tag.startsWith('<script');
+    const isStyle = tag.startsWith('<style');
+    const isTemplate = tag.startsWith('<template');
+    const isTextarea = tag.startsWith('<textarea');
+    const isSpecial = isComment || isScript || isStyle || isTemplate || isTextarea;
 
     // Calculate the start index of the tag's content.
     const start = index + size(tag);
@@ -33,20 +38,20 @@ export function parse(program) {
 
     let parent;
 
-    // If it's a comment, parse it as a tag and handle separately.
-    if (isComment) {
-      const comment = parseTag(tag);
+    // If it's a special tag, parse it as a tag and handle it separately.
+    if (isSpecial) {
+      const special = parseTag(tag);
 
-      // If it's at root level, add the comment directly to the AST.
+      // If it's at root level, add the special tag directly to the AST.
       if (level < 0) {
-        push(comment, ast);
+        push(special, ast);
         return ast;
       }
 
-      // Otherwise, add the comment as a child of the current parent.
+      // Otherwise, add the special tag as a child of the current parent.
       parent = tree[level];
       if (parent && parent.children && isArray(parent.children)) {
-        parent.children.push(comment);
+        parent.children.push(special);
       }
       return ast;
     }
@@ -92,20 +97,63 @@ export function parse(program) {
 }
 
 const ast = parse(/*html*/ `
+  <script lang="ts">
+    console.log("</template>");
+  </script>
   <div>
+    <script lang="ts">
+      console.log("</template>");
+    </script>
+  </div>
+  <!-- <script>const</script> -->
+<!-- <div>
+  <p class="style">text</p>
+</div> -->
+<div>
+  <p class="style">text</p>
+  <img src="./logo.jpg">
+</div>
+<script>
+  console.log("<template></template>");
+</script>
+<p>text</p>
+<!--
+  comment ""multi line
+  c=""omment multi line
+  comment multi="" line
+-->
+<style>
+  .back {
+    position: absolute;
+    content: "<p>text</p>";
+  }
+</style>
+<hr>
+<img src="./logo.jpg">
+<div>
+<img src="./logo.jpg">
+  <div>
+    <h1>text</h1>
     <p>text</p>
+    <!-- <a href="/home.html">home</a> -->
+    <style type="text/css">
+  .back {
+    position: absolute;
+    content: "<p>text</p>";
+  }
+</style>
+<div>
+  <template>
+    <p>text</p>
+    <hr>
+    <img src="./logo.jpg">
+</template>
+</div>
+<textarea name="" id="" cols="30" rows="10">
+  <p>home</p>
+</textarea>
   </div>
-  <!-- comment line -->
-  <p>text</p>
-  <div>
-    <!-- nested comment line -->
-    <p attr="value">text</p>
-    <!--
-      multiple comment line
-      multiple comment line
-      multiple comment line
-    -->
-  </div>
+</div>
 `);
 
 console.log(JSON.stringify(ast, null, 2));
