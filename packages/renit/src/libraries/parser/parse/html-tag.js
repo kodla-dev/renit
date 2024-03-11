@@ -1,6 +1,3 @@
-import { push } from '../../collect/index.js';
-import { isNull } from '../../is/index.js';
-import { size } from '../../math/index.js';
 import {
   HTML_SPECIAL_ELEMENTS,
   HTML_VOID_ELEMENTS,
@@ -8,6 +5,9 @@ import {
   RGX_HTML_TAG_ATTRIBUTES,
   RGX_HTML_TAG_NAME,
 } from '../../../core/define.js';
+import { push } from '../../collect/index.js';
+import { isNull } from '../../is/index.js';
+import { size } from '../../math/index.js';
 import { AttributeNode, CommentNode, ElementNode, TextNode } from '../ast.js';
 
 /**
@@ -15,7 +15,7 @@ import { AttributeNode, CommentNode, ElementNode, TextNode } from '../ast.js';
  * @param {string} tag
  * @returns
  */
-export function parseTag(tag) {
+export function parseHtmlTag(tag) {
   // Create a new ElementNode to represent the parsed tag.
   const node = ElementNode();
 
