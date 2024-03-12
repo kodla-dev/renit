@@ -13,32 +13,28 @@
       "default": "./src/index.js",
       "types": "./type/index.d.ts"
     },
-    "./collect": {
-      "default": "./src/collect.js",
-      "types": "./type/index.d.ts"
-    },
-    "./define": {
-      "default": "./src/define.js",
-      "types": "./type/index.d.ts"
-    },
-    "./fault": {
-      "default": "./src/fault.js",
-      "types": "./type/index.d.ts"
-    },
     "./helper": {
-      "default": "./src/helper.js",
+      "default": "./src/helpers/index.js",
+      "types": "./type/index.d.ts"
+    },
+    "./collect": {
+      "default": "./src/libraries/collect/index.js",
       "types": "./type/index.d.ts"
     },
     "./is": {
-      "default": "./src/is.js",
+      "default": "./src/libraries/is/index.js",
       "types": "./type/index.d.ts"
     },
     "./math": {
-      "default": "./src/math.js",
+      "default": "./src/libraries/math/index.js",
+      "types": "./type/index.d.ts"
+    },
+    "./parser": {
+      "default": "./src/libraries/parser/index.js",
       "types": "./type/index.d.ts"
     },
     "./to": {
-      "default": "./src/to.js",
+      "default": "./src/libraries/to/index.js",
       "types": "./type/index.d.ts"
     }
   },
