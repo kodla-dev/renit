@@ -2,7 +2,7 @@ import { DEV } from '../../core/env.js';
 import { Renit } from '../../core/fault.js';
 import { clone } from '../../helpers/index.js';
 import { hasOwn } from '../collect/index.js';
-import { isFunction, isNull, isObject, isUndefined } from '../is/index.js';
+import { isBoolean, isFunction, isNull, isObject, isUndefined } from '../is/index.js';
 
 /**
  * Represents the function to be executed when a reactive dependency changes.
@@ -260,6 +260,12 @@ export function effect(callback) {
  * @returns {Function} - A function to unsubscribe from the watch.
  */
 export function watch(what, callback, deep = false) {
+  if (DEV) {
+    if (!isFunction(what)) throw new Renit("'what' argument must be a function");
+    if (!isFunction(callback)) throw new Renit("'callback' argument must be a function");
+    if (!isBoolean(deep)) throw new Renit("'deep' argument must be a boolean");
+  }
+
   const oldUpdate = update;
 
   // Flag to track if the watch has been unsubscribed
