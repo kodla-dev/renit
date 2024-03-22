@@ -117,3 +117,21 @@ export const RAW_UNDEFINED = 'undefined';
  * @type {RegExp}
  */
 export const RGX_WHITESPACE = /^\s*$/;
+
+/**
+ * Constant representing a raw empty string
+ * @type {string}
+ */
+export const RAW_EMPTY = '';
+
+/**
+ * Constant representing the string 'template'
+ * @type {string}
+ */
+export const RAW_TEMPLATE = 'template';
+
+/**
+ * Constant representing the DOM reference selector
+ * @type {string}
+ */
+export const DOM_REFER_SELECTOR = '<!>';
