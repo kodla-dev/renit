@@ -210,6 +210,16 @@ export function has(items, collect) {
 }
 
 /**
+ * Checks if the object has the specified property.
+ * @param {Object} obj - The object to check.
+ * @param {string} prop - The property to check for.
+ * @returns {boolean} - True if the object has the property, otherwise false.
+ */
+export function hasOwn(obj, prop) {
+  return Object.prototype.hasOwnProperty.call(obj, prop);
+}
+
+/**
  * Merges two collections by concatenating arrays or extending objects.
  *
  * @param {Array|Object|Promise} seed - The first collection.
