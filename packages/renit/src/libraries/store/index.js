@@ -149,15 +149,15 @@ class Computed {
 
 /**
  * Creates a Computed instance with the given callback function.
- * @param {Function} cb - The callback function used to derive the computed value.
+ * @param {Function} callback - The callback function used to derive the computed value.
  * @returns {Computed} A Computed instance.
  * @throws {Renit} Throws an error if the argument is not a function.
  */
-export function computed(cb) {
+export function computed(callback) {
   if (DEV) {
-    if (!isFunction(cb)) throw new Renit(`Argument of computed() must be a function`);
+    if (!isFunction(callback)) throw new Renit("'callback' argument must be a function");
   }
-  return new Computed(cb);
+  return new Computed(callback);
 }
 
 /**
@@ -240,23 +240,26 @@ export function reactive(obj) {
 
 /**
  * Runs the given callback function and tracks its reactive dependencies.
- * @param {Function} cb - The callback function to run.
+ * @param {Function} callback - The callback function to run.
  */
-export function effect(cb) {
+export function effect(callback) {
+  if (DEV) {
+    if (!isFunction(callback)) throw new Renit("'callback' argument must be a function");
+  }
   const oldUpdate = update;
-  update = cb;
-  cb();
+  update = callback;
+  callback();
   update = oldUpdate;
 }
 
 /**
  * Watches a reactive value or object for changes and invokes the callback function accordingly.
  * @param {Function} what - The function returning the value or object to watch.
- * @param {Function} cb - The callback function to invoke when the watched value changes.
+ * @param {Function} callback - The callback function to invoke when the watched value changes.
  * @param {boolean} [deep=false] - Indicates whether to watch deeply for changes in nested objects.
  * @returns {Function} - A function to unsubscribe from the watch.
  */
-export function watch(what, cb, deep = false) {
+export function watch(what, callback, deep = false) {
   const oldUpdate = update;
 
   // Flag to track if the watch has been unsubscribed
@@ -274,11 +277,11 @@ export function watch(what, cb, deep = false) {
     const newVal = what(); // Get the current value
     if (newVal !== val) {
       // If the value has changed
-      cb(newVal, val); // Invoke the callback with the new and old values
+      callback(newVal, val); // Invoke the callback with the new and old values
       val = newVal; // Update the old value
       if (isObject(val) && deep) {
         // If the value is an object and deep watching is enabled
-        deepWatch(val, what, cb); // Set up deep watching for nested objects
+        deepWatch(val, what, callback); // Set up deep watching for nested objects
       }
     }
   };
@@ -287,7 +290,7 @@ export function watch(what, cb, deep = false) {
 
   // If the value is an object and deep watching is enabled, set up deep watching
   if (isObject(val) && deep) {
-    deepWatch(val, what, cb);
+    deepWatch(val, what, callback);
   }
 
   // Restore the original update function
@@ -300,16 +303,16 @@ export function watch(what, cb, deep = false) {
  * Sets up deep watching for changes in nested objects.
  * @param {Object} obj - The object to watch.
  * @param {Function} what - The function returning the value or object to watch.
- * @param {Function} cb - The callback function to invoke when the watched value changes.
+ * @param {Function} callback - The callback function to invoke when the watched value changes.
  */
-function deepWatch(obj, what, cb) {
+function deepWatch(obj, what, callback) {
   const oldUpdate = update;
 
   // Override the update function to perform deep watch operations
   update = () => {
     if (what() === obj) {
       // If the watched object is still the same
-      cb(obj, obj); // Invoke the callback with the object
+      callback(obj, obj); // Invoke the callback with the object
     }
   };
 
