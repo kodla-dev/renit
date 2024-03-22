@@ -561,3 +561,12 @@ export function isEmpty(value) {
   if (isPromise(value)) return value.then(v => isEmpty(v));
   return isPrimitive(value) || !size(value);
 }
+
+/**
+ * Checks if the given value is an instance of the Text interface.
+ * @param {*} value The value to check.
+ * @returns {boolean} True if the value is a Text node, otherwise false.
+ */
+export function isText(value) {
+  return value instanceof Text;
+}
