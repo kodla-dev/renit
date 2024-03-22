@@ -13,12 +13,20 @@
       "default": "./src/index.js",
       "types": "./type/index.d.ts"
     },
+    "./internal": {
+      "default": "./src/core/internal/index.js",
+      "types": "./type/index.d.ts"
+    },
     "./helper": {
       "default": "./src/helpers/index.js",
       "types": "./type/index.d.ts"
     },
     "./collect": {
       "default": "./src/libraries/collect/index.js",
+      "types": "./type/index.d.ts"
+    },
+    "./event": {
+      "default": "./src/libraries/event/index.js",
       "types": "./type/index.d.ts"
     },
     "./is": {
@@ -31,6 +39,10 @@
     },
     "./parser": {
       "default": "./src/libraries/parser/index.js",
+      "types": "./type/index.d.ts"
+    },
+    "./store": {
+      "default": "./src/libraries/store/index.js",
       "types": "./type/index.d.ts"
     },
     "./to": {
