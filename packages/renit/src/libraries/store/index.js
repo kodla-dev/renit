@@ -1,8 +1,5 @@
-import { DEV } from '../../core/env.js';
-import { Renit } from '../../core/fault.js';
-import { clone } from '../../helpers/index.js';
-import { hasOwn } from '../collect/index.js';
-import { isBoolean, isFunction, isNull, isObject, isUndefined } from '../is/index.js';
+import { each, hasOwn } from '../collect/index.js';
+import { isArray, isNull, isObject, isUndefined } from '../is/index.js';
 
 /**
  * Represents the function to be executed when a reactive dependency changes.
@@ -13,6 +10,34 @@ let update = null;
  * Represents a map of dependencies for each reactive object.
  */
 const deps = new WeakMap();
+
+/**
+ * Adds the current update function to the dependencies of the provided object.
+ * @param {Object} self - The object to add dependencies to.
+ */
+function get(self) {
+  if (!isNull(update)) {
+    let dep = deps.get(self);
+
+    if (isUndefined(dep)) {
+      dep = new Deps();
+      deps.set(self, dep);
+    }
+
+    dep.a(update);
+  }
+}
+
+/**
+ * Notifies the dependencies of the provided object.
+ * @param {Object} self - The object whose dependencies need to be notified.
+ */
+function set(self) {
+  const dep = deps.get(self);
+  if (!isUndefined(dep)) {
+    dep.n(self);
+  }
+}
 
 /**
  * Represents a dependency tracking mechanism.
@@ -44,7 +69,7 @@ class Deps {
 /**
  * Represents a reactive reference.
  */
-class Ref {
+class State {
   /**
    * Creates an instance of Ref.
    * @param {*} initial - The initial value of the reference.
@@ -58,17 +83,7 @@ class Ref {
    * @returns {*} The current value of the reference.
    */
   get $() {
-    if (!isNull(update)) {
-      let dep = deps.get(this);
-
-      if (isUndefined(dep)) {
-        dep = new Deps();
-        deps.set(this, dep);
-      }
-
-      dep.a(update);
-    }
-
+    get(this);
     return this.v;
   }
 
@@ -78,10 +93,7 @@ class Ref {
    */
   set $(val) {
     this.v = val;
-    const dep = deps.get(this);
-    if (!isUndefined(dep)) {
-      dep.n(this);
-    }
+    set(this);
   }
 }
 
@@ -90,8 +102,8 @@ class Ref {
  * @param {*} initial - The initial value of the reference.
  * @returns {Ref} A reactive reference.
  */
-export function ref(initial = null) {
-  return new Ref(initial);
+export function state(initial = null) {
+  return new State(initial);
 }
 
 /**
@@ -111,10 +123,7 @@ class Computed {
       const value = this.cb();
       if (value !== this.cv) {
         this.cv = value;
-        const dep = deps.get(this);
-        if (!isUndefined(dep)) {
-          dep.n(this);
-        }
+        set(this);
       }
     };
   }
@@ -124,16 +133,7 @@ class Computed {
    * @returns {*} The computed value.
    */
   get $() {
-    if (!isNull(update)) {
-      let dep = deps.get(this);
-
-      if (isUndefined(dep)) {
-        dep = new Deps();
-        deps.set(this, dep);
-      }
-
-      dep.a(update);
-    }
+    get(this);
 
     if (!this.c) {
       const oldUpdate = update;
@@ -151,91 +151,87 @@ class Computed {
  * Creates a Computed instance with the given callback function.
  * @param {Function} callback - The callback function used to derive the computed value.
  * @returns {Computed} A Computed instance.
- * @throws {Renit} Throws an error if the argument is not a function.
  */
 export function computed(callback) {
-  if (DEV) {
-    if (!isFunction(callback)) throw new Renit("'callback' argument must be a function");
-  }
   return new Computed(callback);
 }
 
 /**
- * Handler object for reactive proxies.
+ * Registers a property of an object for reactive updates.
+ * @param {Object} obj - The object containing the property.
+ * @param {string} key - The key of the property to register.
  */
-const reactiveHandler = {
-  /**
-   * Getter for reactive proxies.
-   * @param {Object} obj - The target object.
-   * @param {string} prop - The property being accessed.
-   * @returns {*} The value of the property.
-   */
-  get(obj, prop) {
-    if (!isNull(update)) {
-      let dep = deps.get(obj);
-
-      if (isUndefined(dep)) {
-        dep = new Deps();
-        deps.set(obj, dep);
-      }
-
-      dep.a(update);
-    }
-
-    return obj[prop];
-  },
-
-  /**
-   * Setter for reactive proxies.
-   * @param {Object} obj - The target object.
-   * @param {string} prop - The property being set.
-   * @param {*} value - The value to set.
-   * @returns {boolean} True if successful.
-   */
-  set(obj, prop, value) {
-    if (isObject(value)) {
-      obj[prop] = reactive(value);
-    } else {
-      obj[prop] = value;
-    }
-    const dep = deps.get(obj);
-    if (!isUndefined(dep)) {
-      dep.n(obj);
-    }
-    return true;
-  },
-
-  /**
-   * Handler for deleting properties from reactive proxies.
-   * @param {Object} obj - The target object.
-   * @param {string} prop - The property to delete.
-   * @returns {boolean} True if successful.
-   */
-  deleteProperty(obj, prop) {
-    if (hasOwn(obj, prop)) {
-      delete obj[prop];
-      const dep = deps.get(obj);
-      if (!isUndefined(dep)) {
-        dep.n(obj);
-      }
-    }
-    return true;
-  },
-};
+function stateObjectRegister(obj, key) {
+  let value = obj[key];
+  Object.defineProperty(obj, key, {
+    configurable: true,
+    enumerable: true,
+    get() {
+      get(obj);
+      return value;
+    },
+    set(val) {
+      value = val;
+      set(obj);
+    },
+  });
+}
 
 /**
- * Creates a reactive proxy for the given object.
- * @param {Object} obj - The object to make reactive.
- * @returns {Object} A reactive proxy for the object.
+ * Handles the reactivity of an object by registering its properties for reactive updates.
+ * @param {Object} obj - The object to handle reactivity for.
+ * @returns {Object} - The same object with reactive properties.
  */
-export function reactive(obj) {
-  const cln = clone(obj);
-  for (const key in cln) {
-    if (hasOwn(cln, key) && isObject(cln[key])) {
-      cln[key] = reactive(cln[key]);
+function stateObjectHandler(obj) {
+  for (const key in obj) {
+    if (hasOwn(obj, key)) {
+      stateObjectRegister(obj, key);
     }
   }
-  return new Proxy(cln, reactiveHandler);
+  return obj;
+}
+
+/**
+ * Creates a reactive from the given object.
+ * @param {Object} obj - The object to make reactive.
+ * @returns {Object} A reactive object.
+ */
+export function stateObject(obj) {
+  for (const key in obj) {
+    if (hasOwn(obj, key) && isObject(obj[key])) {
+      obj[key] = stateObject(obj[key]);
+    }
+  }
+  return stateObjectHandler(obj);
+}
+
+/**
+ * Represents a reactive array state.
+ * Extends the State class.
+ */
+class StateArray extends State {}
+
+/**
+ * Adds array methods to the StateArray prototype.
+ * These methods are delegated to the internal array value.
+ */
+each(name => {
+  StateArray.prototype[name] = function () {
+    const native = Array.prototype[name].apply(this.v, arguments);
+    set(this);
+    if (!isUndefined(native)) {
+      return native;
+    }
+  };
+}, Object.getOwnPropertyNames(Array.prototype));
+
+/**
+ * Creates a reactive reference with the given array.
+ * @param {*} arr - The array of the reference.
+ * @returns {StateArray} A reactive reference.
+ */
+export function stateArray(arr) {
+  return new StateArray(arr);
 }
 
 /**
@@ -243,9 +239,6 @@ export function reactive(obj) {
  * @param {Function} callback - The callback function to run.
  */
 export function effect(callback) {
-  if (DEV) {
-    if (!isFunction(callback)) throw new Renit("'callback' argument must be a function");
-  }
   const oldUpdate = update;
   update = callback;
   callback();
@@ -260,12 +253,6 @@ export function effect(callback) {
  * @returns {Function} - A function to unsubscribe from the watch.
  */
 export function watch(what, callback, deep = false) {
-  if (DEV) {
-    if (!isFunction(what)) throw new Renit("'what' argument must be a function");
-    if (!isFunction(callback)) throw new Renit("'callback' argument must be a function");
-    if (!isBoolean(deep)) throw new Renit("'deep' argument must be a boolean");
-  }
-
   const oldUpdate = update;
 
   // Flag to track if the watch has been unsubscribed
@@ -341,5 +328,23 @@ function deepObject(obj) {
     if (isObject(obj[key])) {
       deepObject(obj[key]); // Recursively traverse child objects
     }
+  }
+}
+
+/**
+ * Creates a new reactive store.
+ * If the initial value is an array, it creates a StateArray.
+ * If the initial value is an object, it creates a StateObject.
+ * Otherwise, it creates a reactive state.
+ * @param {any} initial - The initial value of the store.
+ * @returns {StateArray|StateObject|State} - The reactive store.
+ */
+export function store(initial) {
+  if (isArray(initial)) {
+    return stateArray(initial);
+  } else if (isObject(initial)) {
+    return stateObject(initial);
+  } else {
+    return state(initial);
   }
 }
