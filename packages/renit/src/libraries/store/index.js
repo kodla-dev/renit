@@ -192,17 +192,27 @@ function stateObjectHandler(obj) {
 }
 
 /**
+ * Creates a reactive state object from the provided object.
+ * @param {Object} obj - The object to create a reactive state object from.
+ * @returns {Object} - The reactive state object.
+ */
+function stateObjectCreate(obj) {
+  for (const key in obj) {
+    if (hasOwn(obj, key) && isObject(obj[key])) {
+      obj[key] = stateObjectCreate(obj[key]);
+    }
+  }
+  return stateObjectHandler(obj);
+}
+
+/**
  * Creates a reactive from the given object.
  * @param {Object} obj - The object to make reactive.
  * @returns {Object} A reactive object.
  */
 export function stateObject(obj) {
-  for (const key in obj) {
-    if (hasOwn(obj, key) && isObject(obj[key])) {
-      obj[key] = stateObject(obj[key]);
-    }
-  }
-  return stateObjectHandler(obj);
+  obj = { $: obj };
+  return stateObjectCreate(obj);
 }
 
 /**
