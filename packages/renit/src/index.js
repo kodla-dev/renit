@@ -4,4 +4,3 @@
   The small framework with powerful features
   --------------------------------------------------------------------------------------------------
 */
-export { render } from "./core/internal/index.js";

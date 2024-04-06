@@ -1,13 +1,7 @@
-import { each } from '../../libraries/collect/index.js';
-import { isElement, isNull, isText } from '../../libraries/is/index.js';
-import { size } from '../../libraries/math/index.js';
-import { RAW_EMPTY, RAW_TEMPLATE } from '../define.js';
+import { RAW_EMPTY } from '../define.js';
 
 // Reference to the document object
 export const Document = document;
-
-// Object to cache templates
-let templates = {};
 
 /**
  * Creates a new element with the specified tag name.
@@ -99,7 +93,7 @@ export function replaceWith(element, target) {
  * @returns {TreeWalker} A tree walker object.
  */
 export function createTreeWalker(root, whatToShow) {
-  return document.createTreeWalker(root, whatToShow);
+  return Document.createTreeWalker(root, whatToShow);
 }
 
 /**
@@ -147,67 +141,43 @@ export function remove(node) {
 }
 
 /**
- * Creates a document fragment from the given HTML content.
- * @param {string} html The HTML content to create the fragment from.
- * @returns {DocumentFragment | Element} The document fragment containing the HTML content.
+ * Appends a node as a child to the specified element.
+ * @param {HTMLElement} element The element to which the node will be appended.
+ * @param {Node} node The node to append as a child to the element.
  */
-export function fragment(html) {
-  let content = templates[html];
-  if (!content) {
-    let template = innerElement(RAW_TEMPLATE, html);
-    content = template.content;
-    if (size(childNodes(content)) == 1) {
-      content = firstChild(content);
-    }
-    templates[html] = content;
-    return content;
-  }
-  return content.cloneNode(true);
+export function appendChild(element, node) {
+  element.appendChild(node);
 }
 
 /**
- * Replaces text nodes and elements in the HTML with anchor nodes and returns a list of references.
- * @param {HTMLElement} html The HTML element to process.
- * @returns {Array} An array of anchor nodes representing the references.
+ * Retrieves the parent node of the specified element.
+ * @param {HTMLElement} element The element whose parent node will be retrieved.
+ * @returns {Node} The parent node of the specified element.
  */
-export function references(html) {
-  // Create a tree walker to traverse the HTML.
-  const walker = createTreeWalker(html, 128);
+export function parentNode(element) {
+  return element.parentNode;
+}
 
-  // Initialize arrays to store nodes to replace and references.
-  const replaceNodes = [];
-  const references = [];
+/**
+ * Inserts a node before a specific child node within a parent element.
+ * @param {HTMLElement|Node} element The parent element where the node will be inserted.
+ * @param {Node} node The node to insert.
+ * @param {Node} child The child node before which the new node will be inserted.
+ */
+export function insertBefore(element, node, child) {
+  element.insertBefore(node, child);
+}
 
-  // Traverse the tree walker.
-  while (nextNode(walker)) {
-    const node = currentNode(walker);
-    const next = nextSibling(node);
-    const previous = previousSibling(node);
+/**
+ * Clones a node and optionally its descendants.
+ * @param {Node} node The node to clone.
+ * @param {boolean} [deep=true] A Boolean value indicating whether the descendants of the node should also be cloned.
+ * @returns {Node} The cloned node.
+ */
+export function cloneNode(node, deep = true) {
+  return node.cloneNode(deep);
+}
 
-    // If the next and previous siblings are text nodes or null, replace the current node with an anchor.
-    if ((isNull(next) || isText(next)) && (isNull(previous) || isText(previous))) {
-      replaceNodes.push([node, createAnchor()]);
-    }
-
-    // If the next sibling is an element, replace the current node with the next sibling.
-    else if (isElement(next)) {
-      replaceNodes.push([node, next]);
-    }
-  }
-
-  // Replace nodes and build the list of references.
-  each(e => {
-    const el = e[0];
-    const target = e[1];
-
-    if (isText(target)) {
-      replaceWith(el, target);
-    } else if (isElement(target)) {
-      remove(el);
-    }
-
-    references.push(target);
-  }, replaceNodes);
-
-  return references;
+export function replaceChild(element, node, child) {
+  element.replaceChild(node, child);
 }
