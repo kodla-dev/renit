@@ -551,12 +551,12 @@ describe('merge', () => {
   });
 
   it('merge:object', () => {
-    const seed = { age: 32 };
-    const collect = { name: 'Nikola', last: 'Tesla' };
+    const seed = { name: 'Nikola', last: 'Tesla' };
+    const collect = { age: 32 };
     const merged = merge(seed, collect);
     expect(merged).toEqual({ name: 'Nikola', last: 'Tesla', age: 32 });
-    expect(seed).toEqual({ age: 32 });
-    expect(collect).toEqual({ name: 'Nikola', last: 'Tesla' });
+    expect(collect).toEqual({ age: 32 });
+    expect(seed).toEqual({ name: 'Nikola', last: 'Tesla' });
   });
 
   it('merge:promise', async () => {

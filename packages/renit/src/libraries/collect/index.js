@@ -232,11 +232,34 @@ export function merge(seed, collect) {
   if (isArray(seed) && isArray(collect)) return collect.concat(seed);
 
   // prettier-ignore
-  if (isObject(seed) && isObject(collect)) return Object.assign(clone(collect), seed);
+  if (isObject(seed) && isObject(collect)) return mergeDeepObject(clone(seed), clone(collect));
 
   if (isPromise(seed)) return seed.then(s => merge(s, collect));
   if (isPromise(collect)) return collect.then(c => merge(seed, c));
   if (DEV) throw new Renit("Type error in 'merge' function");
+}
+
+/**
+ * Recursively merges objects deeply.
+ * @param {Object} seed - The initial object.
+ * @param  {...Object} collect - Objects to merge into the seed.
+ * @returns {Object} - The merged object.
+ */
+function mergeDeepObject(seed, ...collect) {
+  if (!size(collect)) return seed;
+  const source = collect.shift();
+  if (isObject(seed) && isObject(source)) {
+    each(key => {
+      if (isObject(source[key])) {
+        if (!seed[key]) Object.assign(seed, { [key]: {} });
+        mergeDeepObject(seed[key], source[key]);
+      } else {
+        Object.assign(seed, { [key]: source[key] });
+      }
+    }, source);
+  }
+
+  return mergeDeepObject(seed, ...collect);
 }
 
 /**
@@ -497,6 +520,13 @@ export function diff(values, type, collect) {
   if (DEV) throw new Renit("Type error in 'diff' function");
 }
 
+/**
+ * Determines whether the collection contains a given item
+ * @param {string|Function} key - The key to check or a function to apply to each item in the collection.
+ * @param {*} value - The value to match (optional).
+ * @param {Array|Object} collect - The collection to search.
+ * @returns {boolean|Function} - Returns true if the condition is met, otherwise false.
+ */
 export function some(key, value, collect) {
   if (isUndefined(collect)) {
     if (isUndefined(value)) {
@@ -512,6 +542,7 @@ export function some(key, value, collect) {
 
   if (!isUndefined(value)) {
     if (isArray(collect)) {
+      // Check if the key-value pair exists in an array of objects
       return (
         pipe(
           collect,
@@ -520,11 +551,12 @@ export function some(key, value, collect) {
         ) > 0
       );
     }
-
+    // Check if the key-value pair exists in an object
     return !isUndefined(collect[key]) && collect[key] === value;
   }
 
   if (isFunction(key)) {
+    // Check if any item in the collection satisfies the condition provided by the function
     return (
       pipe(
         collect,
@@ -536,9 +568,11 @@ export function some(key, value, collect) {
   }
 
   if (isArray(collect)) {
+    // Check if a value exists in an array
     return collect.indexOf(key) !== -1;
   }
 
+  // Check if a key exists in an object
   const keysAndValues = values(collect);
   push(keys(collect), 1, keysAndValues);
   return keysAndValues.indexOf(key) !== -1;
