@@ -1,13 +1,14 @@
 import { push } from '../../collect/index.js';
-import { isNull } from '../../is/index.js';
+import { isEmpty, isNull } from '../../is/index.js';
 import { size } from '../../math/index.js';
 import { AttributeNode, CommentNode, ElementNode, TextNode } from '../ast.js';
 import { RGX_HTML_TAG_ATTRIBUTES, RGX_HTML_TAG_NAME } from '../utils.js';
 
 /**
- * Parses an HTML tag
- * @param {string} tag
- * @returns
+ * Parses an HTML tag.
+ * @param {string} tag - The HTML tag to parse.
+ * @param {Object} options - Options object.
+ * @returns {Object} - The parsed HTML tag represented as a node.
  */
 export function parseHtmlTag(tag, options) {
   // Create a new ElementNode to represent the parsed tag.
@@ -52,10 +53,10 @@ export function parseHtmlTag(tag, options) {
       if (attr.indexOf('=') > -1) {
         temp = attr.split('=');
       }
-      push(AttributeNode(temp[0], temp[1]), node.attributes);
+      attribute(temp[0], temp[1], node, options);
       rgxAttr.lastIndex--;
     } else if (tree[2]) {
-      push(AttributeNode(tree[2], tree[3].trim().substring(1, size(tree[3]) - 1)), node.attributes);
+      attribute(tree[2], tree[3].trim().substring(1, size(tree[3]) - 1), node, options);
     }
   }
 
@@ -68,4 +69,57 @@ export function parseHtmlTag(tag, options) {
 
   // Return the parsed ElementNode.
   return node;
+}
+
+/**
+ * Sets an attribute on a node with optional affixing.
+ * @param {string} name - Attribute name.
+ * @param {string} value - Attribute value.
+ * @param {Object} node - HTML node.
+ * @param {Object} options - Options object.
+ */
+function attribute(name, value, node, options) {
+  // If value is falsy, set it to undefined
+  if (!value) value = undefined;
+
+  // If affixing is enabled in options, affix the attribute name
+  if (options.attribute.affix) {
+    const af = attributeAffix(name, options);
+    push(AttributeNode(af.name, value, af.prefix, af.suffix), node.attributes);
+  } else {
+    // Otherwise, set the attribute name as is
+    push(AttributeNode(name, value), node.attributes);
+  }
+}
+
+/**
+ * Checks and affixes an attribute name with a prefix or suffix based on options.
+ * @param {string} name - Attribute name.
+ * @param {Object} options - Options object.
+ * @returns {Object} - Affixed attribute name object.
+ */
+function attributeAffix(name, options) {
+  // If the attribute name doesn't match the pattern, return it as is
+  if (!options.rgx.checkAttrAffix.test(name)) return { name };
+  const found = [];
+  const matches = name.matchAll(options.rgx.attributeAffix);
+
+  // Extract prefix and name from matches
+  for (const match of matches) {
+    found.push({ prefix: match[1], name: match[2] });
+  }
+
+  const first = found[0];
+
+  // If no matches, return the name as is
+  if (!first) return { name };
+
+  found.shift();
+
+  // Construct and return the affixed attribute name object
+  return {
+    prefix: !isEmpty(first.prefix) ? first.prefix : undefined,
+    name: first.name,
+    suffix: !isEmpty(found) ? found : undefined,
+  };
 }

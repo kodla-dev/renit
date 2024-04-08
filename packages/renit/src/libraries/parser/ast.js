@@ -34,6 +34,6 @@ export function ElementNode(name = '', voidElement = false, attributes = [], chi
  * @param {string} value
  * @returns {Object}
  */
-export function AttributeNode(name, value) {
-  return { type: 'Attribute', name, value };
+export function AttributeNode(name, value, prefix, suffix) {
+  return { type: 'Attribute', prefix, name, suffix, value };
 }

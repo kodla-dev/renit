@@ -115,6 +115,3 @@ export function parseHtml(program, options = {}) {
   // Return the AST.
   return ast;
 }
-
-// const ast = parseHtml(/*html*/ ``);
-// console.log(JSON.stringify(ast, null, 2));
