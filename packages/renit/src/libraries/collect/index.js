@@ -232,11 +232,31 @@ export function merge(seed, collect) {
   if (isArray(seed) && isArray(collect)) return collect.concat(seed);
 
   // prettier-ignore
-  if (isObject(seed) && isObject(collect)) return mergeDeepObject(clone(seed), clone(collect));
+  if (isObject(seed) && isObject(collect)) return Object.assign(clone(seed), clone(collect));
 
   if (isPromise(seed)) return seed.then(s => merge(s, collect));
   if (isPromise(collect)) return collect.then(c => merge(seed, c));
   if (DEV) throw new Renit("Type error in 'merge' function");
+}
+
+/**
+ * Deeply merges two values together.
+ *
+ * @param {Array|Object|Promise} seed - The initial value or partial result of the merge.
+ * @param {Array|Object|Promise} collect - The value to merge with the seed.
+ * @returns {Array|Object|Promise} The merged result.
+ * @throws {Renit} - Throws a Renit error if development mode.
+ */
+export function mergeDeep(seed, collect) {
+  if (isUndefined(collect)) return collect => mergeDeep(seed, collect);
+  if (isArray(seed) && isArray(collect)) return collect.concat(seed);
+
+  // prettier-ignore
+  if (isObject(seed) && isObject(collect)) return mergeDeepObject(clone(seed), clone(collect));
+
+  if (isPromise(seed)) return seed.then(s => mergeDeep(s, collect));
+  if (isPromise(collect)) return collect.then(c => mergeDeep(seed, c));
+  if (DEV) throw new Renit("Type error in 'mergeDeep' function");
 }
 
 /**
