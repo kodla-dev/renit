@@ -178,6 +178,32 @@ export function cloneNode(node, deep = true) {
   return node.cloneNode(deep);
 }
 
+/**
+ * Replaces a child node of an element with another node.
+ * @param {Node} element - The parent element.
+ * @param {Node} node - The new node to replace the existing child.
+ * @param {Node} child - The existing child node to be replaced.
+ */
 export function replaceChild(element, node, child) {
   element.replaceChild(node, child);
+}
+
+/**
+ * Sets an attribute on an element.
+ * @param {Element} element - The element to set the attribute on.
+ * @param {string} qualifiedName - The qualified name of the attribute.
+ * @param {string} value - The value to set for the attribute.
+ */
+export function setAttribute(element, qualifiedName, value) {
+  element.setAttribute(qualifiedName, value);
+}
+
+/**
+ * Adds an event listener to an element.
+ * @param {Element} element - The element to add the event listener to.
+ * @param {string} type - The type of event to listen for.
+ * @param {EventListenerOrEventListenerObject} listener - The listener function or object to call when the event occurs.
+ */
+export function addEventListener(element, type, listener) {
+  element.addEventListener(type, listener);
 }

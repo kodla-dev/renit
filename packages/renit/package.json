@@ -13,8 +13,8 @@
       "default": "./src/index.js",
       "types": "./type/index.d.ts"
     },
-    "./internal": {
-      "default": "./src/core/internal/index.js",
+    "./core": {
+      "default": "./src/core/index.js",
       "types": "./type/index.d.ts"
     },
     "./helper": {

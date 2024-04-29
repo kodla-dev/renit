@@ -131,6 +131,36 @@ export const RAW_EMPTY = '';
 export const RAW_TEMPLATE = 'template';
 
 /**
+ * Constant representing the string 'click'
+ * @type {string}
+ */
+export const RAW_CLICK = 'click';
+
+/**
+ * Constant representing the string 'value'
+ * @type {string}
+ */
+export const RAW_VALUE = 'value';
+
+/**
+ * Constant representing the string 'input'
+ * @type {string}
+ */
+export const RAW_INPUT = 'input';
+
+/**
+ * Constant representing the string 'checked'
+ * @type {string}
+ */
+export const RAW_CHECKED = 'checked';
+
+/**
+ * Constant representing the string 'textContent'
+ * @type {string}
+ */
+export const RAW_TEXTCONTENT = 'textContent';
+
+/**
  * Constant representing the DOM reference selector
  * @type {string}
  */
