@@ -1,4 +1,4 @@
-import { merge } from '../collect/index.js';
+import { merge, mergeDeep } from '../collect/index.js';
 import { isEmpty, isNil } from '../is/index.js';
 
 /**
@@ -78,7 +78,7 @@ export function parseHtmlOptions(options) {
   };
 
   // Merge provided options with default options
-  options = merge(opts, options);
+  options = mergeDeep(opts, options);
   const tags = options.tags;
   const rgx = options.rgx;
   const attr = options.attribute;
