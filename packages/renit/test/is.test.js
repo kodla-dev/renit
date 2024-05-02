@@ -5,6 +5,7 @@ import {
   isAsyncIterable,
   isClass,
   isCollect,
+  isEmpty,
   isEqual,
   isIterable,
   isNil,
@@ -211,6 +212,41 @@ describe('isType', () => {
   for (let [index, [key, value]] of entries.entries()) {
     it(key, () => {
       expect(isType(value)).toEqual(typeHelper(key));
+    });
+  }
+});
+
+describe('isEmpty', () => {
+  for (let [index, [key, value]] of entries.entries()) {
+    it(key, async () => {
+      if (['promise', 'promiseResolve'].includes(key)) {
+        if (key == 'promise') {
+          expect(await isEmpty(value)).toBe(true);
+        } else if (key == 'promiseResolve') {
+          expect(await isEmpty(value)).toBe(false);
+        }
+        return;
+      }
+      let fill = false;
+      if (
+        // prettier-multiline-arrays-next-line-pattern: 4
+        [
+          'number', 'numberObject', 'numberObjectEmpty', 'numberObjectNew',
+          'float', 'stringEmpty', 'stringObjectEmpty', 'stringObjectNew',
+          'boolean', 'booleanObject', 'arrayEmpty', 'objectEmpty',
+          'function', 'functionAsync', 'map', 'setEmpty',
+          'iterableAsync', 'true', 'false', 'null',
+          'undefined', 'class', 'objectCreateNull', 'objectCreateEmpty',
+          'regex', 'regexObject', 'symbolEmpty', 'error',
+          'numberZero', 'numberNegative', 'promise', 'mathPi',
+          'nan', 'nanNumber', 'nanZero', 'maxValue',
+          'infinity', 'weakMap', 'date', 'dateGetTime',
+          'void0', 'maxSafeInteger', 'numberOdd', 'numberEven',
+        ].includes(key)
+      ) {
+        fill = true;
+      }
+      expect(isEmpty(value)).toBe(fill);
     });
   }
 });
