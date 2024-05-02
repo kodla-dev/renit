@@ -1,4 +1,4 @@
-import { RAW_CHECKED, RAW_CLICK, RAW_INPUT, RAW_TEXTCONTENT, RAW_VALUE } from '../define.js';
+import { RAW_CHECKED, RAW_CLICK, RAW_INPUT, RAW_TEXTCONTENT, RAW_VALUE } from '../../define.js';
 
 /**
  * Represents the 'checked' property name.

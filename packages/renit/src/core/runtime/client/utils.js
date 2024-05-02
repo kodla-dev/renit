@@ -1,6 +1,6 @@
-import { clone } from '../../helpers/index.js';
-import { each } from '../../libraries/collect/index.js';
-import { isArray, isElement, isEqual, isNull, isObject, isText } from '../../libraries/is/index.js';
+import { clone } from '../../../helpers/index.js';
+import { each } from '../../../libraries/collect/index.js';
+import { isArray, isElement, isEqual, isNull, isObject, isText } from '../../../libraries/is/index.js';
 import {
   appendChild,
   createAnchor,

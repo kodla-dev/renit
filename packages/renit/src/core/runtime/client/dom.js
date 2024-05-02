@@ -1,4 +1,4 @@
-import { RAW_EMPTY } from '../define.js';
+import { RAW_EMPTY } from '../../define.js';
 
 // Reference to the document object
 export const Document = document;

@@ -1,4 +1,4 @@
-import { isUndefined } from '../../libraries/is/index.js';
+import { isUndefined } from '../../../libraries/is/index.js';
 import { digest, mount, tick } from './utils.js';
 
 export function component(init, props) {

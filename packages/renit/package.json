@@ -19,8 +19,8 @@
       "default": "./src/index.js",
       "types": "./type/index.d.ts"
     },
-    "./core": {
-      "default": "./src/core/index.js",
+    "./runtime": {
+      "default": "./src/core/runtime/index.js",
       "types": "./type/index.d.ts"
     },
     "./helper": {

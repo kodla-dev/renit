@@ -1,4 +1,4 @@
-import { isFunction } from '../../libraries/is/index.js';
+import { isFunction } from '../../../libraries/is/index.js';
 import { _input, _textContent } from './const.js';
 import { addEventListener, setAttribute } from './dom.js';
 import { reactive } from './reactive.js';

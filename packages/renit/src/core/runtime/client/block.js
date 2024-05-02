@@ -1,5 +1,5 @@
-import { size } from '../../libraries/math/index.js';
-import { RAW_TEMPLATE } from '../define.js';
+import { size } from '../../../libraries/math/index.js';
+import { RAW_TEMPLATE } from '../../define.js';
 import { childNodes, firstChild, innerElement } from './dom.js';
 
 /**
