@@ -786,4 +786,38 @@ describe('some', () => {
     });
     expect(result2).toBe(false);
   });
+
+  it('some:promise:array', async () => {
+    const result = await some(3, Promise.resolve([1, 2, 3]));
+    expect(result).toBe(true);
+  });
+
+  it('some:promise:key', async () => {
+    const result = await some(Promise.resolve(3), Promise.resolve([1, 2, 3]));
+    expect(result).toBe(true);
+  });
+
+  it('some:promise:object', async () => {
+    const result = await some(
+      'name',
+      'Pisagor',
+      Promise.resolve({
+        name: 'Theano',
+        year: 570,
+      })
+    );
+    expect(result).toBe(false);
+  });
+
+  it('some:promise:object:all', async () => {
+    const result = await some(
+      Promise.resolve('name'),
+      Promise.resolve('Pisagor'),
+      Promise.resolve({
+        name: 'Theano',
+        year: 570,
+      })
+    );
+    expect(result).toBe(false);
+  });
 });

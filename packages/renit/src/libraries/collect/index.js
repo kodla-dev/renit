@@ -553,12 +553,18 @@ export function some(key, value, collect) {
       return collect => some(key, collect);
     }
 
+    if (isPromise(value)) return value.then(v => some(key, void 0, v));
+
     if (!isCollect(value)) {
       return collect => some(key, value, collect);
     }
 
     return some(key, void 0, value);
   }
+
+  if (isPromise(key)) return key.then(k => some(k, value, collect));
+  if (isPromise(value)) return value.then(v => some(key, v, collect));
+  if (isPromise(collect)) return collect.then(c => some(key, value, c));
 
   if (!isUndefined(value)) {
     if (isArray(collect)) {
