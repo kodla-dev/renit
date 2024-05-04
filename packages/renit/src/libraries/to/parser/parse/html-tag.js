@@ -1,6 +1,6 @@
-import { push } from '../../collect/index.js';
-import { isEmpty, isNull } from '../../is/index.js';
-import { size } from '../../math/index.js';
+import { push } from '../../../collect/index.js';
+import { isEmpty, isNull } from '../../../is/index.js';
+import { size } from '../../../math/index.js';
 import { AttributeNode, CommentNode, ElementNode, TextNode } from '../ast.js';
 import { RGX_HTML_TAG_ATTRIBUTES, RGX_HTML_TAG_NAME } from '../utils.js';
 

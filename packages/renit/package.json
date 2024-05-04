@@ -43,10 +43,6 @@
       "default": "./src/libraries/math/index.js",
       "types": "./type/index.d.ts"
     },
-    "./parser": {
-      "default": "./src/libraries/parser/index.js",
-      "types": "./type/index.d.ts"
-    },
     "./store": {
       "default": "./src/libraries/store/index.js",
       "types": "./type/index.d.ts"

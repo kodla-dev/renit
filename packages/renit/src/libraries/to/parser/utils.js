@@ -1,5 +1,5 @@
-import { merge, mergeDeep } from '../collect/index.js';
-import { isEmpty, isNil } from '../is/index.js';
+import { merge, mergeDeep } from '../../collect/index.js';
+import { isEmpty, isNil } from '../../is/index.js';
 
 /**
  * Array containing names of HTML void tags.

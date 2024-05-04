@@ -30,3 +30,5 @@ export function toArray(collect) {
     return [collect];
   }
 }
+
+export { htmlToAst } from './parser/parse/html.js';

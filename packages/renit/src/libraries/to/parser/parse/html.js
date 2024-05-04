@@ -1,7 +1,7 @@
-import { RGX_WHITESPACE } from '../../../core/define.js';
-import { push, some } from '../../collect/index.js';
-import { isArray, isEqual } from '../../is/index.js';
-import { size } from '../../math/index.js';
+import { RGX_WHITESPACE } from '../../../../core/define.js';
+import { push, some } from '../../../collect/index.js';
+import { isArray, isEqual } from '../../../is/index.js';
+import { size } from '../../../math/index.js';
 import { TextNode } from '../ast.js';
 import { parseHtmlOptions } from '../utils.js';
 import { parseHtmlTag } from './html-tag.js';
@@ -11,7 +11,7 @@ import { parseHtmlTag } from './html-tag.js';
  * @param {string} program The HTML program to parse.
  * @returns {Array} The abstract syntax tree representing the HTML structure.
  */
-export function parseHtml(program, options = {}) {
+export function htmlToAst(program, options = {}) {
   // Merge the provided options with default options
   options = parseHtmlOptions(options);
 
