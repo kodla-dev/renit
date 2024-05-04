@@ -6,13 +6,26 @@
 */
 
 import { values } from '../collect/index.js';
-import { isArray, isObject, isUndefined } from '../is/index.js';
+import { isArray, isCollect, isObject, isUndefined } from '../is/index.js';
 
 /**
  * Converts the specified collection to a string representation.
  *
+ * @param {*} collect - The value to convert to a string.
+ * @returns {string|function} - Returns the string representation of the collection.
+ */
+export function toString(collect) {
+  if (isUndefined(collect)) return collect => toString(collect);
+  if (isCollect(collect)) return collect.toString();
+  return `${collect}`;
+}
+
+/**
+ * Converts the specified collection to a string representation.
+ * using JSON.stringify
+ *
  * @param {*} [collect] - The collection to convert to a string.
- * @returns {*} Returns the string representation of the collection.
+ * @returns {string|function} Returns the string representation of the collection.
  */
 export function toStringify(collect) {
   if (isUndefined(collect)) return collect => toStringify(collect);
@@ -20,6 +33,12 @@ export function toStringify(collect) {
   return `${collect}`;
 }
 
+/**
+ * Converts a value into an array.
+ *
+ * @param {*} collect - The value to convert into an array.
+ * @returns {Array|function} - The resulting array or a partially applied function.
+ */
 export function toArray(collect) {
   if (isUndefined(collect)) return collect => toArray(collect);
   if (isArray(collect)) {
