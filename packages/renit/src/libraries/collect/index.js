@@ -12,6 +12,7 @@ import {
   isArray,
   isArrayLike,
   isAsync,
+  isAsyncIterable,
   isCollect,
   isEmpty,
   isEqual,
@@ -293,6 +294,22 @@ function mergeDeepObject(seed, ...collect) {
 export function map(fn, collect) {
   if (isUndefined(collect)) return collect => map(fn, collect);
   if (isArray(collect)) return collect.map(fn);
+  if (isAsyncIterable(collect)) {
+    const iterator = collect[Symbol.asyncIterator]();
+    return {
+      async next(concurrent) {
+        const { done, value } = await iterator.next(concurrent);
+        if (done) return { done, value };
+        return {
+          done: false,
+          value: await fn(value),
+        };
+      },
+      [Symbol.asyncIterator]() {
+        return this;
+      },
+    };
+  }
   if (isObject(collect)) {
     const collection = {};
     each((key, value) => push(key, fn(value, key), collection), collect);
