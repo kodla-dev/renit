@@ -75,8 +75,15 @@ export function htmlToAst(program, options = {}) {
         !isEqual(nextChar, '<') &&
         isArray(current.children)
       ) {
-        const text = program.slice(start, program.indexOf('<', start));
-        push(textNode(text), current.children);
+        let text = program.slice(start, program.indexOf('<', start));
+        if (!options.transform.whitespace) {
+          if (!RGX_WHITESPACE.test(text)) {
+            if (options.transform.trim) text = text.trim();
+            push(textNode(text), current.children);
+          }
+        } else {
+          push(textNode(text), current.children);
+        }
       }
 
       // If it's the root level, add the current element to the AST.

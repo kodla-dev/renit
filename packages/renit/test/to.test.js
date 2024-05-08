@@ -281,7 +281,66 @@ describe('htmlToAst', () => {
     expect(ast).toEqual(result);
   });
 
-  // it('should remove optional whitespace', () => {});
+  it('should remove optional whitespace', () => {
+    const ast = htmlToAst(
+      `
+      <div>
+        <p>  renit <span> ! </span>  </p>
+        <script>
+          console.log();
+        </script>
+      </div>
+    `,
+      { transform: { whitespace: false, trim: true } }
+    );
+    const result = [
+      {
+        type: 'element',
+        name: 'div',
+        voidElement: false,
+        attributes: [],
+        children: [
+          {
+            type: 'element',
+            name: 'p',
+            voidElement: false,
+            attributes: [],
+            children: [
+              {
+                type: 'text',
+                content: 'renit',
+              },
+              {
+                type: 'element',
+                name: 'span',
+                voidElement: false,
+                attributes: [],
+                children: [
+                  {
+                    type: 'text',
+                    content: '!',
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            type: 'element',
+            name: 'script',
+            voidElement: false,
+            attributes: [],
+            children: [
+              {
+                type: 'text',
+                content: 'console.log();',
+              },
+            ],
+          },
+        ],
+      },
+    ];
+    expect(ast).toEqual(result);
+  });
 
   it('should not parse special HTML tags', () => {
     const ast = htmlToAst(`

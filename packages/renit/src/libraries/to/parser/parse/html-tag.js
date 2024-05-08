@@ -64,7 +64,9 @@ export function parseHtmlTag(tag, options) {
   if (isSpecial) {
     const rgxRaw = new RegExp(options.rgx.special);
     const raw = rgxRaw.exec(tag);
-    push(textNode(raw ? raw.groups.raw : ''), node.children);
+    let text = raw ? raw.groups.raw : '';
+    if (options.transform.trim) text = text.trim();
+    push(textNode(text), node.children);
   }
 
   // Return the parsed elementNode.

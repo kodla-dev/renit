@@ -75,6 +75,10 @@ export function parseHtmlOptions(options) {
       affixList: [':', '@', '\\|'], // List of attribute affixes
       addAffix: [], // Additional attribute affixes to add
     },
+    transform: {
+      whitespace: true, // Flag to preserve or remove whitespace in parsed HTML
+      trim: false, // Flag to trim whitespace from tag content
+    },
   };
 
   // Merge provided options with default options
