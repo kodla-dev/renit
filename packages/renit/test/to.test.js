@@ -132,13 +132,19 @@ describe('htmlToAst', () => {
             name: 'h1',
             voidElement: false,
             attributes: [],
-            children: [{ type: 'Text', content: 'Hello World!' }],
+            children: [{ type: 'text', content: 'Hello World!' }],
           },
           {
             type: 'element',
             name: 'img',
             voidElement: true,
-            attributes: [{ type: 'Attribute', name: 'src', value: 'renit.png' }],
+            attributes: [
+              {
+                type: 'attribute',
+                name: 'src',
+                value: 'renit.png',
+              },
+            ],
             children: [],
           },
         ],
@@ -201,11 +207,12 @@ describe('htmlToAst', () => {
         name: 'div',
         voidElement: false,
         attributes: [
-          { type: 'attribute', prefix: '@', name: 'name', value: 'form' },
+          { type: 'attribute', prefix: '@', name: 'name', suffix: undefined, value: 'form' },
           {
             type: 'attribute',
+            prefix: undefined,
             name: 'class',
-            suffix: [{ prefix: ':', name: 'visible' }],
+            suffix: [{ prefix: ':', name: 'visible', suffix: undefined }],
             value: '{display}',
           },
         ],
@@ -214,7 +221,15 @@ describe('htmlToAst', () => {
             type: 'element',
             name: 'input',
             voidElement: true,
-            attributes: [{ type: 'attribute', prefix: ':', name: 'value', value: '{number}' }],
+            attributes: [
+              {
+                type: 'attribute',
+                prefix: ':',
+                name: 'value',
+                suffix: undefined,
+                value: '{number}',
+              },
+            ],
             children: [],
           },
         ],
@@ -275,11 +290,16 @@ describe('htmlToAst', () => {
         <script lang="ts">
           console.log("<p>not parse</p>")
         </script>
+        <!-- single line comment <p>not parse</p> -->
         <style type="text/css">
           .title {
             content: "<p>not parse</p>"
           }
         </style>
+        <!--
+          multiple line comment
+          <p>not parse</p>
+        -->
       </div>
     `);
     const result = [
@@ -306,6 +326,7 @@ describe('htmlToAst', () => {
               { type: 'text', content: '\n          console.log("<p>not parse</p>")\n        ' },
             ],
           },
+          { type: 'comment', content: ' single line comment <p>not parse</p> ' },
           {
             type: 'element',
             name: 'style',
@@ -318,6 +339,10 @@ describe('htmlToAst', () => {
                   '\n          .title {\n            content: "<p>not parse</p>"\n          }\n        ',
               },
             ],
+          },
+          {
+            type: 'comment',
+            content: '\n          multiple line comment\n          <p>not parse</p>\n        ',
           },
         ],
       },

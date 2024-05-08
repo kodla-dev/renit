@@ -128,6 +128,6 @@ export function generateRgxHtml(tags, affixList) {
     tags: rgx(rgxTags),
     special: rgx(rgxSpecial),
     attributeAffix: rgx(attributeAffix),
-    checkAttrAffix: rgx(checkAttrAffix),
+    checkAttrAffix: new RegExp(checkAttrAffix),
   };
 }
