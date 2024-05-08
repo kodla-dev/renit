@@ -2,7 +2,7 @@ import { RGX_WHITESPACE } from '../../../../core/define.js';
 import { push, some } from '../../../collect/index.js';
 import { isArray, isEqual } from '../../../is/index.js';
 import { size } from '../../../math/index.js';
-import { TextNode } from '../ast.js';
+import { textNode } from '../ast.js';
 import { parseHtmlOptions } from '../utils.js';
 import { parseHtmlTag } from './html-tag.js';
 
@@ -76,7 +76,7 @@ export function htmlToAst(program, options = {}) {
         isArray(current.children)
       ) {
         const text = program.slice(start, program.indexOf('<', start));
-        push(TextNode(text), current.children);
+        push(textNode(text), current.children);
       }
 
       // If it's the root level, add the current element to the AST.
@@ -105,7 +105,7 @@ export function htmlToAst(program, options = {}) {
         }
         if ((end > -1 && level + parent.length >= 0) || content !== ' ') {
           if (parent && isArray(parent)) {
-            push(TextNode(content), parent);
+            push(textNode(content), parent);
           }
         }
       }

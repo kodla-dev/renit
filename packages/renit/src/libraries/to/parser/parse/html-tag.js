@@ -1,7 +1,7 @@
 import { push } from '../../../collect/index.js';
 import { isEmpty, isNull } from '../../../is/index.js';
 import { size } from '../../../math/index.js';
-import { AttributeNode, CommentNode, ElementNode, TextNode } from '../ast.js';
+import { attributeNode, commentNode, elementNode, textNode } from '../ast.js';
 import { RGX_HTML_TAG_ATTRIBUTES, RGX_HTML_TAG_NAME } from '../utils.js';
 
 /**
@@ -11,8 +11,8 @@ import { RGX_HTML_TAG_ATTRIBUTES, RGX_HTML_TAG_NAME } from '../utils.js';
  * @returns {Object} - The parsed HTML tag represented as a node.
  */
 export function parseHtmlTag(tag, options) {
-  // Create a new ElementNode to represent the parsed tag.
-  const node = ElementNode();
+  // Create a new elementNode to represent the parsed tag.
+  const node = elementNode();
 
   // Extract the tag name from the tag using a regular expression.
   const name = tag.match(RGX_HTML_TAG_NAME)[1];
@@ -22,10 +22,10 @@ export function parseHtmlTag(tag, options) {
     node.name = name;
     node.voidElement = options.tags.void.includes(name) || tag.charAt(size(tag) - 2) === '/';
 
-    // If it's a comment node, create a CommentNode with the comment text and return it.
+    // If it's a comment node, create a commentNode with the comment text and return it.
     if (node.name.startsWith('!--')) {
       const endIndex = tag.indexOf('-->');
-      return CommentNode(endIndex !== -1 ? tag.slice(4, endIndex) : '');
+      return commentNode(endIndex !== -1 ? tag.slice(4, endIndex) : '');
     }
   }
 
@@ -64,10 +64,10 @@ export function parseHtmlTag(tag, options) {
   if (isSpecial) {
     const rgxRaw = new RegExp(options.rgx.special);
     const raw = rgxRaw.exec(tag);
-    push(TextNode(raw ? raw.groups.raw : ''), node.children);
+    push(textNode(raw ? raw.groups.raw : ''), node.children);
   }
 
-  // Return the parsed ElementNode.
+  // Return the parsed elementNode.
   return node;
 }
 
@@ -85,10 +85,10 @@ function attribute(name, value, node, options) {
   // If affixing is enabled in options, affix the attribute name
   if (options.attribute.affix) {
     const af = attributeAffix(name, options);
-    push(AttributeNode(af.name, value, af.prefix, af.suffix), node.attributes);
+    push(attributeNode(af.name, value, af.prefix, af.suffix), node.attributes);
   } else {
     // Otherwise, set the attribute name as is
-    push(AttributeNode(name, value), node.attributes);
+    push(attributeNode(name, value), node.attributes);
   }
 }
 

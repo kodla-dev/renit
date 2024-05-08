@@ -86,11 +86,11 @@ describe('htmlToAst', () => {
     const ast = htmlToAst('<h1>Hello World!</h1>');
     const result = [
       {
-        type: 'Element',
+        type: 'element',
         name: 'h1',
         voidElement: false,
         attributes: [],
-        children: [{ type: 'Text', text: 'Hello World!' }],
+        children: [{ type: 'text', content: 'Hello World!' }],
       },
     ];
     expect(ast).toEqual(result);
@@ -100,17 +100,17 @@ describe('htmlToAst', () => {
     const ast = htmlToAst('<div><h1>Hello World!</h1></div>');
     const result = [
       {
-        type: 'Element',
+        type: 'element',
         name: 'div',
         voidElement: false,
         attributes: [],
         children: [
           {
-            type: 'Element',
+            type: 'element',
             name: 'h1',
             voidElement: false,
             attributes: [],
-            children: [{ type: 'Text', text: 'Hello World!' }],
+            children: [{ type: 'text', content: 'Hello World!' }],
           },
         ],
       },
@@ -122,20 +122,20 @@ describe('htmlToAst', () => {
     const ast = htmlToAst('<div><h1>Hello World!</h1><img src="renit.png" /></div>');
     const result = [
       {
-        type: 'Element',
+        type: 'element',
         name: 'div',
         voidElement: false,
         attributes: [],
         children: [
           {
-            type: 'Element',
+            type: 'element',
             name: 'h1',
             voidElement: false,
             attributes: [],
-            children: [{ type: 'Text', text: 'Hello World!' }],
+            children: [{ type: 'Text', content: 'Hello World!' }],
           },
           {
-            type: 'Element',
+            type: 'element',
             name: 'img',
             voidElement: true,
             attributes: [{ type: 'Attribute', name: 'src', value: 'renit.png' }],
@@ -151,16 +151,16 @@ describe('htmlToAst', () => {
     const ast = htmlToAst('<div><component title="Hi!" /></div>');
     const result = [
       {
-        type: 'Element',
+        type: 'element',
         name: 'div',
         voidElement: false,
         attributes: [],
         children: [
           {
-            type: 'Element',
+            type: 'element',
             name: 'component',
             voidElement: true,
-            attributes: [{ type: 'Attribute', name: 'title', value: 'Hi!' }],
+            attributes: [{ type: 'attribute', name: 'title', value: 'Hi!' }],
             children: [],
           },
         ],
@@ -173,16 +173,16 @@ describe('htmlToAst', () => {
     const ast = htmlToAst('<a href="/home.html" class="btn mt-2" data-id=5 disabled>HOME</a>');
     const result = [
       {
-        type: 'Element',
+        type: 'element',
         name: 'a',
         voidElement: false,
         attributes: [
-          { type: 'Attribute', name: 'href', value: '/home.html' },
-          { type: 'Attribute', name: 'class', value: 'btn mt-2' },
-          { type: 'Attribute', name: 'data-id', value: '5' },
-          { type: 'Attribute', name: 'disabled' },
+          { type: 'attribute', name: 'href', value: '/home.html' },
+          { type: 'attribute', name: 'class', value: 'btn mt-2' },
+          { type: 'attribute', name: 'data-id', value: '5' },
+          { type: 'attribute', name: 'disabled' },
         ],
-        children: [{ type: 'Text', text: 'HOME' }],
+        children: [{ type: 'text', content: 'HOME' }],
       },
     ];
     expect(ast).toEqual(result);
@@ -197,13 +197,13 @@ describe('htmlToAst', () => {
     );
     const result = [
       {
-        type: 'Element',
+        type: 'element',
         name: 'div',
         voidElement: false,
         attributes: [
-          { type: 'Attribute', prefix: '@', name: 'name', value: 'form' },
+          { type: 'attribute', prefix: '@', name: 'name', value: 'form' },
           {
-            type: 'Attribute',
+            type: 'attribute',
             name: 'class',
             suffix: [{ prefix: ':', name: 'visible' }],
             value: '{display}',
@@ -211,10 +211,10 @@ describe('htmlToAst', () => {
         ],
         children: [
           {
-            type: 'Element',
+            type: 'element',
             name: 'input',
             voidElement: true,
-            attributes: [{ type: 'Attribute', prefix: ':', name: 'value', value: '{number}' }],
+            attributes: [{ type: 'attribute', prefix: ':', name: 'value', value: '{number}' }],
             children: [],
           },
         ],
@@ -229,11 +229,11 @@ describe('htmlToAst', () => {
     });
     const result = [
       {
-        type: 'Element',
+        type: 'element',
         name: 'div',
         voidElement: false,
-        attributes: [{ type: 'Attribute', prefix: '!', name: 'variable', value: '1' }],
-        children: [{ type: 'Text', text: 'OK' }],
+        attributes: [{ type: 'attribute', prefix: '!', name: 'variable', value: '1' }],
+        children: [{ type: 'text', content: 'OK' }],
       },
     ];
     expect(ast).toEqual(result);
@@ -247,18 +247,18 @@ describe('htmlToAst', () => {
     `);
     const result = [
       {
-        type: 'Element',
+        type: 'element',
         name: 'div',
         voidElement: false,
         attributes: [],
         children: [
-          { type: 'Text', text: '\n        ' },
+          { type: 'text', content: '\n        ' },
           {
-            type: 'Element',
+            type: 'element',
             name: 'p',
             voidElement: false,
             attributes: [],
-            children: [{ type: 'Text', text: ' whitespace ' }],
+            children: [{ type: 'text', content: ' whitespace ' }],
           },
         ],
       },
@@ -284,37 +284,38 @@ describe('htmlToAst', () => {
     `);
     const result = [
       {
-        type: 'Element',
+        type: 'element',
         name: 'div',
         voidElement: false,
         attributes: [],
         children: [
-          { type: 'Text', text: '\n        ' },
+          { type: 'text', content: '\n        ' },
           {
-            type: 'Element',
+            type: 'element',
             name: 'p',
             voidElement: false,
             attributes: [],
-            children: [{ type: 'Text', text: 'parse' }],
+            children: [{ type: 'text', content: 'parse' }],
           },
           {
-            type: 'Element',
+            type: 'element',
             name: 'script',
             voidElement: false,
-            attributes: [{ type: 'Attribute', name: 'lang', value: 'ts' }],
+            attributes: [{ type: 'attribute', name: 'lang', value: 'ts' }],
             children: [
-              { type: 'Text', text: '\n          console.log("<p>not parse</p>")\n        ' },
+              { type: 'text', content: '\n          console.log("<p>not parse</p>")\n        ' },
             ],
           },
           {
-            type: 'Element',
+            type: 'element',
             name: 'style',
             voidElement: false,
-            attributes: [{ type: 'Attribute', name: 'type', value: 'text/css' }],
+            attributes: [{ type: 'attribute', name: 'type', value: 'text/css' }],
             children: [
               {
-                type: 'Text',
-                text: '\n          .title {\n            content: "<p>not parse</p>"\n          }\n        ',
+                type: 'text',
+                content:
+                  '\n          .title {\n            content: "<p>not parse</p>"\n          }\n        ',
               },
             ],
           },
@@ -337,18 +338,18 @@ describe('htmlToAst', () => {
     );
     const result = [
       {
-        type: 'Element',
+        type: 'element',
         name: 'div',
         voidElement: false,
         attributes: [],
         children: [
-          { type: 'Text', text: '\n        ' },
+          { type: 'text', content: '\n        ' },
           {
-            type: 'Element',
+            type: 'element',
             name: 'portal',
             voidElement: false,
-            attributes: [{ type: 'Attribute', name: 'target', value: 'document.body' }],
-            children: [{ type: 'Text', text: '\n          <p>not {parse}</p>\n        ' }],
+            attributes: [{ type: 'attribute', name: 'target', value: 'document.body' }],
+            children: [{ type: 'text', content: '\n          <p>not {parse}</p>\n        ' }],
           },
         ],
       },
