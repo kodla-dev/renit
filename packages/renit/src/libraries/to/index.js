@@ -112,4 +112,4 @@ export function toStringify(collect) {
   return `${collect}`;
 }
 
-export { htmlToAst } from './parser/parse/html.js';
+export { astToHtml, htmlToAst } from './parser/parse/html.js';

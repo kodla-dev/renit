@@ -275,6 +275,7 @@ describe('htmlToAst', () => {
             attributes: [],
             children: [{ type: 'text', content: ' whitespace ' }],
           },
+          { type: 'text', content: ' ' },
         ],
       },
     ];
@@ -376,6 +377,7 @@ describe('htmlToAst', () => {
             attributes: [],
             children: [{ type: 'text', content: 'parse' }],
           },
+          { type: 'text', content: ' ' },
           {
             type: 'element',
             name: 'script',

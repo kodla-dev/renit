@@ -1,6 +1,6 @@
-import { RGX_WHITESPACE } from '../../../../core/define.js';
-import { push, some } from '../../../collect/index.js';
-import { isArray, isEqual } from '../../../is/index.js';
+import { RAW_EMPTY, RGX_WHITESPACE } from '../../../../core/define.js';
+import { each, push, reduce, some } from '../../../collect/index.js';
+import { isArray, isEqual, isUndefined } from '../../../is/index.js';
 import { size } from '../../../math/index.js';
 import { textNode } from '../ast.js';
 import { parseHtmlOptions } from '../utils.js';
@@ -104,15 +104,17 @@ export function htmlToAst(program, options = {}) {
         current = level === -1 ? ast : tree[level];
       }
       if (nextChar !== '<' && nextChar) {
-        parent = level === -1 ? ast : tree[level];
+        parent = level === -1 ? ast : tree[level].children;
         const end = program.indexOf('<', start);
         let content = program.slice(start, end === -1 ? undefined : end);
         if (RGX_WHITESPACE.test(content)) {
           content = ' ';
         }
-        if ((end > -1 && level + parent.length >= 0) || content !== ' ') {
+        if ((end > -1 && level + size(parent) >= 0) || content !== ' ') {
           if (parent && isArray(parent)) {
-            push(textNode(content), parent);
+            if (options.transform.whitespace) {
+              push(textNode(content), parent);
+            }
           }
         }
       }
@@ -121,4 +123,87 @@ export function htmlToAst(program, options = {}) {
 
   // Return the AST.
   return ast;
+}
+
+/**
+ * Function to convert AST (Abstract Syntax Tree) to HTML representation.
+ * @param {Object} ast - The AST structure to be converted.
+ * @returns {string} - A string containing the HTML representation.
+ */
+export function astToHtml(ast) {
+  // Use the reduce function to transform the AST structure into an HTML string representation.
+  return reduce(
+    (htmlString, el) => {
+      // Process each element by using the htmlStringify function to generate HTML representation.
+      return htmlString + htmlStringify(RAW_EMPTY, el);
+    },
+    RAW_EMPTY,
+    ast
+  );
+}
+
+/**
+ * Function to convert AST node to HTML string.
+ * @param {string} buffer - The current HTML string buffer.
+ * @param {Object} ast - The AST node to be converted.
+ * @returns {string} - Updated HTML string buffer with AST node's representation.
+ */
+function htmlStringify(buffer, ast) {
+  switch (ast.type) {
+    case 'text':
+      // For text nodes, concatenate the content to the buffer.
+      return buffer + ast.content;
+    case 'element':
+      // For element nodes, construct the HTML tag with attributes and children.
+      buffer +=
+        '<' +
+        ast.name +
+        (ast.attributes ? attributesStringify(ast.attributes) : '') +
+        (ast.voidElement ? '/>' : '>');
+      if (ast.voidElement) {
+        return buffer;
+      }
+      // Recursively stringify children of non-void elements.
+      return buffer + reduce(htmlStringify, '', ast.children) + '</' + ast.name + '>';
+    case 'comment':
+      // For comment nodes, add HTML comment syntax to the buffer.
+      buffer += '<!--' + ast.content + '-->';
+      return buffer;
+    default:
+      // Handle unknown node types by returning an empty string.
+      return RAW_EMPTY;
+  }
+}
+
+/**
+ * Function to stringify attributes of an HTML element.
+ * @param {Object} attributes - The attributes object of an element.
+ * @returns {string} - String representation of element attributes.
+ */
+function attributesStringify(attributes) {
+  const attrList = [];
+  each(attr => {
+    // Ensure attribute value is not undefined, default to empty string if undefined.
+    if (isUndefined(attr.value)) {
+      attr.value = RAW_EMPTY;
+    }
+    // If attribute has a prefix, concatenate it to the attribute name.
+    if (!isUndefined(attr.prefix)) {
+      attr.name = attr.prefix + attr.name;
+    }
+    // If attribute has suffixes, concatenate them to the attribute name.
+    if (!isUndefined(attr.suffix)) {
+      each(suffix => {
+        attr.name += suffix.prefix + suffix.name;
+      }, attr.suffix);
+    }
+    // Format attribute as 'name="value"' and add to attribute list.
+    push(attr.name + '="' + attr.value + '"', attrList);
+  }, attributes);
+
+  // Return attributes as a space-separated string or empty string if no attributes.
+  if (!size(attrList)) {
+    return RAW_EMPTY;
+  }
+  return ' ' + attrList.join(' ');
 }
