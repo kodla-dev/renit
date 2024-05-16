@@ -1,4 +1,4 @@
-import { push } from '../../../collect/index.js';
+import { has, push } from '../../../collect/index.js';
 import { isEmpty, isNull, isUndefined } from '../../../is/index.js';
 import { size } from '../../../math/index.js';
 import { attributeNode, commentNode, elementNode, textNode } from '../ast.js';
@@ -54,12 +54,17 @@ export function parseHtmlTag(tag, options) {
     let name = tree[1] || tree[3] || tree[5] || tree[7] || tree[9];
     let value = tree[2] || tree[4] || tree[6] || tree[8];
 
+    // If the match is empty, skip to the next match.
+    if (!name) continue;
+
     // Trim attribute name and value if they exist.
     if (!isUndefined(name)) name = name.trim();
     if (!isUndefined(value)) value = value.trim();
 
-    // If the match is empty, skip to the next match.
-    if (!name) continue;
+    // If the attribute value contains '=' or '{', wrap it in curly braces
+    if (has('={', tree[0])) {
+      value = '{' + value + '}';
+    }
 
     // If the match contains attribute name and value, parse and add it to the node's attributes.
     attribute(name, value, node, options);
