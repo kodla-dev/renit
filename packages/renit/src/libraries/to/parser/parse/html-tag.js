@@ -1,8 +1,8 @@
 import { push } from '../../../collect/index.js';
-import { isEmpty, isNull } from '../../../is/index.js';
+import { isEmpty, isNull, isUndefined } from '../../../is/index.js';
 import { size } from '../../../math/index.js';
 import { attributeNode, commentNode, elementNode, textNode } from '../ast.js';
-import { RGX_HTML_TAG_ATTRIBUTES, RGX_HTML_TAG_NAME } from '../utils.js';
+import { RGX_HTML_FIRST_TAG, RGX_HTML_TAG_ATTRIBUTES, RGX_HTML_TAG_NAME } from '../utils.js';
 
 /**
  * Parses an HTML tag.
@@ -35,29 +35,34 @@ export function parseHtmlTag(tag, options) {
   // Regular expression to match attributes in the tag.
   const rgxAttr = new RegExp(RGX_HTML_TAG_ATTRIBUTES);
   let tree;
+  let tempTag;
+
+  // Extract the opening part of the tag using a regular expression to isolate the first part of the tag.
+  if (isSpecial) {
+    tempTag = new RegExp(RGX_HTML_FIRST_TAG).exec(tag)[0];
+  } else {
+    tempTag = tag;
+  }
 
   // Loop through all attribute matches in the tag.
   for (;;) {
-    tree = rgxAttr.exec(tag);
+    tree = rgxAttr.exec(tempTag);
 
     // If no more matches are found, exit the loop.
     if (isNull(tree)) break;
 
+    let name = tree[1] || tree[3] || tree[5] || tree[7] || tree[9];
+    let value = tree[2] || tree[4] || tree[6] || tree[8];
+
+    // Trim attribute name and value if they exist.
+    if (!isUndefined(name)) name = name.trim();
+    if (!isUndefined(value)) value = value.trim();
+
     // If the match is empty, skip to the next match.
-    if (!tree[0].trim()) continue;
+    if (!name) continue;
 
     // If the match contains attribute name and value, parse and add it to the node's attributes.
-    if (tree[1] && !isSpecial) {
-      const attr = tree[1].trim();
-      let temp = [attr, ''];
-      if (attr.indexOf('=') > -1) {
-        temp = attr.split('=');
-      }
-      attribute(temp[0], temp[1], node, options);
-      rgxAttr.lastIndex--;
-    } else if (tree[2]) {
-      attribute(tree[2], tree[3].trim().substring(1, size(tree[3]) - 1), node, options);
-    }
+    attribute(name, value, node, options);
   }
 
   // If it's a special element, extract its raw content and add it as a child node.

@@ -49,7 +49,14 @@ export const RGX_HTML_TAG_NAME = /<\/?([^\s]+?)[/\s>]/;
  * Regular expression pattern to match attributes of an HTML tag.
  * @type {RegExp}
  */
-export const RGX_HTML_TAG_ATTRIBUTES = /\s([^'"/\s><]+?)[\s/>]|([^\s=]+)=\s?(".*?"|'.*?')/g;
+export const RGX_HTML_TAG_ATTRIBUTES =
+  /(?:([^\s]+))="(?:(.*?))"|(?:([^\s]+))='(?:(.*?))'|(?:([^\s]+))={(?:(.*?))}|(?:([^\s]+))=(?=[^{"'])(?:(.*?))(?:[\s>])|\s((?:[^'"\s\W><]+|[:@|])+)(?=[\s/>])/g;
+
+/**
+ * Regular expression pattern to match the first tag in HTML content.
+ * @type {RegExp}
+ */
+export const RGX_HTML_FIRST_TAG = /<(?:\/|)[a-zA-Z0-9](?:"[^"]*"|'[^']*'|{[^{]*}|[^'"}>])*>/;
 
 /**
  * Function to generate options for HTML parsing.
@@ -117,10 +124,10 @@ export function generateRgxHtml(tags, affixList) {
   tags = tags.join('|');
 
   // Regular expression pattern to match raw content within HTML special elements.
-  const rgxTags = `(?:(?:<!--[\\s\\S]*?-->)|(?:<(?<e>${tags})(?:"[^"]*"|'[^']*'|[^'">])*>[^]*?</(\\k<e>)>)|(?:<(?:/|)(?!(${tags}))[a-zA-Z0-9](?:"[^"]*"|'[^']*'|[^'">])*>))`;
+  const rgxTags = `(?:(?:<!--[\\s\\S]*?-->)|(?:<(?<e>${tags})(?:"[^"]*"|'[^']*'|{[^{]*}|[^'"}>])*>[^]*?</(\\k<e>)>)|(?:<(?:/|)(?!(${tags}))[a-zA-Z0-9](?:"[^"]*"|'[^']*'|{[^{]*}|[^'"}>])*>))`;
 
   // Regular expression pattern to match raw content within HTML special elements.
-  const rgxSpecial = `(?:<(?<e>${tags})(?:"[^"]*"|'[^']*'|[^'">])*>(?<raw>[^]*?)<\\/(\\k<e>)>)`;
+  const rgxSpecial = `(?:<(?<e>${tags})(?:"[^"]*"|'[^']*'|{[^{]*}|[^'"}>])*>(?<raw>[^]*?)<\\/(\\k<e>)>)`;
 
   const attributeAffix = `((?:${affixList.join('|')})?)([a-zA-Z0-9_\\-]+)`;
   const checkAttrAffix = `[${affixList.join('')}]`;
