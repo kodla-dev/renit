@@ -153,6 +153,29 @@ export function isElement(value) {
 }
 
 /**
+ * Checks if a value is empty.
+ *
+ * @param {unknown} value - The value to check.
+ * @returns {boolean|Promise<boolean>} Returns true if the value is empty, false otherwise.
+ */
+export function isEmpty(value) {
+  if (isNil(value)) return true;
+  if (isArrayLike(value)) return !size(value);
+  const type = isType(value);
+  if (type === RAW_OBJECT) {
+    for (const i in value) return false;
+    return !size(value);
+  }
+  if (type === RAW_SYMBOL) {
+    const desc = Object(value).description;
+    if (isUndefined(desc)) return true;
+    return !size(desc);
+  }
+  if (isPromise(value)) return value.then(v => isEmpty(v));
+  return isPrimitive(value) || !size(value);
+}
+
+/**
  * Checks if two given values are equal.
  *
  * @param {unknown} test1 - First value to compare.
@@ -341,16 +364,6 @@ export function isNode(value) {
 }
 
 /**
- * Checks if a value can be used as a valid node value.
- *
- * @param {*} value - The value to check.
- * @returns {boolean} - Returns true if the value can be used as a valid node value, otherwise false.
- */
-export function isNodeValue(value) {
-  return !isNull(value) && !isBoolean(value);
-}
-
-/**
  * Checks if the specified value is null.
  *
  * @template R
@@ -482,6 +495,15 @@ export function isSymbol(value) {
 }
 
 /**
+ * Checks if the given value is an instance of the Text interface.
+ * @param {*} value The value to check.
+ * @returns {boolean} True if the value is a Text node, otherwise false.
+ */
+export function isText(value) {
+  return value instanceof Text;
+}
+
+/**
  * Checks if a given value is equal to true.
  *
  * @param {*} value - The value to check.
@@ -537,36 +559,4 @@ export function isType(value) {
  */
 export function isUndefined(value) {
   return isEqual(typeof value, RAW_UNDEFINED);
-}
-
-/**
- * Checks if a value is empty.
- *
- * @param {unknown} value - The value to check.
- * @returns {boolean|Promise<boolean>} Returns true if the value is empty, false otherwise.
- */
-export function isEmpty(value) {
-  if (isNil(value)) return true;
-  if (isArrayLike(value)) return !size(value);
-  const type = isType(value);
-  if (type === RAW_OBJECT) {
-    for (const i in value) return false;
-    return !size(value);
-  }
-  if (type === RAW_SYMBOL) {
-    const desc = Object(value).description;
-    if (isUndefined(desc)) return true;
-    return !size(desc);
-  }
-  if (isPromise(value)) return value.then(v => isEmpty(v));
-  return isPrimitive(value) || !size(value);
-}
-
-/**
- * Checks if the given value is an instance of the Text interface.
- * @param {*} value The value to check.
- * @returns {boolean} True if the value is a Text node, otherwise false.
- */
-export function isText(value) {
-  return value instanceof Text;
 }
