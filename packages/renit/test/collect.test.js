@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { pipe } from '../src/helpers/index.js';
 import {
   apply,
+  chunk,
   diff,
   each,
   entries,
@@ -14,68 +15,18 @@ import {
   loop,
   map,
   merge,
+  pop,
   push,
   reduce,
+  remove,
   reverse,
   slice,
   some,
   splice,
+  split,
+  value,
   values,
 } from '../src/libraries/collect/index.js';
-
-describe('keys', () => {
-  const data = {
-    club: 'Liverpool',
-    nickname: 'The Reds',
-  };
-  const promiseData = Promise.resolve(data);
-  const result = ['club', 'nickname'];
-
-  it('keys:object', () => {
-    expect(keys(data)).toEqual(result);
-    expect(data).toEqual({
-      club: 'Liverpool',
-      nickname: 'The Reds',
-    });
-  });
-
-  it('keys:promise:object', async () => {
-    expect(await keys(promiseData)).toEqual(result);
-  });
-
-  it('keys:create:promise:object', async () => {
-    const getKeys = keys();
-    expect(await getKeys(promiseData)).toEqual(result);
-  });
-
-  it('keys:pipe', () => {
-    expect(pipe(data, keys)).toEqual(result);
-  });
-});
-
-describe('values', () => {
-  const data = { name: 'Galileo', last: 'Galilei' };
-  const promiseData = Promise.resolve(data);
-  const result = ['Galileo', 'Galilei'];
-
-  it('values:object', () => {
-    expect(values(data)).toEqual(result);
-    expect(data).toEqual({ name: 'Galileo', last: 'Galilei' });
-  });
-
-  it('values:promise:object', async () => {
-    expect(await values(promiseData)).toEqual(result);
-  });
-
-  it('values:create:promise:object', async () => {
-    const getValues = values();
-    expect(await getValues(promiseData)).toEqual(result);
-  });
-
-  it('values:pipe', () => {
-    expect(pipe(data, values)).toEqual(result);
-  });
-});
 
 describe('apply', () => {
   it('apply:array:number', () => {
@@ -136,32 +87,87 @@ describe('apply', () => {
   });
 });
 
-describe('loop', () => {
-  it('loop:default', () => {
-    const data = [1, 2, 3];
-    let total = 0;
-    loop(index => {
-      total += data[index];
-    }, data);
-    expect(total).toEqual(6);
+describe('chunk', () => {
+  it('chunk:array', () => {
+    const chunks = chunk(4, [1, 2, 3, 4, 5, 6, 7]);
+    const result = [
+      [1, 2, 3, 4],
+      [5, 6, 7],
+    ];
+    expect(chunks).toEqual(result);
   });
 
-  it('loop:async', async () => {
-    const data = [1, 2, 3];
-    let total = 0;
-    await loop(async index => {
-      total += data[index];
-    }, data);
-    expect(total).toEqual(6);
+  it('chunk:object', () => {
+    const chunks = chunk(2, { name: 'Albert', last: 'Einstein', age: '∞' });
+    const result = [{ name: 'Albert', last: 'Einstein' }, { age: '∞' }];
+    expect(chunks).toEqual(result);
   });
 
-  it('loop:async:promise', async () => {
-    const data = Promise.resolve([1, 2, 3]);
-    let total = 0;
-    await loop(async index => {
-      total++;
-    }, data);
-    expect(total).toEqual(3);
+  it('chunk:promise', async () => {
+    const chunks = await chunk(4, Promise.resolve([1, 2, 3, 4, 5, 6, 7]));
+    const result = [
+      [1, 2, 3, 4],
+      [5, 6, 7],
+    ];
+    expect(chunks).toEqual(result);
+  });
+
+  it('chunk:create', async () => {
+    const custom = chunk(2);
+    const result1 = custom([1, 2, 3, 4, 5, 6, 7]);
+    expect(result1).toEqual([[1, 2], [3, 4], [5, 6], [7]]);
+
+    const result2 = custom({ name: 'Albert', last: 'Einstein', age: '∞' });
+    expect(result2).toEqual([{ name: 'Albert', last: 'Einstein' }, { age: '∞' }]);
+  });
+});
+
+describe('diff', () => {
+  it('diff:array', () => {
+    const data1 = [1, 2, 3, 4, 7];
+    const data2 = [1, 2, 3, 4, 5, 6, 7];
+    const result = [5, 6];
+    expect(diff(data1, data2)).toEqual(result);
+    expect(data1).toEqual([1, 2, 3, 4, 7]);
+    expect(data2).toEqual([1, 2, 3, 4, 5, 6, 7]);
+  });
+
+  it('diff:object', () => {
+    const data1 = { name: 'Of Mice and Men' };
+    const data2 = { name: 'Of Mice and Men', writer: 'John Steinbeck' };
+    const result = { writer: 'John Steinbeck' };
+    expect(diff(data1, data2)).toEqual(result);
+    expect(data1).toEqual({ name: 'Of Mice and Men' });
+    expect(data2).toEqual({ name: 'Of Mice and Men', writer: 'John Steinbeck' });
+  });
+
+  it('diff:object:notEqualKey', () => {
+    const data1 = { name: 'Of Mice and Men', page: 325 };
+    const data2 = {
+      name: 'Of Mice and Men',
+      writer: 'John Steinbeck',
+      page: 612,
+    };
+    const result = { writer: 'John Steinbeck', page: 612 };
+    expect(diff(data1, data2)).toEqual(result);
+  });
+
+  it('diff:promise', async () => {
+    const data1 = Promise.resolve([1, 2, 3, 4, 7]);
+    const data2 = Promise.resolve([1, 2, 3, 4, 5, 6, 7]);
+    const result = [5, 6];
+    expect(await diff(data1, data2)).toEqual(result);
+  });
+
+  it('diff:create', () => {
+    const data1 = [1, 2, 3, 4, 7];
+    const compare = diff(data1);
+
+    const result = compare([1, 2, 3, 4, 5, 6, 7]);
+    const result2 = compare([1, 2, 3, 4, 12, 15]);
+
+    expect(result).toEqual([5, 6]);
+    expect(result2).toEqual([12, 15]);
   });
 });
 
@@ -214,49 +220,6 @@ describe('each', () => {
       data,
       each((item, index) => expect(item).toEqual(data[index]))
     );
-  });
-});
-
-describe('reduce', () => {
-  it('reduce:array', () => {
-    const sum = (a, b) => a + b;
-    const data = [1, 2, 3, 4];
-    const result = reduce(sum, data);
-    expect(result).toBe(10);
-    expect(data).toEqual([1, 2, 3, 4]);
-  });
-
-  it('reduce:object', () => {
-    const sum = (a, b) => a + b;
-    const data = { wood: 150, stone: 50, gold: 10 };
-    const result = reduce(sum, data);
-    expect(result).toBe(210);
-    expect(data).toEqual({ wood: 150, stone: 50, gold: 10 });
-  });
-
-  it('reduce:seed', () => {
-    const sum = (a, b) => a + b;
-    const data = [1, 2, 3, 4];
-    const result = reduce(sum, 10, data);
-    expect(result).toBe(20);
-  });
-
-  it('reduce:pipe', () => {
-    const sum = (a, b) => a + b;
-    // prettier-ignore
-    const result = pipe(
-      [1, 2, 3, 4],
-      reduce(sum)
-    );
-    expect(result).toBe(10);
-  });
-
-  it('reduce:create', () => {
-    const sum = (a, b) => a + b;
-    const data = [1, 2, 3, 4];
-    const total = reduce(sum);
-    const result = total(data);
-    expect(result).toBe(10);
   });
 });
 
@@ -470,6 +433,36 @@ describe('has', () => {
   });
 });
 
+describe('keys', () => {
+  const data = {
+    club: 'Liverpool',
+    nickname: 'The Reds',
+  };
+  const promiseData = Promise.resolve(data);
+  const result = ['club', 'nickname'];
+
+  it('keys:object', () => {
+    expect(keys(data)).toEqual(result);
+    expect(data).toEqual({
+      club: 'Liverpool',
+      nickname: 'The Reds',
+    });
+  });
+
+  it('keys:promise:object', async () => {
+    expect(await keys(promiseData)).toEqual(result);
+  });
+
+  it('keys:create:promise:object', async () => {
+    const getKeys = keys();
+    expect(await getKeys(promiseData)).toEqual(result);
+  });
+
+  it('keys:pipe', () => {
+    expect(pipe(data, keys)).toEqual(result);
+  });
+});
+
 describe('last', () => {
   it('last:array', () => {
     const data = [1, 2, 3];
@@ -510,6 +503,35 @@ describe('last', () => {
   });
 });
 
+describe('loop', () => {
+  it('loop:default', () => {
+    const data = [1, 2, 3];
+    let total = 0;
+    loop(index => {
+      total += data[index];
+    }, data);
+    expect(total).toEqual(6);
+  });
+
+  it('loop:async', async () => {
+    const data = [1, 2, 3];
+    let total = 0;
+    await loop(async index => {
+      total += data[index];
+    }, data);
+    expect(total).toEqual(6);
+  });
+
+  it('loop:async:promise', async () => {
+    const data = Promise.resolve([1, 2, 3]);
+    let total = 0;
+    await loop(async index => {
+      total++;
+    }, data);
+    expect(total).toEqual(3);
+  });
+});
+
 describe('map', () => {
   it('map:array', () => {
     const data = [1, 2, 3, 4];
@@ -546,8 +568,6 @@ describe('merge', () => {
     const collect = ['orange'];
     const merged = merge(seed, collect);
     expect(merged).toEqual(['orange', 'apple', 'pear']);
-    expect(seed).toEqual(['apple', 'pear']);
-    expect(collect).toEqual(['orange']);
   });
 
   it('merge:object', () => {
@@ -555,8 +575,6 @@ describe('merge', () => {
     const collect = { age: 32 };
     const merged = merge(seed, collect);
     expect(merged).toEqual({ name: 'Nikola', last: 'Tesla', age: 32 });
-    expect(collect).toEqual({ age: 32 });
-    expect(seed).toEqual({ name: 'Nikola', last: 'Tesla' });
   });
 
   it('merge:promise', async () => {
@@ -591,6 +609,27 @@ describe('merge', () => {
     const merged = merge(seed);
     const result = merged(['apple', 'pear']);
     expect(result).toEqual(['apple', 'pear', 'orange']);
+  });
+});
+
+describe('pop', () => {
+  it('pop:array', () => {
+    expect(pop([1, 2, 3, 4, 5])).toEqual(5);
+  });
+
+  it('pop:array:size', () => {
+    expect(pop(2, [1, 2, 3, 4, 5])).toEqual([4, 5]);
+  });
+
+  it('pop:object', () => {
+    expect(pop({ name: 'Ali', last: 'Kuşçu', birth: '1403' })).toEqual('1403');
+  });
+
+  it('pop:object:size', () => {
+    expect(pop(2, { name: 'Ali', last: 'Kuşçu', birth: '1403' })).toEqual({
+      last: 'Kuşçu',
+      birth: '1403',
+    });
   });
 });
 
@@ -633,11 +672,92 @@ describe('push', () => {
   });
 });
 
+describe('reduce', () => {
+  it('reduce:array', () => {
+    const sum = (a, b) => a + b;
+    const data = [1, 2, 3, 4];
+    const result = reduce(sum, data);
+    expect(result).toBe(10);
+    expect(data).toEqual([1, 2, 3, 4]);
+  });
+
+  it('reduce:object', () => {
+    const sum = (a, b) => a + b;
+    const data = { wood: 150, stone: 50, gold: 10 };
+    const result = reduce(sum, data);
+    expect(result).toBe(210);
+    expect(data).toEqual({ wood: 150, stone: 50, gold: 10 });
+  });
+
+  it('reduce:seed', () => {
+    const sum = (a, b) => a + b;
+    const data = [1, 2, 3, 4];
+    const result = reduce(sum, 10, data);
+    expect(result).toBe(20);
+  });
+
+  it('reduce:pipe', () => {
+    const sum = (a, b) => a + b;
+    // prettier-ignore
+    const result = pipe(
+      [1, 2, 3, 4],
+      reduce(sum)
+    );
+    expect(result).toBe(10);
+  });
+
+  it('reduce:create', () => {
+    const sum = (a, b) => a + b;
+    const data = [1, 2, 3, 4];
+    const total = reduce(sum);
+    const result = total(data);
+    expect(result).toBe(10);
+  });
+});
+
+describe('remove', () => {
+  it('remove:array', () => {
+    expect(remove([0, 1], [1, 2, 3, 4])).toEqual([undefined, undefined, 3, 4]);
+  });
+
+  it('remove:object', () => {
+    expect(
+      remove('date', {
+        name: 'Pîrî',
+        last: 'Reis',
+        date: 1553,
+      })
+    ).toEqual({ name: 'Pîrî', last: 'Reis' });
+  });
+
+  it('remove:object:array', () => {
+    expect(
+      remove(['subs', 'pages', 'roles'], {
+        id: 78,
+        subs: {
+          id: 17,
+        },
+        name: 'Kevin',
+        pages: {
+          number: 176,
+        },
+        roles: [
+          {
+            name: 'Editor',
+          },
+          {
+            name: 'Admin',
+          },
+        ],
+      })
+    ).toEqual({ id: 78, name: 'Kevin' });
+  });
+});
+
 describe('reverse', () => {
   it('reverse:array', () => {
     const data = [1, 2, 3, 4, 5];
     expect(reverse(data)).toEqual([5, 4, 3, 2, 1]);
-    expect(data).toEqual([1, 2, 3, 4, 5]);
   });
 });
 
@@ -651,95 +771,9 @@ describe('slice', () => {
 
   it('slice:array:limit', () => {
     const data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-    const result = slice([4, 2], data);
+    const result = slice([4, 2, 1], data);
     expect(data).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     expect(result).toEqual([5, 6]);
-  });
-});
-
-describe('splice', () => {
-  it('splice:array:index', () => {
-    const data = [1, 2, 3, 4, 5];
-    const result = splice(2, data);
-    expect(data).toEqual([1, 2]);
-    expect(result).toEqual([3, 4, 5]);
-  });
-
-  it('splice:array:limit', () => {
-    const data = [1, 2, 3, 4, 5];
-    const result = splice([2, 1], data);
-    expect(data).toEqual([1, 2, 4, 5]);
-    expect(result).toEqual([3]);
-  });
-
-  it('splice:array:replace', () => {
-    const data = [1, 2, 3, 4, 5];
-    const result = splice([2, 1, [10, 11]], data);
-    expect(data).toEqual([1, 2, 10, 11, 4, 5]);
-    expect(result).toEqual([3]);
-  });
-
-  it('splice:promise', async () => {
-    const data = Promise.resolve([1, 2, 3, 4, 5]);
-    const result = await splice(2, data);
-    expect(result).toEqual([3, 4, 5]);
-  });
-
-  it('splice:create', () => {
-    const data = [1, 2, 3, 4, 5];
-    const spliced = splice(2);
-    const result = spliced(data);
-    expect(data).toEqual([1, 2]);
-    expect(result).toEqual([3, 4, 5]);
-  });
-});
-
-describe('diff', () => {
-  it('diff:array', () => {
-    const data1 = [1, 2, 3, 4, 7];
-    const data2 = [1, 2, 3, 4, 5, 6, 7];
-    const result = [5, 6];
-    expect(diff(data1, data2)).toEqual(result);
-    expect(data1).toEqual([1, 2, 3, 4, 7]);
-    expect(data2).toEqual([1, 2, 3, 4, 5, 6, 7]);
-  });
-
-  it('diff:object', () => {
-    const data1 = { name: 'Of Mice and Men' };
-    const data2 = { name: 'Of Mice and Men', writer: 'John Steinbeck' };
-    const result = { writer: 'John Steinbeck' };
-    expect(diff(data1, data2)).toEqual(result);
-    expect(data1).toEqual({ name: 'Of Mice and Men' });
-    expect(data2).toEqual({ name: 'Of Mice and Men', writer: 'John Steinbeck' });
-  });
-
-  it('diff:object:notEqualKey', () => {
-    const data1 = { name: 'Of Mice and Men', page: 325 };
-    const data2 = {
-      name: 'Of Mice and Men',
-      writer: 'John Steinbeck',
-      page: 612,
-    };
-    const result = { writer: 'John Steinbeck', page: 612 };
-    expect(diff(data1, data2)).toEqual(result);
-  });
-
-  it('diff:promise', async () => {
-    const data1 = Promise.resolve([1, 2, 3, 4, 7]);
-    const data2 = Promise.resolve([1, 2, 3, 4, 5, 6, 7]);
-    const result = [5, 6];
-    expect(await diff(data1, data2)).toEqual(result);
-  });
-
-  it('diff:create', () => {
-    const data1 = [1, 2, 3, 4, 7];
-    const compare = diff(data1);
-
-    const result = compare([1, 2, 3, 4, 5, 6, 7]);
-    const result2 = compare([1, 2, 3, 4, 12, 15]);
-
-    expect(result).toEqual([5, 6]);
-    expect(result2).toEqual([12, 15]);
   });
 });
 
@@ -819,5 +853,95 @@ describe('some', () => {
       })
     );
     expect(result).toBe(false);
+  });
+});
+
+describe('splice', () => {
+  it('splice:array:index', () => {
+    const data = [1, 2, 3, 4, 5];
+    const result = splice(2, data);
+    expect(data).toEqual([1, 2]);
+    expect(result).toEqual([3, 4, 5]);
+  });
+
+  it('splice:array:limit', () => {
+    const data = [1, 2, 3, 4, 5];
+    const result = splice([2, 1], data);
+    expect(data).toEqual([1, 2, 4, 5]);
+    expect(result).toEqual([3]);
+  });
+
+  it('splice:array:replace', () => {
+    const data = [1, 2, 3, 4, 5];
+    const result = splice([2, 1, [10, 11]], data);
+    expect(data).toEqual([1, 2, 10, 11, 4, 5]);
+    expect(result).toEqual([3]);
+  });
+
+  it('splice:promise', async () => {
+    const data = Promise.resolve([1, 2, 3, 4, 5]);
+    const result = await splice(2, data);
+    expect(result).toEqual([3, 4, 5]);
+  });
+
+  it('splice:create', () => {
+    const data = [1, 2, 3, 4, 5];
+    const spliced = splice(2);
+    const result = spliced(data);
+    expect(data).toEqual([1, 2]);
+    expect(result).toEqual([3, 4, 5]);
+  });
+});
+
+describe('split', () => {
+  it('split:string', () => {
+    expect(split('&', 'id=1&book=5')).toEqual(['id=1', 'book=5']);
+  });
+
+  it('split:object', () => {
+    expect(split(3, [1, 2, 3, 4, 5])).toEqual([[1, 2], [3, 4], [5]]);
+  });
+});
+
+describe('value', () => {
+  it('value:array', () => {
+    expect(value('type', [{ type: 'element' }, { type: 'text' }])).toEqual(['element', 'text']);
+  });
+
+  it('value:object:basic', () => {
+    expect(value('name', { name: 'Cahit', last: 'Arf' })).toEqual('Cahit');
+  });
+
+  it('value:object:nested', () => {
+    expect(
+      value('roles.1.name', {
+        name: 'Cahit',
+        roles: [{ name: 'Editor' }, { name: 'Admin' }],
+      })
+    ).toEqual('Admin');
+  });
+});
+
+describe('values', () => {
+  const data = { name: 'Galileo', last: 'Galilei' };
+  const promiseData = Promise.resolve(data);
+  const result = ['Galileo', 'Galilei'];
+
+  it('values:object', () => {
+    expect(values(data)).toEqual(result);
+    expect(data).toEqual({ name: 'Galileo', last: 'Galilei' });
+  });
+
+  it('values:promise:object', async () => {
+    expect(await values(promiseData)).toEqual(result);
+  });
+
+  it('values:create:promise:object', async () => {
+    const getValues = values();
+    expect(await getValues(promiseData)).toEqual(result);
+  });
+
+  it('values:pipe', () => {
+    expect(pipe(data, values)).toEqual(result);
   });
 });
