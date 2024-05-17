@@ -64,6 +64,10 @@
     "prebuild": "rimraf type *.d.ts -g",
     "build": "node build"
   },
+  "dependencies": {
+    "acorn": "^8.11.3",
+    "astring": "^1.8.6"
+  },
   "engines": {
     "node": ">= 18"
   }
