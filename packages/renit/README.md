@@ -8,6 +8,12 @@
 
 _Renit_ is a powerful JavaScript framework with a very small footprint, built for developers who need a simple and elegant toolkit to create full-featured web applications.
 
+## Get Started
+
+- [Examples][EXAMPLE]
+- [Try Renit REPL][REPL]
+- [Documentation][RENIT]
+
 ### Easy to use
 
 Create the simplest components in the world.
@@ -107,6 +113,8 @@ Thanks for reading!
 🎉
 
 [RENIT]: https://renit.dev
+[REPL]: https://renit.dev/#!/repl
+[EXAMPLE]: https://renit.dev/#!/repl?example
 [TEST]: https://github.com/kodla-dev/renit/actions/workflows/test.yaml
 [PACKAGE]: https://www.npmjs.com/package/renit
 [SIZE]: https://bundlephobia.com/package/renit
