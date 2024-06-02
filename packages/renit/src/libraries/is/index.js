@@ -47,6 +47,7 @@ export function isArray(value) {
  * Returns true if the value is array-like, false otherwise.
  */
 export function isArrayLike(value) {
+  if (isArray(value)) return true;
   const len = !!value && value.length;
   return (
     (!isNil(value) &&
@@ -68,7 +69,7 @@ export function isArrayLike(value) {
  * Returns true if the value is an asynchronous function, false otherwise.
  */
 export function isAsync(value) {
-  return isFunction(value) && isEqual(value.constructor.name, RAW_ASYNC_FUNCTION);
+  return isFunction(value) && value.constructor.name === RAW_ASYNC_FUNCTION;
 }
 
 /**
@@ -92,7 +93,7 @@ export function isAsyncIterable(value) {
  * Returns true if the value is a boolean, false otherwise.
  */
 export function isBoolean(value) {
-  return isEqual(typeof value, RAW_BOOLEAN);
+  return typeof value === RAW_BOOLEAN;
 }
 
 /**
@@ -114,7 +115,7 @@ export function isClass(value) {
  * false otherwise.
  */
 export function isClient() {
-  return isEqual(typeof window, RAW_OBJECT);
+  return typeof window === RAW_OBJECT;
 }
 
 /**
@@ -161,6 +162,10 @@ export function isElement(value) {
 export function isEmpty(value) {
   if (isNil(value)) return true;
   if (isArrayLike(value)) return !size(value);
+  if (isObject(value)) {
+    for (const i in value) return false;
+    return !size(value);
+  }
   const type = isType(value);
   if (type === RAW_OBJECT) {
     for (const i in value) return false;
@@ -245,7 +250,7 @@ export function isEven(value) {
  * Returns true if the value is equal to false, otherwise false.
  */
 export function isFalse(value) {
-  return isEqual(value, false);
+  return value === false;
 }
 
 /**
@@ -279,7 +284,7 @@ export function isFloat(value) {
  * Returns true if the value is a function, false otherwise.
  */
 export function isFunction(value) {
-  return isEqual(typeof value, RAW_FUNCTION);
+  return typeof value === RAW_FUNCTION;
 }
 
 /**
@@ -372,7 +377,7 @@ export function isNode(value) {
  * Returns true if the value is null, false otherwise.
  */
 export function isNull(value) {
-  return isEqual(value, null);
+  return value === null;
 }
 
 /**
@@ -384,7 +389,7 @@ export function isNull(value) {
  * Returns true if the value is a number, false otherwise.
  */
 export function isNumber(value) {
-  return isEqual(typeof value, RAW_NUMBER);
+  return typeof value === RAW_NUMBER;
 }
 
 /**
@@ -395,7 +400,7 @@ export function isNumber(value) {
  * Returns true if the value is a object, false otherwise.
  */
 export function isObject(value) {
-  return !isNil(value) && isEqual(typeof value, RAW_OBJECT) && isEqual(value.constructor, Object);
+  return !!value && typeof value === RAW_OBJECT && value.constructor === Object;
 }
 
 /**
@@ -407,7 +412,7 @@ export function isObject(value) {
  * Returns true if the value is a object, false otherwise.
  */
 export function isObjects(value) {
-  return isEqual(typeof value, RAW_OBJECT) || isFunction(value);
+  return typeof value === RAW_OBJECT || isFunction(value);
 }
 
 /**
@@ -455,9 +460,7 @@ export function isPromise(value) {
  * Returns true if the value is a regular expression, false otherwise.
  */
 export function isRegExp(value) {
-  return (
-    value instanceof RegExp || isEqual(Object.prototype.toString.call(value), '[object RegExp]')
-  );
+  return value instanceof RegExp || Object.prototype.toString.call(value) === '[object RegExp]';
 }
 
 /**
@@ -467,7 +470,7 @@ export function isRegExp(value) {
  * false otherwise.
  */
 export function isServer() {
-  return isEqual(typeof window, RAW_UNDEFINED);
+  return typeof window === RAW_UNDEFINED;
 }
 
 /**
@@ -479,7 +482,7 @@ export function isServer() {
  * Returns true if the value is a string, false otherwise.
  */
 export function isString(value) {
-  return isEqual(typeof value, RAW_STRING) || value instanceof String;
+  return typeof value === RAW_STRING || value instanceof String;
 }
 
 /**
@@ -491,7 +494,7 @@ export function isString(value) {
  * Returns true if the value is a symbol, false otherwise.
  */
 export function isSymbol(value) {
-  return isEqual(typeof value, RAW_SYMBOL);
+  return typeof value === RAW_SYMBOL;
 }
 
 /**
@@ -511,7 +514,7 @@ export function isText(value) {
  * Returns true if the value is equal to true, otherwise false.
  */
 export function isTrue(value) {
-  return isEqual(value, true);
+  return value === true;
 }
 
 /**
@@ -558,5 +561,5 @@ export function isType(value) {
  * Returns true if the value is undefined, false otherwise.
  */
 export function isUndefined(value) {
-  return isEqual(typeof value, RAW_UNDEFINED);
+  return typeof value === RAW_UNDEFINED;
 }
