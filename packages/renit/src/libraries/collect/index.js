@@ -294,20 +294,31 @@ function buildKeyMap(item, index, paths) {
  */
 export function has(items, collect) {
   if (isUndefined(collect)) return collect => has(collect);
-  if (isArray(collect) || isString(collect)) return collect.includes(items);
+  if (isArray(collect) || isString(collect)) return includes(items, collect);
   if (isObject(collect)) return hasOwn(items, collect);
   // TODO: Add support for multiple items
   if (DEV) throw new Renit("Type error in 'has' function");
 }
 
 /**
+ * Checks if a collection includes a specified item.
+ *
+ * @param {any} item - The item to check for in the collection.
+ * @param {Array} collect - The collection to search within.
+ * @returns {boolean} True if the item is found in the collection, false otherwise.
+ */
+export function includes(item, collect) {
+  return collect.includes(item);
+}
+
+/**
  * Checks if the object has the specified property.
- * @param {string} prop - The property to check for.
- * @param {Object} obj - The object to check.
+ * @param {string} item - The property to check for.
+ * @param {Object} collect - The object to check.
  * @returns {boolean} - True if the object has the property, otherwise false.
  */
-export function hasOwn(prop, obj) {
-  return Object.prototype.hasOwnProperty.call(obj, prop);
+export function hasOwn(item, collect) {
+  return Object.prototype.hasOwnProperty.call(collect, item);
 }
 
 /**
