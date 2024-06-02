@@ -79,10 +79,6 @@ pluck('name', 'detail.date', [
 //=> {1879: 'Albert', 1643: 'Isaac'}
 ```
 
-## Documentation
-
-Documentation lives on [renit.dev][RENIT].
-
 ---
 
 <details>
