@@ -63,9 +63,9 @@ export const RGX_HTML_FIRST_TAG = /<(?:\/|)[a-zA-Z0-9](?:"[^"]*"|'[^']*'|{[^{]*}
  * @param {Object} options - Options object.
  * @returns {Object} - Merged options object.
  */
-export function parseHtmlOptions(options) {
+export function parseHtmlOptions(opts) {
   // Default options
-  const opts = {
+  const options = {
     tags: {
       void: HTML_VOID_TAGS, // HTML void tags
       special: HTML_SPECIAL_TAGS, // HTML special tags,
@@ -89,7 +89,7 @@ export function parseHtmlOptions(options) {
   };
 
   // Merge provided options with default options
-  options = mergeDeep(opts, options);
+  mergeDeep(opts, options);
   const tags = options.tags;
   const rgx = options.rgx;
   const attr = options.attribute;
