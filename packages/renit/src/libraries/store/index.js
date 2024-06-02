@@ -184,7 +184,7 @@ function stateObjectRegister(obj, key) {
  */
 function stateObjectHandler(obj) {
   for (const key in obj) {
-    if (hasOwn(obj, key)) {
+    if (hasOwn(key, obj)) {
       stateObjectRegister(obj, key);
     }
   }
@@ -198,7 +198,7 @@ function stateObjectHandler(obj) {
  */
 function stateObjectCreate(obj) {
   for (const key in obj) {
-    if (hasOwn(obj, key) && isObject(obj[key])) {
+    if (hasOwn(key, obj) && isObject(obj[key])) {
       obj[key] = stateObjectCreate(obj[key]);
     }
   }
