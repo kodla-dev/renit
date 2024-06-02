@@ -10,20 +10,25 @@ import {
   filter,
   flat,
   has,
+  keyMap,
   keys,
   last,
   loop,
   map,
   merge,
+  pluck,
   pop,
   push,
   reduce,
   remove,
   reverse,
+  shift,
   slice,
   some,
   splice,
   split,
+  take,
+  takeUntil,
   value,
   values,
 } from '../src/libraries/collect/index.js';
@@ -421,6 +426,34 @@ describe('flat', () => {
   });
 });
 
+describe('keyMap', () => {
+  it('keyMap:object', () => {
+    expect(
+      keyMap([
+        {
+          name: 'John',
+          roles: [
+            {
+              name: 'Editor',
+            },
+            {
+              name: 'Admin',
+            },
+          ],
+        },
+      ])
+    ).toEqual({
+      0: { name: 'John', roles: [{ name: 'Editor' }, { name: 'Admin' }] },
+      '0.name': 'John',
+      '0.roles.0.name': 'Editor',
+      '0.roles.0': { name: 'Editor' },
+      '0.roles.1.name': 'Admin',
+      '0.roles.1': { name: 'Admin' },
+      '0.roles': [{ name: 'Editor' }, { name: 'Admin' }],
+    });
+  });
+});
+
 describe('has', () => {
   it('has:string', () => {
     expect(has('c', 'abcd')).toEqual(true);
@@ -430,6 +463,10 @@ describe('has', () => {
   it('has:array', () => {
     expect(has(3, [1, 2, 3, 4])).toEqual(true);
     expect(has(5, [1, 2, 3, 4])).toEqual(false);
+  });
+  it('has:object', () => {
+    expect(has('name', { name: 'Fârâbî' })).toEqual(true);
+    expect(has('lastname', { name: 'Fârâbî' })).toEqual(false);
   });
 });
 
@@ -612,6 +649,51 @@ describe('merge', () => {
   });
 });
 
+describe('pluck', () => {
+  it('pluck:object', () => {
+    const result = pluck('name', { name: 'Sabuncuoğlu', last: 'Şerefeddin' });
+    expect(result).toEqual(['Sabuncuoğlu']);
+  });
+  it('pluck:object:multiple', () => {
+    const result = pluck('name', [
+      { id: 78, name: 'Nikola' },
+      { id: 79, name: 'Tesla' },
+    ]);
+    expect(result).toEqual(['Nikola', 'Tesla']);
+  });
+  it('pluck:object:multiple:key', () => {
+    const result = pluck('name', 'subs.id', [
+      { id: 78, subs: { id: 17 }, name: 'Thomas' },
+      { id: 79, subs: { id: 18 }, name: 'Edison' },
+    ]);
+    expect(result).toEqual({ 17: 'Thomas', 18: 'Edison' });
+  });
+  it('pluck:object:index', () => {
+    const result = pluck('roles.0.name', {
+      name: 'John',
+      roles: [{ name: 'Editor' }, { name: 'Admin' }],
+    });
+    expect(result).toEqual(['Editor']);
+  });
+  it('pluck:object:index:multiple', () => {
+    const result = pluck('roles.0.name', [
+      { id: 1, roles: [{ name: 'Editor' }, { name: 'Admin' }] },
+      { id: 2, roles: [{ name: 'Super User' }, { name: 'Writer' }] },
+    ]);
+    expect(result).toEqual(['Editor', 'Super User']);
+  });
+  it('pluck:object:wildcard', () => {
+    const result = pluck('roles.*.name', [
+      { id: 1, roles: [{ name: 'Editor' }, { name: 'Admin' }] },
+      { id: 2, roles: [{ name: 'Super User' }, { name: 'Writer' }] },
+    ]);
+    expect(result).toEqual([
+      ['Editor', 'Admin'],
+      ['Super User', 'Writer'],
+    ]);
+  });
+});
+
 describe('pop', () => {
   it('pop:array', () => {
     expect(pop([1, 2, 3, 4, 5])).toEqual(5);
@@ -761,6 +843,20 @@ describe('reverse', () => {
   });
 });
 
+describe('shift', () => {
+  it('shift:array', () => {
+    const data = [1, 2, 3, 4, 5];
+    expect(shift(data)).toEqual(1);
+    expect(data).toEqual([2, 3, 4, 5]);
+  });
+
+  it('shift:array:count', () => {
+    const data = [1, 2, 3, 4, 5];
+    expect(shift(2, data)).toEqual([1, 2]);
+    expect(data).toEqual([3, 4, 5]);
+  });
+});
+
 describe('slice', () => {
   it('slice:array:index', () => {
     const data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -900,6 +996,40 @@ describe('split', () => {
 
   it('split:object', () => {
     expect(split(3, [1, 2, 3, 4, 5])).toEqual([[1, 2], [3, 4], [5]]);
+  });
+});
+
+describe('take', () => {
+  it('take:array:first', () => {
+    expect(take(3, [1, 2, 3, 4, 5, 6, 7])).toEqual([1, 2, 3]);
+  });
+  it('take:array:last', () => {
+    expect(take(-3, [1, 2, 3, 4, 5, 6, 7])).toEqual([5, 6, 7]);
+  });
+  it('take:object:first', () => {
+    expect(take(1, { name: 'Isaac', last: 'Newton' })).toEqual({ name: 'Isaac' });
+  });
+  it('take:object:last', () => {
+    expect(take(-1, { name: 'Isaac', last: 'Newton' })).toEqual({ last: 'Newton' });
+  });
+});
+
+describe('takeUntil', () => {
+  it('takeUntil:array', () => {
+    expect(takeUntil(3, [1, 2, 3])).toEqual([1, 2]);
+  });
+  it('takeUntil:fn:array', () => {
+    expect(takeUntil(item => item >= 3, [1, 2, 3])).toEqual([1, 2]);
+  });
+  it('takeUntil:fn:object', () => {
+    expect(
+      takeUntil(item => item >= 1000, {
+        books: 194,
+        users: 1458,
+        collections: 500,
+        kits: null,
+      })
+    ).toEqual({ books: 194 });
   });
 });
 

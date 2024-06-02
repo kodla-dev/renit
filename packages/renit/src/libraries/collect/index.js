@@ -246,6 +246,45 @@ export function flat(depth, collect) {
 }
 
 /**
+ * Creates a map of keys from a nested collection.
+ *
+ * @param {Array|Object} collect - Collection to map keys from.
+ * @returns {Object} Map of keys and their corresponding values.
+ */
+export function keyMap(collect) {
+  if (isUndefined(collect)) return collect => keyMap(collect);
+
+  const paths = {};
+
+  each((item, index) => {
+    buildKeyMap(item, index, paths);
+  }, collect);
+
+  return paths;
+}
+
+/**
+ * Recursively builds the key map for a given item.
+ *
+ * @param {any} item - Current item to process.
+ * @param {string} index - Current index or key.
+ * @param {Object} paths - Object to store the key map.
+ */
+function buildKeyMap(item, index, paths) {
+  if (isObject(item)) {
+    each((key, value) => {
+      buildKeyMap(value, `${index}.${key}`, paths);
+    }, item);
+  } else if (isArray(item)) {
+    each((value, i) => {
+      buildKeyMap(value, `${index}.${i}`, paths);
+    }, item);
+  }
+
+  paths[index] = item;
+}
+
+/**
  * Checks if a collection contains a specific item or items.
  *
  * @param {*} items - The item or items to check for in the collection.
@@ -256,17 +295,18 @@ export function flat(depth, collect) {
 export function has(items, collect) {
   if (isUndefined(collect)) return collect => has(collect);
   if (isArray(collect) || isString(collect)) return collect.includes(items);
+  if (isObject(collect)) return hasOwn(items, collect);
   // TODO: Add support for multiple items
   if (DEV) throw new Renit("Type error in 'has' function");
 }
 
 /**
  * Checks if the object has the specified property.
- * @param {Object} obj - The object to check.
  * @param {string} prop - The property to check for.
+ * @param {Object} obj - The object to check.
  * @returns {boolean} - True if the object has the property, otherwise false.
  */
-export function hasOwn(obj, prop) {
+export function hasOwn(prop, obj) {
   return Object.prototype.hasOwnProperty.call(obj, prop);
 }
 
@@ -377,7 +417,7 @@ export function merge(seed, collect) {
   if (isArray(seed) && isArray(collect)) return collect.concat(seed);
 
   // prettier-ignore
-  if (isObject(seed) && isObject(collect)) return Object.assign(seed, collect);
+  if (isObject(seed) && isObject(collect)) return Object.assign(collect, seed);
 
   if (isPromise(seed)) return seed.then(s => merge(s, collect));
   if (isPromise(collect)) return collect.then(c => merge(seed, c));
@@ -397,7 +437,7 @@ export function mergeDeep(seed, collect) {
   if (isArray(seed) && isArray(collect)) return collect.concat(seed);
 
   // prettier-ignore
-  if (isObject(seed) && isObject(collect)) return mergeDeepObject(seed, collect);
+  if (isObject(seed) && isObject(collect)) return mergeDeepObject(collect, seed);
 
   if (isPromise(seed)) return seed.then(s => mergeDeep(s, collect));
   if (isPromise(collect)) return collect.then(c => mergeDeep(seed, c));
@@ -425,6 +465,107 @@ function mergeDeepObject(seed, ...collect) {
   }
 
   return mergeDeepObject(seed, ...collect);
+}
+
+/**
+ * Applies a function to each element in the collection, returns the original collection.
+ *
+ * @param {Function} fn - Function to apply to each element.
+ * @param {Array|Object} [collect] - Collection to iterate over.
+ * @returns {Function|Array|Object} Function if `collect` is undefined, otherwise the original collection.
+ */
+export function peek(fn, collect) {
+  if (isUndefined(collect)) return collect => peek(fn, collect);
+  return map(tap(fn), collect);
+}
+
+/**
+ * Extracts values associated with a specified key from a collection.
+ *
+ * @param {string} key - The key to pluck values for.
+ * @param {string} [seed] - Optional seed key to structure the result.
+ * @param {Array|Object} [collect] - The collection to pluck values from.
+ * @returns {Function|Array|Object} Function if `collect` is undefined, otherwise the plucked values.
+ */
+export function pluck(key, seed, collect) {
+  if (isUndefined(collect)) {
+    if (isUndefined(seed)) return collect => pluck(key, collect);
+    return pluck(key, void 0, seed);
+  }
+
+  let fn = value;
+  let collection = [];
+
+  // Initialize collection as an object if seed is provided
+  if (!isUndefined(seed)) collection = {};
+
+  // Use wildcard function if key contains '*'
+  if (key.indexOf('*') !== -1) fn = pluckWildcard;
+
+  if (isArray(collect)) {
+    each(item => {
+      pluckInit(fn, key, item, seed, collection);
+    }, collect);
+
+    return collection;
+  } else {
+    pluckInit(fn, key, collect, seed, collection);
+    return collection;
+  }
+}
+
+/**
+ * Handles wildcard keys and extracts matching values from the collection.
+ *
+ * @param {string} key - The wildcard key.
+ * @param {Array|Object} collect - The collection to pluck values from.
+ * @returns {Array} The plucked values.
+ */
+function pluckWildcard(key, collect) {
+  collect = [collect];
+  const collection = [];
+  const paths = keyMap(collect);
+  const regex = new RegExp(`0.${key}`, 'g');
+  const numberOfLevels = size(split('.', `0.${key}`));
+  pipe(
+    collect,
+    keyMap(),
+    keys(),
+    map(k => {
+      const matching = k.match(regex);
+      if (matching) {
+        const match = matching[0];
+        if (size(split('.', match)) === numberOfLevels) {
+          push(paths[match], collection);
+        }
+      }
+    })
+  );
+  return collection;
+}
+
+/**
+ * Initializes the plucking process and merges results into the collection.
+ *
+ * @param {Function} fn - Function to apply to each element.
+ * @param {string} key - The key to pluck values for.
+ * @param {any} item - The current item to process.
+ * @param {string} [seed] - Optional seed key to structure the result.
+ * @param {Array|Object} collection - The collection to store the results.
+ */
+function pluckInit(fn, key, item, seed, collection) {
+  const result = fn(key, item);
+  let seedResult = null;
+
+  // If seed is provided, extract the seed result
+  if (!isUndefined(seed)) seedResult = fn(seed, item);
+
+  // Merge the result into the collection
+  if (seedResult) {
+    merge({ [seedResult]: result }, collection);
+  } else {
+    push(result, collection);
+  }
 }
 
 /**
@@ -568,6 +709,32 @@ export function reverse(collect) {
   if (isUndefined(collect)) return collect => reverse(collect);
   if (isArray(collect)) return collect.reverse();
   if (DEV) throw new Renit("Type error in 'reverse' function");
+}
+
+/**
+ * Removes and returns the first item from the collection.
+ *
+ * @param {number} [count] - The number of elements to shift.
+ * @param {Array|Promise} [collect] - The collection or a promise that resolves to a collection.
+ * @returns {Function|any|null} If the collection is an array, returns the shifted elements.
+ */
+export function shift(count, collect) {
+  if (isUndefined(collect)) {
+    if (isUndefined(count)) return collect => shift(count, collect);
+    return shift(void 0, count);
+  }
+
+  if (isPromise(collect)) return collect.then(c => shift(c));
+  if (isUndefined(count)) count = 1;
+
+  if (isArray(collect)) {
+    if (isEqual(count, 1)) {
+      return collect.shift();
+    }
+    return splice([0, count], collect);
+  }
+  // TODO: object support
+  return null;
 }
 
 /**
@@ -732,6 +899,106 @@ export function split(key, collect) {
   }, key);
 
   return collection;
+}
+
+/**
+ * Takes a specified number of elements from a collection.
+ *
+ * @param {number} size - Number of elements to take. If negative, takes from the end.
+ * @param {Array|Object} [collect] - Collection to take from.
+ * @returns {Function|Array|Object} Function if `collect` is undefined, otherwise sliced collection.
+ */
+export function take(size, collect) {
+  if (isUndefined(collect)) return collect => take(size, collect);
+
+  if (isObject(collect)) {
+    const collectKeys = keys(collect);
+    let slicedKeys;
+
+    if (size < 0) {
+      slicedKeys = slice(size, collectKeys);
+    } else {
+      slicedKeys = slice([0, size], collectKeys);
+    }
+
+    const collection = {};
+
+    each(prop => {
+      if (slicedKeys.indexOf(prop) !== -1) {
+        collection[prop] = collect[prop];
+      }
+    }, collectKeys);
+
+    return collection;
+  }
+
+  if (size < 0) {
+    return slice(size, collect);
+  }
+
+  return slice([0, size], collect);
+}
+
+/**
+ * Returns items in the collection until the given callback returns `true`
+ *
+ * @param {Function|any} fn - Condition function or value to stop taking elements.
+ * @param {Array|Object} [collect] - Collection to take from.
+ * @returns {Function|Array|Object} Function if `collect` is undefined, otherwise filtered collection.
+ */
+export function takeUntil(fn, collect) {
+  if (isUndefined(collect)) return collect => takeUntil(fn, collect);
+
+  let previous = null;
+  let items;
+  let callback = value => value === fn;
+
+  if (isFunction(fn)) {
+    callback = fn;
+  }
+
+  if (isArray(collect)) {
+    items = filter(item => {
+      if (previous !== false) {
+        previous = !callback(item);
+      }
+      return previous;
+    }, collect);
+  } else if (isObject(collect)) {
+    items = pipe(
+      collect,
+      keys(),
+      reduce([
+        (acc, key) => {
+          if (previous !== false) {
+            previous = !callback(collect[key]);
+          }
+
+          if (previous !== false) {
+            acc[key] = collect[key];
+          }
+
+          return acc;
+        },
+        {},
+      ])
+    );
+  }
+
+  return items;
+}
+
+/**
+ * Executes a function with the provided collection and returns the original collection.
+ *
+ * @param {Function} fn - Function to execute with the collection.
+ * @param {Array|Object} [collect] - Collection to pass to the function.
+ * @returns {Function|Array|Object} Function if `collect` is undefined, otherwise the original collection.
+ */
+export function tap(fn, collect) {
+  if (isUndefined(collect)) return collect => tap(fn, collect);
+  fn(collect);
+  return collect;
 }
 
 /**
