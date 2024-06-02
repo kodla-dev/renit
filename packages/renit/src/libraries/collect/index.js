@@ -246,6 +246,48 @@ export function flat(depth, collect) {
 }
 
 /**
+ * Joins elements of a collection into a string, with optional glue for specific keys.
+ *
+ * @param {string} key - The separator or the key to pluck values from.
+ * @param {string} [glue] - The separator for the plucked values.
+ * @param {Array|Object} [collect] - The collection to join.
+ * @returns {string|Function} The joined string or a function if `collect` is undefined.
+ */
+export function implode(key, glue, collect) {
+  if (isUndefined(collect)) {
+    if (isUndefined(glue)) return collect => implode(key, collect);
+    if (isString(glue)) return collect => implode(key, glue, collect);
+    return implode(key, void 0, glue);
+  }
+  if (isUndefined(glue)) return collect.join(key);
+  return pluck(key, collect).join(glue);
+}
+
+/**
+ * Joins elements of a collection into a string with optional final glue for the last element.
+ *
+ * @param {string} glue - The separator for the elements.
+ * @param {string} [finalGlue] - The separator for the final element.
+ * @param {Array|Object} [collect] - The collection to join.
+ * @returns {string|Function} The joined string or a function if `collect` is undefined.
+ */
+export function join(glue, finalGlue, collect) {
+  if (isUndefined(collect)) {
+    if (isUndefined(finalGlue)) return collect => join(glue, collect);
+    if (isString(finalGlue)) return collect => join(glue, finalGlue, collect);
+    return join(glue, void 0, finalGlue);
+  }
+
+  const collection = values(collect);
+  if (isUndefined(finalGlue)) return implode(glue, collection);
+  const len = size(collection);
+  if (len === 0) return '';
+  if (len === 1) return last(collection);
+  const finalItem = pop(collection);
+  return implode(glue, collection) + finalGlue + finalItem;
+}
+
+/**
  * Creates a map of keys from a nested collection.
  *
  * @param {Array|Object} collect - Collection to map keys from.
@@ -622,6 +664,37 @@ export function pop(length, collect) {
   }
 
   return null;
+}
+
+/**
+ * Prepends a key or value to a collection.
+ *
+ * @param {any} key - The key or value to prepend.
+ * @param {any} [value] - The value to prepend if `collect` is an object.
+ * @param {Array|Object|string} [collect] - The collection to prepend to.
+ * @returns {Array|Object|string|Function} The modified collection, or a function if `collect` is undefined.
+ */
+export function prepend(key, value, collect) {
+  if (isUndefined(collect)) {
+    if (isCollect(value) || isString(value)) return prepend(key, void 0, value);
+    return collect => prepend(key, value, collect);
+  }
+
+  if (isString(collect)) {
+    return `${key}` + collect;
+  } else if (isArray(collect)) {
+    if (isArray(key)) {
+      each(value => {
+        collect.unshift(value);
+      }, reverse(key));
+    } else {
+      collect.unshift(key);
+    }
+  } else if (isObject(collect)) {
+    return merge(collect, { [key]: value });
+  }
+
+  return collect;
 }
 
 /**

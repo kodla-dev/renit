@@ -10,6 +10,8 @@ import {
   filter,
   flat,
   has,
+  implode,
+  join,
   keyMap,
   keys,
   last,
@@ -18,6 +20,7 @@ import {
   merge,
   pluck,
   pop,
+  prepend,
   push,
   reduce,
   remove,
@@ -426,6 +429,45 @@ describe('flat', () => {
   });
 });
 
+describe('implode', () => {
+  it('implode:array', () => {
+    expect(implode('-', [1, 2, 3, 4, 5])).toEqual('1-2-3-4-5');
+  });
+  it('implode:array', () => {
+    expect(
+      implode('product', ', ', [
+        {
+          product: 'ChromeOS',
+          company: 'Google',
+        },
+        {
+          product: 'ChatGPT',
+          company: 'OpenAI',
+        },
+        {
+          product: 'VS Code',
+          company: 'Microsoft',
+        },
+      ])
+    ).toEqual('ChromeOS, ChatGPT, VS Code');
+  });
+});
+
+describe('join', () => {
+  it('join:array', () => {
+    expect(join(', ', ['a', 'b', 'c'])).toEqual('a, b, c');
+  });
+  it('join:array:final', () => {
+    expect(join(', ', ', and ', ['a', 'b', 'c'])).toEqual('a, b, and c');
+  });
+  it('join:array:final:last', () => {
+    expect(join(', ', ', and ', ['a'])).toEqual('a');
+  });
+  it('join:object', () => {
+    expect(join(' ', { name: 'Marie', last: 'Curie' })).toEqual('Marie Curie');
+  });
+});
+
 describe('keyMap', () => {
   it('keyMap:object', () => {
     expect(
@@ -712,6 +754,25 @@ describe('pop', () => {
       last: 'Kuşçu',
       birth: '1403',
     });
+  });
+});
+
+describe('prepend', () => {
+  it('prepend:array', () => {
+    expect(prepend(0, [1, 2, 3, 4, 5])).toEqual([0, 1, 2, 3, 4, 5]);
+  });
+  it('prepend:array:multiple', () => {
+    expect(prepend([0, 14], [1, 2, 3, 4, 5])).toEqual([0, 14, 1, 2, 3, 4, 5]);
+  });
+  it('prepend:object', () => {
+    expect(
+      prepend('brand', 'Google', {
+        product: 'ChromeOS',
+      })
+    ).toEqual({ brand: 'Google', product: 'ChromeOS' });
+  });
+  it('prepend:string', () => {
+    expect(prepend('?', 'category=1&book=5')).toEqual('?category=1&book=5');
   });
 });
 
