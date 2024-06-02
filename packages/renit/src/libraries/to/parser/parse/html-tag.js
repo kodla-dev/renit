@@ -1,4 +1,4 @@
-import { has, push } from '../../../collect/index.js';
+import { includes, push } from '../../../collect/index.js';
 import { isEmpty, isNull, isUndefined } from '../../../is/index.js';
 import { size } from '../../../math/index.js';
 import { attributeNode, commentNode, elementNode, textNode } from '../ast.js';
@@ -62,7 +62,7 @@ export function parseHtmlTag(tag, options) {
     if (!isUndefined(value)) value = value.trim();
 
     // If the attribute value contains '=' or '{', wrap it in curly braces
-    if (has('={', tree[0])) {
+    if (includes('={', tree[0])) {
       value = '{' + value + '}';
     }
 
