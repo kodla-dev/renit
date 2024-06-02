@@ -663,10 +663,7 @@ export function reduce(fn, seed, collect) {
   }
 
   if (isArray(collect)) {
-    each(item => {
-      seed = fn(seed, item);
-    }, collect);
-    return seed;
+    return collect.reduce(fn, seed);
   }
 
   if (isObject(collect)) {
