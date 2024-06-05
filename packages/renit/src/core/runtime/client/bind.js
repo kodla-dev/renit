@@ -1,4 +1,4 @@
-import { isFunction } from '../../../libraries/is/index.js';
+import { isEmpty, isFunction } from '../../../libraries/is/index.js';
 import { _input, _textContent } from './const.js';
 import { addEventListener, setAttribute } from './dom.js';
 import { reactive } from './reactive.js';
@@ -28,9 +28,14 @@ function _attribute(element, name, value) {
  */
 export function attribute(self, element, name, value) {
   if (isFunction(value)) {
-    reactive(self, value, value => {
-      _attribute(element, name, value);
-    });
+    reactive(
+      self,
+      value,
+      value => {
+        _attribute(element, name, value);
+      },
+      [value]
+    );
   } else {
     _attribute(element, name, value);
   }
@@ -73,13 +78,22 @@ export function input(self, element, name, get, set) {
  * @param {Object} self - The context for reactive binding.
  * @param {Node} node - The node whose text content will be bound.
  * @param {function|string} content - The reactive function or value providing the text content.
+ * @param {...Function} trackers - Optional tracker functions for reactivity.
  */
-export function text(self, node, content) {
+export function text(self, node, content, ...trackers) {
+  // If no trackers are provided, use the content as the only tracker
+  if (isEmpty(trackers)) trackers = [content];
+
   // If content is a function, bind it to a reactive update of the text content
   if (isFunction(content)) {
-    reactive(self, content, value => {
-      _attribute(node, _textContent, value);
-    });
+    reactive(
+      self,
+      content,
+      value => {
+        _attribute(node, _textContent, value);
+      },
+      trackers
+    );
   } else {
     // Otherwise, set the text content directly
     _attribute(node, _textContent, content);

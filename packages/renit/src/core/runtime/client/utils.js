@@ -1,13 +1,5 @@
-import { clone } from '../../../helpers/index.js';
 import { each } from '../../../libraries/collect/index.js';
-import {
-  isArray,
-  isElement,
-  isEqual,
-  isNull,
-  isObject,
-  isText,
-} from '../../../libraries/is/index.js';
+import { isElement, isNull, isObject, isText } from '../../../libraries/is/index.js';
 import {
   appendChild,
   createAnchor,
@@ -152,21 +144,4 @@ export function removeRange(start, end) {
  */
 export function eachKey(item, index, array) {
   return isObject(array[0]) ? item : index;
-}
-
-/**
- * Executes callback functions for each item in the watch list if the value returned by the
- * associated reactive function has changed.
- * @param {Array} watchList - The list of watch objects containing reactive functions and their
- * corresponding callbacks.
- */
-export function digest(watchList) {
-  each(watch => {
-    let value = watch.fn();
-    if (!isEqual(watch.v, value)) {
-      watch.cb(value);
-      if (isArray(value)) value = clone(value);
-      watch.v = value;
-    }
-  }, watchList);
 }
