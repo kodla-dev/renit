@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { add, avg, size, sum } from '../src/libraries/math/index.js';
+import { add, avg, divisible, size, sum } from '../src/libraries/math/index.js';
 
 describe('add', () => {
   it('add:number', () => {
@@ -43,6 +43,20 @@ describe('avg', () => {
         ]
       )
     ).toEqual(636);
+  });
+});
+
+describe('divisible', () => {
+  it('divisible:array:single', () => {
+    expect(divisible(2, [1, 2, 3, 4, 5, 6])).toEqual([2, 4, 6]);
+  });
+
+  it('divisible:array:multiple', () => {
+    expect(divisible([2, 3], [1, 2, 3, 4, 5, 6, 12])).toEqual([6, 12]);
+  });
+
+  it('divisible:object', () => {
+    expect(divisible(3, { a: 1, b: 3, c: 6, d: 9 })).toEqual({ b: 3, c: 6, d: 9 });
   });
 });
 

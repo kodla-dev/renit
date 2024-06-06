@@ -1,8 +1,9 @@
-import { keys, map, pluck, reduce } from '../collect/index.js';
+import { every, filter, keys, map, pluck, reduce } from '../collect/index.js';
 import {
   isArray,
   isArrayLike,
   isCollect,
+  isDivisible,
   isFunction,
   isNumber,
   isObject,
@@ -40,6 +41,23 @@ export function avg(key, collect) {
   }
 
   return sum(key, collect) / size(collect);
+}
+
+/**
+ * Filters a collection to include only items divisible by a given number or numbers.
+ *
+ * @param {number|Array<number>} number - The number or array of numbers to check divisibility against.
+ * @param {Array|Object} [collect] - The collection to filter.
+ * @returns {Array|Object} The filtered collection.
+ */
+export function divisible(number, collect) {
+  if (isUndefined(collect)) return collect => divisible(collect);
+  if (isNumber(number) && isCollect(collect)) {
+    return filter(item => isDivisible(item, number), collect);
+  }
+  if (isArray(number) && isCollect(collect)) {
+    return filter(item => every(num => isDivisible(item, num), number), collect);
+  }
 }
 
 /**
