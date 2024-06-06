@@ -144,6 +144,17 @@ export function isDate(value) {
 }
 
 /**
+ * Checks if a value is divisible by a given number.
+ *
+ * @param {number} value - The value to check.
+ * @param {number} number - The number to divide by.
+ * @returns {boolean} True if value is divisible by number, otherwise false.
+ */
+export function isDivisible(value, number) {
+  return value % number === 0;
+}
+
+/**
  * Checks if a value is an Element object.
  *
  * @param {*} value - The value to check.
