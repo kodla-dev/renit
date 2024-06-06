@@ -54,3 +54,37 @@ export function event() {
     },
   };
 }
+
+// Global event listeners
+const bus = event();
+
+/**
+ * Emits an event with the given arguments.
+ *
+ * @param {string} event - The event name to emit.
+ * @param {...any} args - The arguments to pass to the event listeners.
+ */
+export const emit = (event, ...args) => bus.emit(event, ...args);
+
+/**
+ * Registers an event listener for the given event.
+ *
+ * @param {string} event - The event name to listen for.
+ * @param {Function} callback - The callback function to invoke when the event is emitted.
+ */
+export const on = (event, callback) => bus.on(event, callback);
+
+/**
+ * Removes all listeners for the given event.
+ *
+ * @param {string} event - The event name to remove listeners for.
+ */
+export const off = event => bus.off(event);
+
+/**
+ * Registers an event listener for the given event that will be invoked only once.
+ *
+ * @param {string} event - The event name to listen for.
+ * @param {Function} callback - The callback function to invoke when the event is emitted.
+ */
+export const once = (event, callback) => bus.once(event, callback);
