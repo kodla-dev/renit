@@ -1,12 +1,13 @@
 import { isEmpty, isFunction } from '../../../libraries/is/index.js';
 import { _input, _textContent } from './const.js';
 import { addEventListener, setAttribute } from './dom.js';
-import { reactive } from './reactive.js';
+import { watch } from './reactive.js';
 
 /**
  * Sets the attribute of an element.
  * If the attribute is a property of the element, it sets the property directly,
  * otherwise, it sets the attribute using setAttribute method.
+ *
  * @param {HTMLElement} element The element to set the attribute on.
  * @param {string} name The name of the attribute.
  * @param {string} value The value of the attribute.
@@ -21,18 +22,19 @@ function _attribute(element, name, value) {
 
 /**
  * Sets an attribute on an element, binding its value to a reactive function if the value is a function.
- * @param {Object} self - The context for reactive binding.
+ *
+ * @param {Object} context - The context for reactive binding.
  * @param {Element} element - The element on which the attribute will be set.
  * @param {string} name - The name of the attribute.
  * @param {any} value - The value to set for the attribute.
  */
-export function attribute(self, element, name, value) {
+export function attribute(context, element, name, value) {
   if (isFunction(value)) {
-    reactive(
-      self,
+    watch(
+      context,
       value,
-      value => {
-        _attribute(element, name, value);
+      newValue => {
+        _attribute(element, name, newValue);
       },
       [value]
     );
@@ -43,31 +45,34 @@ export function attribute(self, element, name, value) {
 
 /**
  * Adds an event listener to an element, binding its callback to a reactive function.
- * @param {Object} self - The context for reactive binding.
+ *
+ * @param {Object} context - The context for reactive binding.
  * @param {Element} element - The element to which the event listener will be added.
- * @param {string} event - The event type (e.g., 'click', 'input').
+ * @param {string} type - The event type (e.g., 'click', 'input').
  * @param {function} callback - The callback function to execute when the event occurs.
  */
-export function event(self, element, event, callback) {
+export function event(context, element, type, callback) {
   if (!callback) return;
-  addEventListener(element, event, callback);
+  addEventListener(element, type, callback);
+  // TODO: add removeEventListener to context
 }
 
 /**
  * Binds an input element's attribute and event to reactive functions.
- * @param {Object} self - The context for reactive binding.
+ *
+ * @param {Object} context - The context for reactive binding.
  * @param {Element} element - The input element to bind.
  * @param {string} name - The name of the attribute to bind.
  * @param {function} get - The reactive function to retrieve the attribute value.
  * @param {function} set - The optional setter function to update the attribute value.
  */
-export function input(self, element, name, get, set) {
+export function input(context, element, name, get, set) {
   // Bind the attribute to a reactive function
-  attribute(self, element, name, get);
+  attribute(context, element, name, get);
 
   // If a setter function is provided, bind the 'input' event to update the attribute value
   if (set) {
-    event(self, element, _input, () => {
+    event(context, element, _input, () => {
       set(element[name]);
     });
   }
@@ -75,24 +80,25 @@ export function input(self, element, name, get, set) {
 
 /**
  * Binds text content of a node to a reactive function or value.
- * @param {Object} self - The context for reactive binding.
+ *
+ * @param {Object} context - The context for reactive binding.
  * @param {Node} node - The node whose text content will be bound.
  * @param {function|string} content - The reactive function or value providing the text content.
- * @param {...Function} trackers - Optional tracker functions for reactivity.
+ * @param {...Function} dependencies - Optional dependencies that trigger updates.
  */
-export function text(self, node, content, ...trackers) {
-  // If no trackers are provided, use the content as the only tracker
-  if (isEmpty(trackers)) trackers = [content];
+export function text(context, node, content, ...dependencies) {
+  // If dependencies are empty, set them to the content
+  if (isEmpty(dependencies)) dependencies = [content];
 
-  // If content is a function, bind it to a reactive update of the text content
+  // If content is a function, watch its changes and update the text node reactively
   if (isFunction(content)) {
-    reactive(
-      self,
+    watch(
+      context,
       content,
       value => {
         _attribute(node, _textContent, value);
       },
-      trackers
+      dependencies
     );
   } else {
     // Otherwise, set the text content directly

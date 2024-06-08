@@ -4,118 +4,118 @@ import { isCollect, isEmpty, isEqual } from '../../../libraries/is/index.js';
 import { tick } from './utils.js';
 
 /**
- * Tracks dependencies and invokes a callback when they change.
+ * Sets up a watch on the given dependencies and triggers the onChange callback when any dependency changes.
  *
- * @param {Object} self - The context object that holds the watch list.
- * @param {Function} content - A function that returns the content to be tracked.
- * @param {Function} callback - A callback function to be invoked when the content changes.
- * @param {Array<Function>} trackers - An array of tracker functions to monitor for changes.
+ * @param {Object} context - The context to store the watch information.
+ * @param {Function} getContent - Function to get the current content.
+ * @param {Function} onChange - Callback function to call when any dependency changes.
+ * @param {Array<Function>} dependencies - Array of dependency functions to watch.
  */
-export function reactive(self, content, callback, trackers) {
-  each(tracker => {
-    let collect;
-    let value = tracker();
+export function watch(context, getContent, onChange, dependencies) {
+  each(dependency => {
+    let isCollection;
+    let value = dependency();
 
     // Check if the value is a collection and clone it if necessary
-    if (isCollect(value)) collect = true;
-    if (collect) value = clone(value);
+    if (isCollect(value)) isCollection = true;
+    if (isCollection) value = clone(value);
 
     // Execute the callback with the current content
-    callback(content());
+    onChange(getContent());
 
     // Push the tracker, value, content, and callback into the watch list
-    self.$_w.push({ t: tracker, v: value, c: content, cb: callback });
-  }, trackers);
+    context.$_w.push({ t: dependency, v: value, c: getContent, cb: onChange });
+  }, dependencies);
 }
 
 /**
- * Executes all computed functions and watch functions in their respective lists.
+ * Adds a computed function to the computed list, with optional dependencies.
  *
- * @param {Array} watchList - The list of watch functions to execute.
- * @param {Array} computedList - The list of computed functions to execute.
+ * @param {Array} computedList - The list to store computed functions.
+ * @param {Function} computed - The computed function to add.
+ * @param {Array} [dependencies] - Optional dependencies for the computed function.
  */
-export function reactiveWatch(watchList, computedList) {
-  // Schedule the execution of all computed functions
-  tick(() => each(computed => execComputed(computed), computedList));
-
-  // Schedule the execution of all watch functions
-  tick(() => each(watch => execWatch(watch), watchList));
-}
-
-/**
- * Executes a watch callback if the tracked value has changed.
- *
- * @param {Object} watch - An object representing the watch with properties:
- *   - t: Function that returns the current value to be tracked.
- *   - v: The previous value.
- *   - c: Function that returns the content.
- *   - cb: Callback function to be executed if the value changes.
- */
-export function execWatch(watch) {
-  let collect;
-
-  // Check if the previous value is a collection
-  if (isCollect(watch.v)) collect = true;
-
-  // Get the current value from the tracker function
-  let value = watch.t();
-
-  // If the current value is not equal to the previous value, run the callback
-  if (!isEqual(watch.v, value)) {
-    watch.cb(watch.c());
-
-    // Update the previous value with the current value, cloning if it's a collection
-    if (collect) {
-      watch.v = clone(value);
-    } else {
-      watch.v = value;
-    }
-  }
-}
-
-/**
- * Adds a computed function to the computed list, optionally tracking dependencies.
- *
- * @param {Array} computedList - The list of computed functions to update.
- * @param {Function} computed - The computed function to be added.
- * @param {Array} trackers - The list of tracker functions that this computed function depends on.
- */
-export function addComputed(computedList, computed, trackers) {
+export function computed(computedList, computed, dependencies) {
   // Execute the computed function initially
   computed();
 
-  if (isEmpty(trackers)) {
-    // If no trackers are provided, add the computed function to the list without dependencies
+  if (isEmpty(dependencies)) {
+    // If there are no dependencies, add the computed function to the list
     computedList.push({ c: computed });
   } else {
-    // If trackers are provided, add each tracker and its initial value along with the computed function to the list
-    each(tracker => {
-      computedList.push({ t: tracker, v: tracker(), c: computed });
-    }, trackers);
+    // If there are dependencies, add them along with the computed function to the list
+    each(dependency => {
+      computedList.push({ t: dependency, v: dependency(), c: computed });
+    }, dependencies);
   }
 }
 
 /**
- * Executes a computed callback and updates its value if necessary.
+ * Executes all computed and watch trackers.
  *
- * @param {Object} computed - An object representing the computed value with properties:
- *   - t: [Optional] Function that returns the current value to be tracked.
- *   - v: The previous value.
- *   - c: Function that performs the computed operation.
+ * @param {Array} watchList - The list of watch trackers to execute.
+ * @param {Array} computedList - The list of computed trackers to execute.
  */
-export function execComputed(computed) {
-  if (computed.t) {
-    // Get the current value from the tracker function
-    let value = computed.t();
+export function updateTrackers(watchList, computedList) {
+  // Execute all computed trackers
+  tick(() => each(computed => executeComputed(computed), computedList));
 
-    // If the current value is not equal to the previous value, run the computed function
-    if (!isEqual(computed.v, value)) {
+  // Execute all watch trackers
+  tick(() => each(watch => executeWatch(watch), watchList));
+}
+
+/**
+ * Executes a computed function if its dependencies have changed.
+ *
+ * @param {Object} computed - The computed object containing:
+ *   - {Function} [t] - The dependency tracker function.
+ *   - {any} [v] - The last tracked value of the dependency.
+ *   - {Function} c - The computed function to execute.
+ */
+export function executeComputed(computed) {
+  if (computed.t) {
+    // Track the current value of the dependency
+    let currentValue = computed.t();
+
+    // If the current value is different from the last tracked value, execute the computed function
+    if (!isEqual(computed.v, currentValue)) {
       computed.c();
       // Update the previous value with the current value
-      computed.v = value;
+      computed.v = currentValue;
     }
   } else {
-    // If there is no tracker function, just run the computed function
+    // If there is no dependency tracker, just execute the computed function
     computed.c();
+  }
+}
+
+/**
+ * Executes a watch function if its tracked value has changed.
+ *
+ * @param {Object} watch - The watch object containing:
+ *   - {Function} t - The tracker function to get the current value.
+ *   - {any} v - The last tracked value.
+ *   - {Function} c - The content function to get the new value.
+ *   - {Function} cb - The callback function to execute on change.
+ */
+export function executeWatch(watch) {
+  let isCollection = false;
+
+  // Check if the last tracked value is a collection
+  if (isCollect(watch.v)) isCollection = true;
+
+  // Get the current value from the tracker function
+  let currentValue = watch.t();
+
+  // If the current value is different from the last tracked value, execute the callback function
+  if (!isEqual(watch.v, currentValue)) {
+    watch.cb(watch.c());
+
+    // Update the last tracked value
+    if (isCollection) {
+      watch.v = clone(currentValue);
+    } else {
+      watch.v = currentValue;
+    }
   }
 }
