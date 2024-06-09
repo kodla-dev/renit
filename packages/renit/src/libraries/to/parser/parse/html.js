@@ -2,7 +2,7 @@ import { RAW_EMPTY, RGX_WHITESPACE } from '../../../../core/define.js';
 import { each, push, reduce, some } from '../../../collect/index.js';
 import { isArray, isEqual, isUndefined } from '../../../is/index.js';
 import { size } from '../../../math/index.js';
-import { textNode } from '../ast.js';
+import { TextNode } from '../ast.js';
 import { parseHtmlOptions } from '../utils.js';
 import { parseHtmlTag } from './html-tag.js';
 
@@ -79,10 +79,10 @@ export function htmlToAst(program, options = {}) {
         if (!options.transform.whitespace) {
           if (!RGX_WHITESPACE.test(text)) {
             if (options.transform.trim) text = text.trim();
-            push(textNode(text), current.children);
+            push(TextNode(text), current.children);
           }
         } else {
-          push(textNode(text), current.children);
+          push(TextNode(text), current.children);
         }
       }
 
@@ -113,7 +113,7 @@ export function htmlToAst(program, options = {}) {
         if ((end > -1 && level + size(parent) >= 0) || content !== ' ') {
           if (parent && isArray(parent)) {
             if (options.transform.whitespace) {
-              push(textNode(content), parent);
+              push(TextNode(content), parent);
             }
           }
         }

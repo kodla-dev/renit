@@ -3,8 +3,8 @@
  * @param {string} text
  * @returns {Object}
  */
-export function textNode(content) {
-  return { type: 'text', content };
+export function TextNode(content) {
+  return { type: 'Text', content };
 }
 
 /**
@@ -12,8 +12,8 @@ export function textNode(content) {
  * @param {string} content
  * @returns {Object}
  */
-export function commentNode(content) {
-  return { type: 'comment', content };
+export function CommentNode(content) {
+  return { type: 'Comment', content };
 }
 
 /**
@@ -24,8 +24,8 @@ export function commentNode(content) {
  * @param {Array} children
  * @returns {Object}
  */
-export function elementNode(name = '', voidElement = false, attributes = [], children = []) {
-  return { type: 'element', name, voidElement, attributes, children };
+export function ElementNode(name = '', voidElement = false, attributes = [], children = []) {
+  return { type: 'Element', name, voidElement, attributes, children };
 }
 
 /**
@@ -34,6 +34,6 @@ export function elementNode(name = '', voidElement = false, attributes = [], chi
  * @param {string} value
  * @returns {Object}
  */
-export function attributeNode(name, value, prefix, suffix) {
-  return { type: 'attribute', prefix, name, suffix, value };
+export function AttributeNode(name, value, prefix, suffix) {
+  return { type: 'Attribute', prefix, name, suffix, value };
 }

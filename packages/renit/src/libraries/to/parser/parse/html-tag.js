@@ -1,7 +1,7 @@
 import { includes, push } from '../../../collect/index.js';
 import { isEmpty, isNull, isUndefined } from '../../../is/index.js';
 import { size } from '../../../math/index.js';
-import { attributeNode, commentNode, elementNode, textNode } from '../ast.js';
+import { AttributeNode, CommentNode, ElementNode, TextNode } from '../ast.js';
 import { RGX_HTML_FIRST_TAG, RGX_HTML_TAG_ATTRIBUTES, RGX_HTML_TAG_NAME } from '../utils.js';
 
 /**
@@ -12,7 +12,7 @@ import { RGX_HTML_FIRST_TAG, RGX_HTML_TAG_ATTRIBUTES, RGX_HTML_TAG_NAME } from '
  */
 export function parseHtmlTag(tag, options) {
   // Create a new elementNode to represent the parsed tag.
-  const node = elementNode();
+  const node = ElementNode();
 
   // Extract the tag name from the tag using a regular expression.
   const name = tag.match(RGX_HTML_TAG_NAME)[1];
@@ -25,7 +25,7 @@ export function parseHtmlTag(tag, options) {
     // If it's a comment node, create a commentNode with the comment text and return it.
     if (node.name.startsWith('!--')) {
       const endIndex = tag.indexOf('-->');
-      return commentNode(endIndex !== -1 ? tag.slice(4, endIndex) : '');
+      return CommentNode(endIndex !== -1 ? tag.slice(4, endIndex) : '');
     }
   }
 
@@ -76,7 +76,7 @@ export function parseHtmlTag(tag, options) {
     const raw = rgxRaw.exec(tag);
     let text = raw ? raw.groups.raw : '';
     if (options.transform.trim) text = text.trim();
-    push(textNode(text), node.children);
+    push(TextNode(text), node.children);
   }
 
   // Return the parsed elementNode.
@@ -97,10 +97,10 @@ function attribute(name, value, node, options) {
   // If affixing is enabled in options, affix the attribute name
   if (options.attribute.affix) {
     const af = attributeAffix(name, options);
-    push(attributeNode(af.name, value, af.prefix, af.suffix), node.attributes);
+    push(AttributeNode(af.name, value, af.prefix, af.suffix), node.attributes);
   } else {
     // Otherwise, set the attribute name as is
-    push(attributeNode(name, value), node.attributes);
+    push(AttributeNode(name, value), node.attributes);
   }
 }
 
