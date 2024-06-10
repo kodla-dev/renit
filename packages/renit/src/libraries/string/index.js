@@ -93,7 +93,7 @@ export function ucwords(locale, collect) {
     lower(locale),
     words,
     map(letter => ucfirst(locale, letter)),
-    join(' ')
+    join
   );
 }
 
