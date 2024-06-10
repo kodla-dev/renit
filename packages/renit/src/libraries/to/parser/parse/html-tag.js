@@ -61,6 +61,12 @@ export function parseHtmlTag(tag, options) {
     if (!isUndefined(name)) name = name.trim();
     if (!isUndefined(value)) value = value.trim();
 
+    // Handle attributes with template syntax.
+    if (includes('{', name)) {
+      value = name;
+      name = /{(.*?)}/g.exec(name)[1];
+    }
+
     // If the attribute value contains '=' or '{', wrap it in curly braces
     if (includes('={', tree[0])) {
       value = '{' + value + '}';
