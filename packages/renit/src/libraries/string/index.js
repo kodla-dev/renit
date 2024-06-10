@@ -126,7 +126,7 @@ export function upper(locale, collect) {
  */
 export function words(punct, collect) {
   if (isUndefined(collect)) {
-    if (isString(punct)) return words(1, punct);
+    if (isString(punct)) return words(0, punct);
     return collect => words(punct, collect);
   }
 

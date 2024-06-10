@@ -29,7 +29,7 @@ describe('upper', () => {
 
 describe('words', () => {
   it('words:true', () => {
-    const result = words('Lorem ipsum\ndolor sit amet, consectetur adipiscing\telit.');
+    const result = words(true, 'Lorem ipsum\ndolor sit amet, consectetur adipiscing\telit.');
     const expected = [
       'Lorem',
       'ipsum',
@@ -44,7 +44,7 @@ describe('words', () => {
   });
 
   it('words:false', () => {
-    const result = words(false, 'Lorem ipsum\ndolor sit amet, consectetur adipiscing\telit.');
+    const result = words('Lorem ipsum\ndolor sit amet, consectetur adipiscing\telit.');
     const expected = [
       'Lorem',
       'ipsum',
