@@ -93,7 +93,7 @@ describe('htmlToAst', () => {
         children: [{ type: 'Text', content: 'Hello World!' }],
       },
     ];
-    expect(ast).toEqual(result);
+    expect(JSON.stringify(ast)).toEqual(JSON.stringify(result));
   });
 
   it('should parse nested elements', () => {
@@ -115,7 +115,7 @@ describe('htmlToAst', () => {
         ],
       },
     ];
-    expect(ast).toEqual(result);
+    expect(JSON.stringify(ast)).toEqual(JSON.stringify(result));
   });
 
   it('should recognize void elements', () => {
@@ -138,19 +138,13 @@ describe('htmlToAst', () => {
             type: 'Element',
             name: 'img',
             voidElement: true,
-            attributes: [
-              {
-                type: 'Attribute',
-                name: 'src',
-                value: 'renit.png',
-              },
-            ],
+            attributes: [{ type: 'Attribute', name: 'src', value: 'renit.png' }],
             children: [],
           },
         ],
       },
     ];
-    expect(ast).toEqual(result);
+    expect(JSON.stringify(ast)).toEqual(JSON.stringify(result));
   });
 
   it('should recognize custom void tags', () => {
@@ -172,38 +166,29 @@ describe('htmlToAst', () => {
         ],
       },
     ];
-    expect(ast).toEqual(result);
+    expect(JSON.stringify(ast)).toEqual(JSON.stringify(result));
   });
 
   it('should parse the attributes of the element', () => {
-    const ast = htmlToAst('<a href="/home.html" class="btn mt-2" data-id=5 disabled>HOME</a>');
+    const ast = htmlToAst(
+      '<a href="/home.html" class="btn mt-2" data-id=5 disabled {value}>HOME</a>'
+    );
     const result = [
       {
         type: 'Element',
         name: 'a',
         voidElement: false,
         attributes: [
-          {
-            type: 'Attribute',
-            prefix: undefined,
-            name: 'href',
-            suffix: undefined,
-            value: '/home.html',
-          },
-          {
-            type: 'Attribute',
-            prefix: undefined,
-            name: 'class',
-            suffix: undefined,
-            value: 'btn mt-2',
-          },
-          { type: 'Attribute', prefix: undefined, name: 'data-id', suffix: undefined, value: '5' },
+          { type: 'Attribute', name: 'href', value: '/home.html' },
+          { type: 'Attribute', name: 'class', value: 'btn mt-2' },
+          { type: 'Attribute', name: 'data-id', value: '5' },
           { type: 'Attribute', name: 'disabled' },
+          { type: 'Attribute', name: 'value', value: '{value}' },
         ],
         children: [{ type: 'Text', content: 'HOME' }],
       },
     ];
-    expect(ast).toEqual(result);
+    expect(JSON.stringify(ast)).toEqual(JSON.stringify(result));
   });
 
   it('should provide affix feature in attribute parsing', () => {
@@ -219,12 +204,11 @@ describe('htmlToAst', () => {
         name: 'div',
         voidElement: false,
         attributes: [
-          { type: 'Attribute', prefix: '@', name: 'name', suffix: undefined, value: 'form' },
+          { type: 'Attribute', prefix: '@', name: 'name', value: 'form' },
           {
             type: 'Attribute',
-            prefix: undefined,
             name: 'class',
-            suffix: [{ prefix: ':', name: 'visible', suffix: undefined }],
+            suffix: [{ prefix: ':', name: 'visible' }],
             value: '{display}',
           },
         ],
@@ -233,21 +217,13 @@ describe('htmlToAst', () => {
             type: 'Element',
             name: 'input',
             voidElement: true,
-            attributes: [
-              {
-                type: 'Attribute',
-                prefix: ':',
-                name: 'value',
-                suffix: undefined,
-                value: '{number}',
-              },
-            ],
+            attributes: [{ type: 'Attribute', prefix: ':', name: 'value', value: '{number}' }],
             children: [],
           },
         ],
       },
     ];
-    expect(ast).toEqual(result);
+    expect(JSON.stringify(ast)).toEqual(JSON.stringify(result));
   });
 
   it('should allow adding new affixes', () => {
@@ -263,7 +239,7 @@ describe('htmlToAst', () => {
         children: [{ type: 'Text', content: 'OK' }],
       },
     ];
-    expect(ast).toEqual(result);
+    expect(JSON.stringify(ast)).toEqual(JSON.stringify(result));
   });
 
   it('should recognize whitespace', () => {
@@ -287,11 +263,12 @@ describe('htmlToAst', () => {
             attributes: [],
             children: [{ type: 'Text', content: ' whitespace ' }],
           },
-          { type: 'Text', content: ' ' },
+          { type: 'Text', content: '\n      ' },
         ],
       },
+      { type: 'Text', content: '\n    ' },
     ];
-    expect(ast).toEqual(result);
+    expect(JSON.stringify(ast)).toEqual(JSON.stringify(result));
   });
 
   it('should remove optional whitespace', () => {
@@ -319,21 +296,13 @@ describe('htmlToAst', () => {
             voidElement: false,
             attributes: [],
             children: [
-              {
-                type: 'Text',
-                content: 'renit',
-              },
+              { type: 'Text', content: 'renit' },
               {
                 type: 'Element',
                 name: 'span',
                 voidElement: false,
                 attributes: [],
-                children: [
-                  {
-                    type: 'Text',
-                    content: '!',
-                  },
-                ],
+                children: [{ type: 'Text', content: '!' }],
               },
             ],
           },
@@ -342,17 +311,12 @@ describe('htmlToAst', () => {
             name: 'script',
             voidElement: false,
             attributes: [],
-            children: [
-              {
-                type: 'Text',
-                content: 'console.log();',
-              },
-            ],
+            children: [{ type: 'Text', content: 'console.log();' }],
           },
         ],
       },
     ];
-    expect(ast).toEqual(result);
+    expect(JSON.stringify(ast)).toEqual(JSON.stringify(result));
   });
 
   it('should not parse special HTML tags', () => {
@@ -389,7 +353,7 @@ describe('htmlToAst', () => {
             attributes: [],
             children: [{ type: 'Text', content: 'parse' }],
           },
-          { type: 'Text', content: ' ' },
+          { type: 'Text', content: '\n        ' },
           {
             type: 'Element',
             name: 'script',
@@ -419,8 +383,9 @@ describe('htmlToAst', () => {
           },
         ],
       },
+      { type: 'Text', content: '\n    ' },
     ];
-    expect(ast).toEqual(result);
+    expect(JSON.stringify(ast)).toEqual(JSON.stringify(result));
   });
 
   it('should allow special HTML tags but not parse their content', () => {
@@ -451,7 +416,33 @@ describe('htmlToAst', () => {
           },
         ],
       },
+      { type: 'Text', content: '\n    ' },
     ];
-    expect(ast).toEqual(result);
+    expect(JSON.stringify(ast)).toEqual(JSON.stringify(result));
+  });
+  it('should convert content outside tags into text nodes', () => {
+    const ast = htmlToAst(`
+      <div>div text</div> outside
+      text <p>paragraph text</p>
+    `);
+    const result = [
+      {
+        type: 'Element',
+        name: 'div',
+        voidElement: false,
+        attributes: [],
+        children: [{ type: 'Text', content: 'div text' }],
+      },
+      { type: 'Text', content: 'outside text' },
+      {
+        type: 'Element',
+        name: 'p',
+        voidElement: false,
+        attributes: [],
+        children: [{ type: 'Text', content: 'paragraph text' }],
+      },
+      { type: 'Text', content: '\n    ' },
+    ];
+    expect(JSON.stringify(ast)).toEqual(JSON.stringify(result));
   });
 });

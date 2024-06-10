@@ -1,9 +1,16 @@
-import { RAW_EMPTY, RGX_WHITESPACE } from '../../../../core/define.js';
-import { each, push, reduce, some } from '../../../collect/index.js';
-import { isArray, isEqual, isUndefined } from '../../../is/index.js';
+import {
+  RAW_EMPTY,
+  RAW_WHITESPACE,
+  RGX_WHITESPACE,
+  RGX_WHITESPACE_ESCAPE,
+} from '../../../../core/define.js';
+import { pipe } from '../../../../helpers/index.js';
+import { each, join, push, reduce, some } from '../../../collect/index.js';
+import { isArray, isEmpty, isEqual, isUndefined } from '../../../is/index.js';
 import { size } from '../../../math/index.js';
+import { words } from '../../../string/index.js';
 import { TextNode } from '../ast.js';
-import { parseHtmlOptions } from '../utils.js';
+import { RGX_HTML_OUTSIDE_TAGS, parseHtmlOptions } from '../utils.js';
 import { parseHtmlTag } from './html-tag.js';
 
 /**
@@ -23,6 +30,19 @@ export function htmlToAst(program, options = {}) {
   const tree = [];
   let current;
   let level = -1;
+
+  // Replace text outside HTML tags with a specific format
+  program = program.replace(RGX_HTML_OUTSIDE_TAGS, (tag, ...args) => {
+    let text = args[2];
+    if (!isUndefined(text)) {
+      text = text.trim();
+      if (!isEmpty(text)) {
+        text = pipe(text, words, join);
+        return `<!--text:${text}-->`;
+      }
+    }
+    return tag;
+  });
 
   // Use regular expression to match HTML tags in the program string.
   program.replace(options.rgx.tags, (tag, ...args) => {
@@ -82,6 +102,9 @@ export function htmlToAst(program, options = {}) {
             push(TextNode(text), current.children);
           }
         } else {
+          if (!RGX_WHITESPACE.test(text)) {
+            if (options.transform.trim) text = text.trim();
+          }
           push(TextNode(text), current.children);
         }
       }
@@ -107,10 +130,10 @@ export function htmlToAst(program, options = {}) {
         parent = level === -1 ? ast : tree[level].children;
         const end = program.indexOf('<', start);
         let content = program.slice(start, end === -1 ? undefined : end);
-        if (RGX_WHITESPACE.test(content)) {
-          content = ' ';
+        if (RGX_WHITESPACE_ESCAPE.test(content)) {
+          content = RAW_WHITESPACE;
         }
-        if ((end > -1 && level + size(parent) >= 0) || content !== ' ') {
+        if ((end > -1 && level + size(parent) >= 0) || content !== RAW_WHITESPACE) {
           if (parent && isArray(parent)) {
             if (options.transform.whitespace) {
               push(TextNode(content), parent);
@@ -126,7 +149,8 @@ export function htmlToAst(program, options = {}) {
 }
 
 /**
- * Function to convert AST (Abstract Syntax Tree) to HTML representation.
+ * Converts an abstract syntax tree (AST) back to an HTML string representation.
+ *
  * @param {Object} ast - The AST structure to be converted.
  * @returns {string} - A string containing the HTML representation.
  */
@@ -143,29 +167,30 @@ export function astToHtml(ast) {
 }
 
 /**
- * Function to convert AST node to HTML string.
+ * Converts an AST node to its HTML string representation.
+ *
  * @param {string} buffer - The current HTML string buffer.
  * @param {Object} ast - The AST node to be converted.
  * @returns {string} - Updated HTML string buffer with AST node's representation.
  */
 function htmlStringify(buffer, ast) {
   switch (ast.type) {
-    case 'text':
+    case 'Text':
       // For text nodes, concatenate the content to the buffer.
       return buffer + ast.content;
-    case 'element':
+    case 'Element':
       // For element nodes, construct the HTML tag with attributes and children.
       buffer +=
         '<' +
         ast.name +
-        (ast.attributes ? attributesStringify(ast.attributes) : '') +
+        (ast.attributes ? attributesStringify(ast.attributes) : RAW_EMPTY) +
         (ast.voidElement ? '/>' : '>');
       if (ast.voidElement) {
         return buffer;
       }
       // Recursively stringify children of non-void elements.
-      return buffer + reduce(htmlStringify, '', ast.children) + '</' + ast.name + '>';
-    case 'comment':
+      return buffer + reduce(htmlStringify, RAW_EMPTY, ast.children) + '</' + ast.name + '>';
+    case 'Comment':
       // For comment nodes, add HTML comment syntax to the buffer.
       buffer += '<!--' + ast.content + '-->';
       return buffer;
@@ -176,7 +201,8 @@ function htmlStringify(buffer, ast) {
 }
 
 /**
- * Function to stringify attributes of an HTML element.
+ * Converts an object of attributes into a string representation suitable for HTML tags.
+ *
  * @param {Object} attributes - The attributes object of an element.
  * @returns {string} - String representation of element attributes.
  */
@@ -205,5 +231,5 @@ function attributesStringify(attributes) {
   if (!size(attrList)) {
     return RAW_EMPTY;
   }
-  return ' ' + attrList.join(' ');
+  return RAW_WHITESPACE + join(attrList);
 }

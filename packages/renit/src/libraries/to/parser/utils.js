@@ -59,6 +59,13 @@ export const RGX_HTML_TAG_ATTRIBUTES =
 export const RGX_HTML_FIRST_TAG = /<(?:\/|)[a-zA-Z0-9](?:"[^"]*"|'[^']*'|{[^{]*}|[^'"}>])*>/;
 
 /**
+ * Regular expression to match text outside tags.
+ * @type {RegExp}
+ */
+export const RGX_HTML_OUTSIDE_TAGS =
+  /(?:(?:<(\w+)\b[^<>]*>[\s\S]*?<\/\1>)|(?:<(\w+|\W+)\b[^<>]*>))|([^<>]+)/g;
+
+/**
  * Function to generate options for HTML parsing.
  * @param {Object} options - Options object.
  * @returns {Object} - Merged options object.

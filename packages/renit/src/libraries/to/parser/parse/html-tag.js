@@ -1,3 +1,4 @@
+import { RAW_EMPTY } from '../../../../core/define.js';
 import { includes, push } from '../../../collect/index.js';
 import { isEmpty, isNull, isUndefined } from '../../../is/index.js';
 import { size } from '../../../math/index.js';
@@ -6,12 +7,17 @@ import { RGX_HTML_FIRST_TAG, RGX_HTML_TAG_ATTRIBUTES, RGX_HTML_TAG_NAME } from '
 
 /**
  * Parses an HTML tag.
+ *
+ * This function takes an HTML tag as a string and an options object, then parses the tag
+ * to create a node representation of the tag. It handles void elements, special tags
+ * (like comments and certain HTML elements), and attributes.
+ *
  * @param {string} tag - The HTML tag to parse.
  * @param {Object} options - Options object.
  * @returns {Object} - The parsed HTML tag represented as a node.
  */
 export function parseHtmlTag(tag, options) {
-  // Create a new elementNode to represent the parsed tag.
+  // Create a new ElementNode to represent the parsed tag.
   const node = ElementNode();
 
   // Extract the tag name from the tag using a regular expression.
@@ -22,10 +28,22 @@ export function parseHtmlTag(tag, options) {
     node.name = name;
     node.voidElement = options.tags.void.includes(name) || tag.charAt(size(tag) - 2) === '/';
 
-    // If it's a comment node, create a commentNode with the comment text and return it.
+    // Check if the tag is a comment.
     if (node.name.startsWith('!--')) {
       const endIndex = tag.indexOf('-->');
-      return CommentNode(endIndex !== -1 ? tag.slice(4, endIndex) : '');
+      let value = endIndex !== -1 ? tag.slice(4, endIndex) : RAW_EMPTY;
+      const textSelector = 'text:';
+
+      // Trim the comment value if the trim option is enabled.
+      if (options.transform.trim) value = value.trim();
+
+      // Handle special text nodes in comments.
+      if (value.startsWith(textSelector)) {
+        return TextNode(value.replace(textSelector, RAW_EMPTY));
+      }
+
+      // Return a CommentNode for regular comments.
+      return CommentNode(value);
     }
   }
 
@@ -85,7 +103,7 @@ export function parseHtmlTag(tag, options) {
     push(TextNode(text), node.children);
   }
 
-  // Return the parsed elementNode.
+  // Return the parsed ElementNode.
   return node;
 }
 
