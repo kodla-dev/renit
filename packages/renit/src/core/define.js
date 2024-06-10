@@ -6,6 +6,12 @@
 */
 
 /**
+ * Constant representing the DOM reference selector
+ * @type {string}
+ */
+export const DOM_REFER_SELECTOR = '<!>';
+
+/**
  * Represents the maximum safe integer.
  * @type {number}
  */
@@ -30,6 +36,12 @@ export const RAW_ASYNC_FUNCTION = 'AsyncFunction';
 export const RAW_BOOLEAN = 'boolean';
 
 /**
+ * Constant representing the string 'checked'
+ * @type {string}
+ */
+export const RAW_CHECKED = 'checked';
+
+/**
  * Represents the "class" expression in object-oriented programming.
  * @type {string}
  */
@@ -41,10 +53,28 @@ export const RAW_CLASS = 'class';
 export const RAW_CLASS_NAME = 'className';
 
 /**
+ * Constant representing the string 'click'
+ * @type {string}
+ */
+export const RAW_CLICK = 'click';
+
+/**
+ * Constant representing a raw empty string
+ * @type {string}
+ */
+export const RAW_EMPTY = '';
+
+/**
  * Represents the function expression.
  * @type {string}
  */
 export const RAW_FUNCTION = 'function';
+
+/**
+ * Constant representing the string 'input'
+ * @type {string}
+ */
+export const RAW_INPUT = 'input';
 
 /**
  * Represents the "Map" data structure.
@@ -107,52 +137,10 @@ export const RAW_STYLE = 'style';
 export const RAW_SYMBOL = 'symbol';
 
 /**
- * Represents the undefined value.
- * @type {string}
- */
-export const RAW_UNDEFINED = 'undefined';
-
-/**
- * Regular expression to match whitespace
- * @type {RegExp}
- */
-export const RGX_WHITESPACE = /^\s*$/;
-
-/**
- * Constant representing a raw empty string
- * @type {string}
- */
-export const RAW_EMPTY = '';
-
-/**
  * Constant representing the string 'template'
  * @type {string}
  */
 export const RAW_TEMPLATE = 'template';
-
-/**
- * Constant representing the string 'click'
- * @type {string}
- */
-export const RAW_CLICK = 'click';
-
-/**
- * Constant representing the string 'value'
- * @type {string}
- */
-export const RAW_VALUE = 'value';
-
-/**
- * Constant representing the string 'input'
- * @type {string}
- */
-export const RAW_INPUT = 'input';
-
-/**
- * Constant representing the string 'checked'
- * @type {string}
- */
-export const RAW_CHECKED = 'checked';
 
 /**
  * Constant representing the string 'textContent'
@@ -161,7 +149,37 @@ export const RAW_CHECKED = 'checked';
 export const RAW_TEXTCONTENT = 'textContent';
 
 /**
- * Constant representing the DOM reference selector
+ * Represents the undefined value.
  * @type {string}
  */
-export const DOM_REFER_SELECTOR = '<!>';
+export const RAW_UNDEFINED = 'undefined';
+
+/**
+ * Constant representing the string 'value'
+ * @type {string}
+ */
+export const RAW_VALUE = 'value';
+
+/**
+ * Constant representing a raw space character.
+ * @type {string}
+ */
+export const RAW_WHITESPACE = ' ';
+
+/**
+ * Regular expression to match non-whitespace
+ * @type {RegExp}
+ */
+export const RGX_NON_WHITESPACE = /\S+/g;
+
+/**
+ * Regular expression to match whitespace
+ * @type {RegExp}
+ */
+export const RGX_WHITESPACE = /^\s*$/;
+
+/**
+ * Regular expression to match whitespace escape
+ * @type {RegExp}
+ */
+export const RGX_WHITESPACE_ESCAPE = /^\\s*$/;
