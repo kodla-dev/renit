@@ -66,7 +66,8 @@
   },
   "dependencies": {
     "acorn": "^8.11.3",
-    "astring": "^1.8.6"
+    "astring": "^1.8.6",
+    "css-tree": "^2.3.1"
   },
   "engines": {
     "node": ">= 18"
