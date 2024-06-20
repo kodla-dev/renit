@@ -250,23 +250,41 @@ describe('htmlToAst', () => {
     `);
     const result = [
       {
+        type: 'Text',
+        content: '\n      ',
+      },
+      {
         type: 'Element',
         name: 'div',
         voidElement: false,
         attributes: [],
         children: [
-          { type: 'Text', content: '\n        ' },
+          {
+            type: 'Text',
+            content: '\n        ',
+          },
           {
             type: 'Element',
             name: 'p',
             voidElement: false,
             attributes: [],
-            children: [{ type: 'Text', content: ' whitespace ' }],
+            children: [
+              {
+                type: 'Text',
+                content: ' whitespace ',
+              },
+            ],
           },
-          { type: 'Text', content: '\n      ' },
+          {
+            type: 'Text',
+            content: '\n      ',
+          },
         ],
       },
-      { type: 'Text', content: '\n    ' },
+      {
+        type: 'Text',
+        content: '\n    ',
+      },
     ];
     expect(JSON.stringify(ast)).toEqual(JSON.stringify(result));
   });
@@ -340,35 +358,68 @@ describe('htmlToAst', () => {
     `);
     const result = [
       {
+        type: 'Text',
+        content: '\n      ',
+      },
+      {
         type: 'Element',
         name: 'div',
         voidElement: false,
         attributes: [],
         children: [
-          { type: 'Text', content: '\n        ' },
+          {
+            type: 'Text',
+            content: '\n        ',
+          },
           {
             type: 'Element',
             name: 'p',
             voidElement: false,
             attributes: [],
-            children: [{ type: 'Text', content: 'parse' }],
+            children: [
+              {
+                type: 'Text',
+                content: 'parse',
+              },
+            ],
           },
-          { type: 'Text', content: '\n        ' },
+          {
+            type: 'Text',
+            content: '\n        ',
+          },
           {
             type: 'Element',
             name: 'script',
             voidElement: false,
-            attributes: [{ type: 'Attribute', name: 'lang', value: 'ts' }],
+            attributes: [
+              {
+                type: 'Attribute',
+                name: 'lang',
+                value: 'ts',
+              },
+            ],
             children: [
-              { type: 'Text', content: '\n          console.log("<p>not parse</p>")\n        ' },
+              {
+                type: 'Text',
+                content: '\n          console.log("<p>not parse</p>")\n        ',
+              },
             ],
           },
-          { type: 'Comment', content: ' single line comment <p>not parse</p> ' },
+          {
+            type: 'Comment',
+            content: ' single line comment <p>not parse</p> ',
+          },
           {
             type: 'Element',
             name: 'style',
             voidElement: false,
-            attributes: [{ type: 'Attribute', name: 'type', value: 'text/css' }],
+            attributes: [
+              {
+                type: 'Attribute',
+                name: 'type',
+                value: 'text/css',
+              },
+            ],
             children: [
               {
                 type: 'Text',
@@ -383,7 +434,10 @@ describe('htmlToAst', () => {
           },
         ],
       },
-      { type: 'Text', content: '\n    ' },
+      {
+        type: 'Text',
+        content: '\n    ',
+      },
     ];
     expect(JSON.stringify(ast)).toEqual(JSON.stringify(result));
   });
@@ -400,6 +454,7 @@ describe('htmlToAst', () => {
       { tags: { addSpecial: ['portal'] } }
     );
     const result = [
+      { type: 'Text', content: '\n      ' },
       {
         type: 'Element',
         name: 'div',
@@ -426,6 +481,7 @@ describe('htmlToAst', () => {
       text <p>paragraph text</p>
     `);
     const result = [
+      { type: 'Text', content: '\n      ' },
       {
         type: 'Element',
         name: 'div',
@@ -433,7 +489,7 @@ describe('htmlToAst', () => {
         attributes: [],
         children: [{ type: 'Text', content: 'div text' }],
       },
-      { type: 'Text', content: 'outside text' },
+      { type: 'Text', content: ' outside\n      text ' },
       {
         type: 'Element',
         name: 'p',

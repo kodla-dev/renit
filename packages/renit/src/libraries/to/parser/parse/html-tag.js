@@ -39,7 +39,11 @@ export function parseHtmlTag(tag, options) {
 
       // Handle special text nodes in comments.
       if (value.startsWith(textSelector)) {
-        return TextNode(value.replace(textSelector, RAW_EMPTY));
+        value = value.replace(textSelector, RAW_EMPTY);
+        if (value != RAW_EMPTY) {
+          return TextNode(value);
+        }
+        return false;
       }
 
       // Return a CommentNode for regular comments.

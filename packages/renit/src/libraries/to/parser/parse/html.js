@@ -1,9 +1,4 @@
-import {
-  RAW_EMPTY,
-  RAW_WHITESPACE,
-  RGX_WHITESPACE,
-  RGX_WHITESPACE_ESCAPE,
-} from '../../../../core/define.js';
+import { RAW_EMPTY, RAW_WHITESPACE, RGX_WHITESPACE } from '../../../../core/define.js';
 import { pipe } from '../../../../helpers/index.js';
 import { each, join, push, reduce, some } from '../../../collect/index.js';
 import { isArray, isEmpty, isEqual, isUndefined } from '../../../is/index.js';
@@ -35,9 +30,9 @@ export function htmlToAst(program, options = {}) {
   program = program.replace(RGX_HTML_OUTSIDE_TAGS, (tag, ...args) => {
     let text = args[2];
     if (!isUndefined(text)) {
-      text = text.trim();
+      if (options.transform.trim) text = text.trim();
       if (!isEmpty(text)) {
-        text = pipe(text, words, join);
+        if (!options.transform.whitespace) text = pipe(text, words, join);
         return `<!--text:${text}-->`;
       }
     }
@@ -67,6 +62,7 @@ export function htmlToAst(program, options = {}) {
     // If it's a special tag, parse it as a tag and handle it separately.
     if (isSpecial) {
       const special = parseHtmlTag(tag, options);
+      if (!special) return;
 
       // If it's at root level, add the special tag directly to the AST.
       if (level < 0) {
@@ -86,6 +82,7 @@ export function htmlToAst(program, options = {}) {
     if (isOpen) {
       level++;
       current = parseHtmlTag(tag, options);
+      if (!current) return;
 
       // If the tag is not a void element and there is content following the tag,
       // parse the content and add it as a child of the current element.
@@ -98,7 +95,11 @@ export function htmlToAst(program, options = {}) {
         let text = program.slice(start, program.indexOf('<', start));
         if (!options.transform.whitespace) {
           if (!RGX_WHITESPACE.test(text)) {
-            if (options.transform.trim) text = text.trim();
+            if (options.transform.trim) {
+              text = text.trim();
+            } else {
+              text = text.replaceAll('\n', '');
+            }
             push(TextNode(text), current.children);
           }
         } else {
@@ -130,13 +131,19 @@ export function htmlToAst(program, options = {}) {
         parent = level === -1 ? ast : tree[level].children;
         const end = program.indexOf('<', start);
         let content = program.slice(start, end === -1 ? undefined : end);
-        if (RGX_WHITESPACE_ESCAPE.test(content)) {
-          content = RAW_WHITESPACE;
-        }
-        if ((end > -1 && level + size(parent) >= 0) || content !== RAW_WHITESPACE) {
+        if (end > -1 && level + size(parent) >= 0) {
           if (parent && isArray(parent)) {
             if (options.transform.whitespace) {
+              if (!RGX_WHITESPACE.test(content)) {
+                if (options.transform.trim) content = content.trim();
+              }
               push(TextNode(content), parent);
+            } else {
+              if (options.transform.trim) content = content.trim();
+              if (!RGX_WHITESPACE.test(content)) {
+                content = content.replaceAll('\n', '');
+                push(TextNode(content), parent);
+              }
             }
           }
         }
