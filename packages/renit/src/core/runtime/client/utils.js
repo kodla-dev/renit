@@ -1,5 +1,5 @@
 import { each } from '../../../libraries/collect/index.js';
-import { isElement, isNull, isObject, isText } from '../../../libraries/is/index.js';
+import { isElement, isObject, isText } from '../../../libraries/is/index.js';
 import {
   appendChild,
   createAnchor,
@@ -11,7 +11,6 @@ import {
   nextNode,
   nextSibling,
   parentNode,
-  previousSibling,
   remove,
   replaceWith,
 } from './dom.js';
@@ -49,17 +48,17 @@ export function reference(html) {
   // Traverse the tree walker.
   while (nextNode(walker)) {
     const node = currentNode(walker);
+    const content = node.textContent;
     const next = nextSibling(node);
-    const previous = previousSibling(node);
 
-    // If the next and previous siblings are text nodes or null, replace the current node with an anchor.
-    if ((isNull(next) || isText(next)) && (isNull(previous) || isText(previous))) {
-      replaces.push([node, createAnchor()]);
+    // If the node's text content is 'e', replace it with the next sibling node.
+    if (content == 'e') {
+      replaces.push([node, next]);
     }
 
-    // If the next sibling is an element, replace the current node with the next sibling.
-    else if (isElement(next)) {
-      replaces.push([node, next]);
+    // If the node's text content is 't', replace it with a newly created anchor node.
+    else if (content == 't') {
+      replaces.push([node, createAnchor()]);
     }
   }
 

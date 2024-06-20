@@ -6,10 +6,16 @@
 */
 
 /**
- * Constant representing the DOM reference selector
- * @type {string}
+ * The selector used to reference element nodes in the DOM.
+ * @constant {string}
  */
-export const DOM_REFER_SELECTOR = '<!>';
+export const DOM_ELEMENT_SELECTOR = '<!e>';
+
+/**
+ * The selector used to reference text nodes in the DOM.
+ * @constant {string}
+ */
+export const DOM_TEXT_SELECTOR = '<!t>';
 
 /**
  * Represents the maximum safe integer.
@@ -177,9 +183,3 @@ export const RGX_NON_WHITESPACE = /\S+/g;
  * @type {RegExp}
  */
 export const RGX_WHITESPACE = /^\s*$/;
-
-/**
- * Regular expression to match whitespace escape
- * @type {RegExp}
- */
-export const RGX_WHITESPACE_ESCAPE = /^\\s*$/;
