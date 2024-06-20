@@ -132,6 +132,15 @@ export function isCollect(value) {
 }
 
 /**
+ * Checks if the given value is an instance of the Comment interface.
+ * @param {*} value The value to check.
+ * @returns {boolean} True if the value is a Comment node, otherwise false.
+ */
+export function isComment(value) {
+  return value instanceof Comment;
+}
+
+/**
  * Checks if the specified value belongs to an date class.
  *
  * @template R
