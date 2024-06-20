@@ -1071,6 +1071,39 @@ export function takeUntil(fn, collect) {
 }
 
 /**
+ * Returns a collection of unique items from the given collection.
+ * @param {Function|string} key - The key function or key name to determine uniqueness.
+ * @param {Array} [collect] - The collection to filter for unique items.
+ * @returns {Array|Function} - The filtered collection of unique items.
+ */
+export function unique(key, collect) {
+  if (isUndefined(collect)) {
+    if (isCollect(key)) return unique(void 0, key);
+    return collect => unique(key, collect);
+  }
+
+  if (isUndefined(key)) {
+    return filter((element, index, self) => self.indexOf(element) === index, collect);
+  } else {
+    let collection = [];
+    const used = [];
+    each(item => {
+      let unique;
+      if (isFunction(key)) {
+        unique = key(item);
+      } else {
+        unique = item[key];
+      }
+      if (used.indexOf(unique) === -1) {
+        push(item, collection);
+        push(unique, used);
+      }
+    }, collect);
+    return collection;
+  }
+}
+
+/**
  * Executes a function with the provided collection and returns the original collection.
  *
  * @param {Function} fn - Function to execute with the collection.
