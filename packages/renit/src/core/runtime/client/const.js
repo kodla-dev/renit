@@ -1,4 +1,12 @@
-import { RAW_CHECKED, RAW_CLICK, RAW_INPUT, RAW_TEXTCONTENT, RAW_VALUE } from '../../define.js';
+import {
+  RAW_CHECKED,
+  RAW_CLASS,
+  RAW_CLICK,
+  RAW_INPUT,
+  RAW_STYLE,
+  RAW_TEXTCONTENT,
+  RAW_VALUE,
+} from '../../define.js';
 
 /**
  * Represents the 'checked' property name.
@@ -7,10 +15,22 @@ import { RAW_CHECKED, RAW_CLICK, RAW_INPUT, RAW_TEXTCONTENT, RAW_VALUE } from '.
 export const _checked = RAW_CHECKED;
 
 /**
+ * Represents the 'class' property.
+ * @type {string}
+ */
+export const _class = RAW_CLASS;
+
+/**
  * Represents the 'click' event.
  * @type {string}
  */
 export const _click = RAW_CLICK;
+
+/**
+ * Represents the 'style' property.
+ * @type {string}
+ */
+export const _style = RAW_STYLE;
 
 /**
  * Represents the 'value' property.

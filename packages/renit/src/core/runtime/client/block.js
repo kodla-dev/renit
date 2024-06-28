@@ -1,6 +1,15 @@
 import { size } from '../../../libraries/math/index.js';
 import { RAW_TEMPLATE } from '../../define.js';
-import { childNodes, firstChild, innerElement } from './dom.js';
+import {
+  appendChild,
+  childNodes,
+  createElement,
+  firstChild,
+  innerElement,
+  innerHTML,
+  querySelector,
+  setId,
+} from './dom.js';
 
 /**
  * Extracts the block content from the provided HTML.
@@ -14,4 +23,17 @@ export function block(html) {
     content = firstChild(content);
   }
   return content;
+}
+
+/**
+ * Adds a style element with the specified id and content to the document head.
+ * @param {string} id - The id to set on the style element.
+ * @param {string} content - The CSS content to include in the style element.
+ */
+export function style(id, content) {
+  if (querySelector(document.head, 'style#' + id)) return;
+  let style = createElement('style');
+  setId(style, id);
+  innerHTML(style, content);
+  appendChild(document.head, style);
 }

@@ -22,6 +22,15 @@ export function innerHTML(element, html) {
 }
 
 /**
+ * Sets the id attribute of the given element.
+ * @param {Element} element - The element on which to set the id.
+ * @param {string} id - The id to set on the element.
+ */
+export function setId(element, id) {
+  element.id = id;
+}
+
+/**
  * Creates a new element of the specified type and sets its inner HTML content.
  * @param {string} type The type of the element to create.
  * @param {string} html The HTML content to set for the element.
@@ -206,4 +215,14 @@ export function setAttribute(element, qualifiedName, value) {
  */
 export function addEventListener(element, type, listener) {
   element.addEventListener(type, listener);
+}
+
+/**
+ * Executes the `querySelector` method on the given element with the specified selectors.
+ * @param {Element} element - The element on which to execute the query.
+ * @param {string} selectors - A string containing one or more CSS selectors to match.
+ * @returns {Element|null} The first element that matches the specified selectors, or null if no matches are found.
+ */
+export function querySelector(element, selectors) {
+  element.querySelector(selectors);
 }

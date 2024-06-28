@@ -5,8 +5,8 @@
   ------------------------------------------------------------------------------
 */
 
-export { attribute, event, input, text } from './client/bind.js';
-export { block } from './client/block.js';
+export { attribute, event, html, input, text } from './client/bind.js';
+export { block, style } from './client/block.js';
 export { component } from './client/component.js';
-export { _checked, _click, _value } from './client/const.js';
+export { _checked, _class, _click, _style, _value } from './client/const.js';
 export { reference } from './client/utils.js';

@@ -1,6 +1,7 @@
 import { isEmpty, isFunction } from '../../../libraries/is/index.js';
+import { block } from './block.js';
 import { _input, _textContent } from './const.js';
-import { addEventListener, setAttribute } from './dom.js';
+import { addEventListener, replaceWith, setAttribute } from './dom.js';
 import { watch } from './reactive.js';
 
 /**
@@ -27,8 +28,12 @@ function _attribute(element, name, value) {
  * @param {Element} element - The element on which the attribute will be set.
  * @param {string} name - The name of the attribute.
  * @param {any} value - The value to set for the attribute.
+ * @param {...any} dependencies - Dependencies that determine when the content should be updated.
  */
-export function attribute(context, element, name, value) {
+export function attribute(context, element, name, value, ...dependencies) {
+  // If dependencies are empty, set them to the value
+  if (isEmpty(dependencies)) dependencies = [value];
+
   if (isFunction(value)) {
     watch(
       context,
@@ -36,7 +41,7 @@ export function attribute(context, element, name, value) {
       newValue => {
         _attribute(element, name, newValue);
       },
-      [value]
+      dependencies
     );
   } else {
     _attribute(element, name, value);
@@ -103,5 +108,35 @@ export function text(context, node, content, ...dependencies) {
   } else {
     // Otherwise, set the text content directly
     _attribute(node, _textContent, content);
+  }
+}
+
+/**
+ * Updates the HTML content of a given node.
+ *
+ * @param {Object} context - The context in which the function operates.
+ * @param {HTMLElement} node - The DOM node to be updated.
+ * @param {Function|string} content - The new content to be set. Can be a function or a string.
+ * @param {...any} dependencies - Dependencies that determine when the content should be updated.
+ */
+export function html(context, node, content, ...dependencies) {
+  // If dependencies are not provided, use content as the dependency
+  if (isEmpty(dependencies)) dependencies = [content];
+
+  // If content is a function, set up a watcher to update the node when content changes
+  if (isFunction(content)) {
+    watch(
+      context,
+      content,
+      value => {
+        const element = block(value);
+        replaceWith(node, element);
+        node = element;
+      },
+      dependencies
+    );
+  } else {
+    // If content is not a function, directly replace the node's content
+    replaceWith(node, block(content));
   }
 }
