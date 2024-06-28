@@ -89,6 +89,11 @@ export function cssToAST(code) {
   return parseCss(code);
 }
 
+/**
+ * Generates CSS from an Abstract Syntax Tree (AST).
+ * @param {object} ast - The Abstract Syntax Tree (AST) representing CSS.
+ * @returns {string} The generated CSS as a string.
+ */
 export function generateCss(ast) {
   return generateStyle(ast);
 }
