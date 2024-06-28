@@ -50,7 +50,7 @@ export const RGX_HTML_TAG_NAME = /<\/?([^\s]+?)[/\s>]/;
  * @type {RegExp}
  */
 export const RGX_HTML_TAG_ATTRIBUTES =
-  /(?:([^\s]+))="(?:(.*?))"|(?:([^\s]+))='(?:(.*?))'|(?:([^\s]+))={(?:(.*?))}|(?:([^\s]+))=(?=[^{"'])(?:(.*?))(?=[\s>])|\s((?:[^'"\s\W><]+|[{}:@.|])+)(?=[\s/>])/g;
+  /(?:([^\s]+))="(?:(.*?))"|(?:([^\s]+))='(?:(.*?))'|(?:([^\s]+))={(?:(.*?))}|(?:([^\s]+))=(?=[^{"'])(?:(.*?))(?=[\s>])|\s((?:[^'"\s\W><]+|[{}:@.|*#^])+)(?=[\s/>])/g;
 
 /**
  * Regular expression pattern to match the first tag in HTML content.
@@ -86,7 +86,7 @@ export function parseHtmlOptions(opts) {
     },
     attribute: {
       affix: false, // Flag to determine whether to affix attribute names parse
-      affixList: [':', '@', '\\|', '\\*'], // List of attribute affixes
+      affixList: [':', '@', '\\|', '\\*', '#', '\\^'], // List of attribute affixes
       addAffix: [], // Additional attribute affixes to add
     },
     transform: {
