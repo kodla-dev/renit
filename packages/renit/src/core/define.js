@@ -65,6 +65,12 @@ export const RAW_CLASS_NAME = 'className';
 export const RAW_CLICK = 'click';
 
 /**
+ * Represents a raw comma character ','.
+ * @type {string}
+ */
+export const RAW_COMMA = ',';
+
+/**
  * Constant representing a raw empty string
  * @type {string}
  */
