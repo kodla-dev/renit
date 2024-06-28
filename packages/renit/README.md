@@ -24,23 +24,6 @@ Create the simplest components in the world.
 <td valign="top" width="550">
 
 ```html
-<script>
-  export let name = 'world';
-</script>
-
-<h1>Hello {name}!</h1>
-
-<style>
-  h1 {
-    color: red;
-  }
-</style>
-```
-
-</td>
-<td valign="top" width="550">
-
-```html
 <h1 @name="hello">
   Hello {name}!
 
@@ -54,6 +37,23 @@ Create the simplest components in the world.
     }
   </style>
 </h1>
+```
+
+</td>
+<td valign="top" width="550">
+
+```html
+<script>
+  export let name = 'world';
+</script>
+
+<h1>Hello {name}!</h1>
+
+<style>
+  .this h1 {
+    color: red;
+  }
+</style>
 ```
 
 </td>
