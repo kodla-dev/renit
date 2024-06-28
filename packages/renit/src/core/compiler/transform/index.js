@@ -17,10 +17,10 @@ const transforms = [types, parsers, attributes, texts];
 export function transform(code) {
   // Convert the HTML code to an AST with specific options.
   let ast = {
-    type: 'Nit',
+    type: 'Document',
     children: htmlToAst(code, {
       attribute: { affix: true },
-      transform: { whitespace: false, trim: true },
+      transform: { whitespace: false, trim: false },
     }),
   };
 

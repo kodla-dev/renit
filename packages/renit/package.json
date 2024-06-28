@@ -19,6 +19,10 @@
       "default": "./src/index.js",
       "types": "./type/index.d.ts"
     },
+    "./core": {
+      "default": "./src/core/index.js",
+      "types": "./type/index.d.ts"
+    },
     "./runtime": {
       "default": "./src/core/runtime/index.js",
       "types": "./type/index.d.ts"
@@ -66,6 +70,7 @@
   },
   "dependencies": {
     "acorn": "^8.11.3",
+    "acorn-walk": "^8.3.3",
     "astring": "^1.8.6",
     "css-tree": "^2.3.1"
   },

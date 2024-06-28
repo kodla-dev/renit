@@ -1,13 +1,14 @@
-import { each } from '../../libraries/collect/index.js';
+import { each, some } from '../../libraries/collect/index.js';
 import { isEmpty } from '../../libraries/is/index.js';
+import { isStyle } from './utils/index.js';
 
 /**
- * Visits nodes in a tree structure, invoking the appropriate visitor function for each node type.
+ * Visits nodes in a tree structure, invoking the appropriate visitors function for each node type.
  * @param {object} node - The current node to visit.
- * @param {object} visitor - An object containing visitor functions for each node type.
+ * @param {object} visitor - An object containing visitors functions for each node type.
  */
 export function visit(node, visitor) {
-  if (node.type in visitor || node.type == 'Nit') {
+  if (node.type in visitors) {
     visitors[node.type](node, visitor);
   }
 }
@@ -44,8 +45,21 @@ function handleAttributes(node, visitor) {
  */
 function handleChildren(node, visitor) {
   if (!isEmpty(node.children)) {
-    each(children => {
+    each((children, index) => {
       children.parent = () => node;
+      children.parentNode = () => {
+        const n = node.children[index - 1];
+        if (!isEmpty(n)) return n;
+        return false;
+      };
+      children.nextNode = () => {
+        const n = node.children[index + 1];
+        if (!isEmpty(n)) return n;
+        return false;
+      };
+      children.hasStyleSheet = () => {
+        return some(child => isStyle(child), children.children);
+      };
       visit(children, visitor);
     }, node.children);
   }
@@ -65,7 +79,7 @@ function handleElement(node, visitor) {
  * An object containing visitor functions for each node type.
  */
 const visitors = {
-  Nit: (node, visitor) => {
+  Document: (node, visitor) => {
     handle(node, visitor);
     handleChildren(node, visitor);
   },

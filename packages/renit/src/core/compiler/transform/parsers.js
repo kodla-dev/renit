@@ -1,5 +1,6 @@
 import { isEmpty } from '../../../libraries/is/index.js';
-import { convertCssToAST, convertJavaScriptToAST } from '../utils.js';
+import { cssToAST, javaScriptToAST } from '../utils/ast.js';
+import { hasEmbed, hasInline } from '../utils/index.js';
 import { visit } from '../visit.js';
 
 /**
@@ -9,16 +10,28 @@ import { visit } from '../visit.js';
 export function parsers(ast) {
   visit(ast, {
     Script: node => {
+      // Check if the script node is embedded
+      const isEmbed = hasEmbed(node);
+      if (isEmbed) node.type = 'EmbedScript';
+
+      // Process the children of the script node if it's not embedded
       const children = node.children[0];
-      if (!isEmpty(children)) {
-        node.content = convertJavaScriptToAST(children.content);
+      if (!isEmpty(children) && !isEmbed) {
+        node.content = javaScriptToAST(children.content);
         node.children = [];
       }
     },
     Style: node => {
+      // Check if the style node is embedded or inline
+      const isEmbed = hasEmbed(node);
+      const isInline = hasInline(node);
+      if (isEmbed) node.type = 'EmbedStyle';
+      if (isInline) node.type = 'InlineStyle';
+
+      // Process the children of the style node if it's not embedded
       const children = node.children[0];
-      if (!isEmpty(children)) {
-        node.content = convertCssToAST(children.content);
+      if (!isEmpty(children) && !isEmbed) {
+        node.content = cssToAST(children.content);
         node.children = [];
       }
     },

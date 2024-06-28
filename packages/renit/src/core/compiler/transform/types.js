@@ -9,7 +9,7 @@ import {
   SVGElements,
   isFragmentComponent,
   setNodeParam,
-} from '../utils.js';
+} from '../utils/index.js';
 import { visit } from '../visit.js';
 
 /**
