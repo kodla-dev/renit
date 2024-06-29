@@ -164,8 +164,7 @@ export function $el(reference) {
  * @returns {string} The generated update function call string.
  */
 export function $u(parameters = RAW_EMPTY, close = true) {
-  let src = '';
-  src = `$u(${parameters})`;
+  let src = `$u(${parameters})`;
   if (close) src += ';';
   return src;
 }
