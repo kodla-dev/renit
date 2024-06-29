@@ -4,7 +4,7 @@ import { ucfirst } from '../../../libraries/string/index.js';
 import { RAW_COMMA, RAW_EMPTY, RAW_WHITESPACE } from '../../define.js';
 import { createSource } from '../source.js';
 import { functionExpressionAnalysis, javaScriptSyntaxCorrection } from '../utils/ast.js';
-import { $el, $element, $event, adaptDefine, lambda } from '../utils/index.js';
+import { $el, $element, $event, $u, adaptDefine, lambda } from '../utils/index.js';
 
 /**
  * Class representing an EventSpot which handles event-related functionality in the AST.
@@ -105,7 +105,7 @@ export class EventSpot {
         src.add(handler);
       }
 
-      if (needUpdate) src.add(`$u();\n`);
+      if (needUpdate) src.add($u() + `\n`);
 
       src.add(`}`);
       push(src.toString(), parameters);

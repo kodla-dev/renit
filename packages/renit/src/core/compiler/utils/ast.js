@@ -20,6 +20,7 @@ import { size } from '../../../libraries/math/index.js';
 import { RAW_EMPTY, RAW_WHITESPACE } from '../../define.js';
 import { createSource } from '../source.js';
 import {
+  $u,
   AttributePattern,
   ProgramPattern,
   RawPattern,
@@ -492,7 +493,7 @@ export function prepareScript(ast, dependencies, changedStyles) {
             push(dependency, updatedDependencies);
             if (!dependencyAdded) {
               const lastNode = last(astNode.body.body);
-              replaceNodeWithCode(lastNode, extractCode(lastNode) + `\n$u();`);
+              replaceNodeWithCode(lastNode, extractCode(lastNode) + `\n` + $u());
               dependencyAdded = true;
             }
           }
@@ -504,7 +505,7 @@ export function prepareScript(ast, dependencies, changedStyles) {
             push(name, updatedDependencies);
             if (!dependencyAdded) {
               const lastNode = last(astNode.body.body);
-              replaceNodeWithCode(lastNode, extractCode(lastNode) + `\n$u();`);
+              replaceNodeWithCode(lastNode, extractCode(lastNode) + `\n` + $u());
               dependencyAdded = true;
             }
           }

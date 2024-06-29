@@ -158,6 +158,15 @@ export function $el(reference) {
 }
 
 /**
+ * Generates a string representing an update function call with optional parameters.
+ * @param {string} parameters - The parameters to be passed to the update function.
+ * @returns {string} The generated update function call string.
+ */
+export function $u(parameters = RAW_EMPTY) {
+  return `$u(${parameters});`;
+}
+
+/**
  * Creates a lambda function string with specified content and parameters.
  *
  * @param {string} content - The content of the lambda function.
