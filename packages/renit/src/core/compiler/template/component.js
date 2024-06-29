@@ -5,7 +5,7 @@ import { size } from '../../../libraries/math/index.js';
 import { RAW_COMMA, RAW_EMPTY } from '../../define.js';
 import { createSource } from '../source.js';
 import { parseExports, prepareScript } from '../utils/ast.js';
-import { $el, generateStyleHash } from '../utils/index.js';
+import { $el, $ltr, generateStyleHash } from '../utils/index.js';
 
 /**
  * Class representing a component for generating JavaScript code.
@@ -193,7 +193,7 @@ export class Component {
     if (this.embed) spot = 'embed';
 
     if (Interface.has.block) {
-      src.add(`const $parent = $.${spot}(\`${this.block}\`);\n`);
+      src.add(`const $parent = $.${spot}(${$ltr(this.block)});\n`);
 
       if (Interface.has.references) {
         src.adds(['let [', this.getElementReferences(), '] = $.reference($parent);\n']);
