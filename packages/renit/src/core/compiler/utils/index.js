@@ -160,10 +160,14 @@ export function $el(reference) {
 /**
  * Generates a string representing an update function call with optional parameters.
  * @param {string} parameters - The parameters to be passed to the update function.
+ * @param {boolean} close - Whether to add a semicolon at the end of the string.
  * @returns {string} The generated update function call string.
  */
-export function $u(parameters = RAW_EMPTY) {
-  return `$u(${parameters});`;
+export function $u(parameters = RAW_EMPTY, close = true) {
+  let src = '';
+  src = `$u(${parameters})`;
+  if (close) src += ';';
+  return src;
 }
 
 /**
