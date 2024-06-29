@@ -84,10 +84,11 @@ export class Component {
     const isStyleEmpty = isEmpty(this.style);
     const isReferencesEmpty = isEmpty(this.references);
     const isSpotsEmpty = isEmpty(this.spots);
+    let isUpdatedDependenciesEmpty = isEmpty(this.updatedDependencies);
+
     let rawProps;
     let rawScript;
     let hasComputed = false;
-    let hasUpdatedDependencies = false;
 
     if (!isExportEmpty) {
       const declarations = [];
@@ -109,11 +110,14 @@ export class Component {
         this.dependencies,
         this.changedStyles
       );
-      this.updatedDependencies = preparedScript.updatedDependencies;
       this.functionNames = preparedScript.functionNames;
       hasComputed = preparedScript.hasComputed;
-      hasUpdatedDependencies = preparedScript.hasUpdatedDependencies;
       rawScript = preparedScript.raw;
+      if (!isEmpty(preparedScript.hasUpdatedDependencies)) {
+        push(preparedScript.hasUpdatedDependencies, 1, this.updatedDependencies);
+        this.updatedDependencies = unique(this.updatedDependencies);
+        isUpdatedDependenciesEmpty = false;
+      }
     }
 
     this.interface = {
@@ -125,7 +129,7 @@ export class Component {
         references: !isReferencesEmpty,
         spots: !isSpotsEmpty,
         computed: hasComputed,
-        updated: hasUpdatedDependencies,
+        updated: !isUpdatedDependenciesEmpty,
       },
       raw: {
         props: rawProps,
@@ -275,6 +279,14 @@ export class Component {
     if (isEmpty(dependencies)) dependencies = content;
     push(dependencies, this.dependencies);
     this.dependencies = pipe(this.dependencies, flat, unique);
+  }
+
+  /**
+   * Adds content to the updatedDependencies list.
+   * @param {string|string[]} content - The content to be added to the updatedDependencies list.
+   */
+  addUpdatedDependencies(content) {
+    push(content, this.updatedDependencies);
   }
 
   /**
