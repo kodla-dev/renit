@@ -2,8 +2,9 @@ import { pipe } from '../../../helpers/index.js';
 import { each, filter, map, some } from '../../../libraries/collect/index.js';
 import { isArray, isEmpty, isUndefined } from '../../../libraries/is/index.js';
 import { RAW_WHITESPACE } from '../../define.js';
-import { AttributeSpot, BindAttributeSpot } from '../spot/attribute.js';
+import { AttributeSpot } from '../spot/attribute.js';
 import { EventSpot } from '../spot/event.js';
+import { InputSpot } from '../spot/input.js';
 import { javaScriptToAST, updateStyleAttribute } from '../utils/ast.js';
 import {
   $str,
@@ -108,6 +109,6 @@ export default {
    */
   BindAttribute({ parent, node, figure }) {
     figure.addUpdatedDependencies(node.value[0].content.trim());
-    figure.addSpot(new BindAttributeSpot(parent, node));
+    figure.addSpot(new InputSpot(parent, node));
   },
 };

@@ -16,7 +16,6 @@ import {
   $el,
   $lamb,
   $ltr,
-  $u,
   $var,
   adaptDefine,
   isCurlyBracesAttribute,
@@ -108,50 +107,6 @@ export class AttributeSpot {
     push(lambda(isLambda, content), parameters);
 
     if (needDependencies && !onlyOne) each(dep => push($lamb(dep), parameters), dependencies);
-
-    return join(RAW_COMMA, parameters);
-  }
-}
-
-export class BindAttributeSpot {
-  constructor(parent, node) {
-    this.reference = parent.reference;
-    this.name = node.name;
-    this.value = node.value;
-    this.define = null;
-    this.parameters = ['$t'];
-  }
-
-  /**
-   * Generates the binding attribute spot as a string.
-   * @returns {string} The generated binding attribute spot string.
-   */
-  generate() {
-    this.init();
-    return `$.input(${this.generateArguments()});`;
-  }
-
-  /**
-   * Initializes the reference, define, and value properties.
-   */
-  init() {
-    let { reference, name, value } = this;
-    this.reference = $el(reference);
-    this.define = adaptDefine(name);
-    this.value = value[0].content.trim();
-  }
-
-  /**
-   * Generates the arguments string for the binding attribute spot.
-   * @returns {string} The generated arguments string.
-   */
-  generateArguments() {
-    const { reference, value, define, parameters } = this;
-
-    push(reference, parameters);
-    push(define, parameters);
-    push($lamb(value), parameters);
-    push($lamb(`${value}=` + $u('$e', false), '$e'), parameters);
 
     return join(RAW_COMMA, parameters);
   }
