@@ -1,5 +1,6 @@
 import {
   each,
+  every,
   flat,
   has,
   includes,
@@ -9,6 +10,7 @@ import {
   unique,
 } from '../../../libraries/collect/index.js';
 import { isEmpty } from '../../../libraries/is/index.js';
+import { size } from '../../../libraries/math/index.js';
 import { RAW_COMMA } from '../../define.js';
 import {
   $el,
@@ -30,6 +32,7 @@ export class AttributeSpot {
     this.define = null;
     this.dependencies = [];
     this.parameters = ['$t'];
+    this.onlyOne = false;
   }
 
   /**
@@ -47,26 +50,40 @@ export class AttributeSpot {
     const { reference, name, values } = this;
     this.reference = $el(reference);
     this.define = adaptDefine(name);
+    const onlyOne = every(value => isCurlyBracesAttribute(value), values) && size(values) == 1;
+    this.onlyOne = onlyOne;
 
     let content = '';
-    each(value => {
-      if (isStringAttribute(value)) {
-        content += value.content;
-      } else if (isCurlyBracesAttribute(value)) {
-        content += $var(value.content.trim());
 
-        if (isEmpty(value.dependencies)) {
-          if (has(value.content, updatedDependencies)) {
-            push(value.content, this.dependencies);
-          }
-        } else {
-          push(value.dependencies, this.dependencies);
-        }
-
-        this.dependencies = unique(flat(this.dependencies));
+    if (onlyOne) {
+      const value = values[0];
+      content += value.content.trim();
+      if (has(value.content, updatedDependencies)) {
+        push(value.content, this.dependencies);
       }
-    }, values);
+    } else {
+      each(value => {
+        if (isStringAttribute(value)) {
+          content += value.content;
+        } else if (isCurlyBracesAttribute(value)) {
+          content += $var(value.content.trim());
 
+          if (isEmpty(value.dependencies)) {
+            if (has(value.content, updatedDependencies)) {
+              push(value.content, this.dependencies);
+            }
+          } else {
+            push(value.dependencies, this.dependencies);
+          }
+
+          this.dependencies = unique(flat(this.dependencies));
+        }
+      }, values);
+    }
+
+    if (!onlyOne) {
+      content = $ltr(content);
+    }
     this.content = content;
   }
 
@@ -74,7 +91,7 @@ export class AttributeSpot {
    * Generates the arguments for the attribute code.
    */
   generateArguments(updatedDependencies) {
-    let { reference, content, define, dependencies, parameters } = this;
+    let { reference, content, define, dependencies, parameters, onlyOne } = this;
     const hasDependencies = !isEmpty(dependencies);
     let isLambda = false;
     let needDependencies = false;
@@ -87,9 +104,9 @@ export class AttributeSpot {
       if (isLambda) needDependencies = true;
     }
 
-    push(lambda(isLambda, $ltr(content)), parameters);
+    push(lambda(isLambda, content), parameters);
 
-    if (needDependencies) each(dep => push($lamb(dep), parameters), dependencies);
+    if (needDependencies && !onlyOne) each(dep => push($lamb(dep), parameters), dependencies);
 
     return join(RAW_COMMA, parameters);
   }
