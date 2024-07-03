@@ -1,9 +1,15 @@
-import { RAW_EMPTY } from '../../../../core/define.js';
+import { RAW_EMPTY, RAW_WHITESPACE } from '../../../../core/define.js';
 import { includes, push } from '../../../collect/index.js';
 import { isEmpty, isNull, isUndefined } from '../../../is/index.js';
 import { size } from '../../../math/index.js';
 import { AttributeNode, CommentNode, ElementNode, TextNode } from '../ast.js';
-import { RGX_HTML_FIRST_TAG, RGX_HTML_TAG_ATTRIBUTES, RGX_HTML_TAG_NAME } from '../utils.js';
+import {
+  RGX_HTML_FIRST_TAG,
+  RGX_HTML_TAG_ATTRIBUTES,
+  RGX_HTML_TAG_NAME,
+  commentEnd,
+  textSelector,
+} from '../utils.js';
 
 /**
  * Parses an HTML tag.
@@ -18,7 +24,7 @@ import { RGX_HTML_FIRST_TAG, RGX_HTML_TAG_ATTRIBUTES, RGX_HTML_TAG_NAME } from '
  */
 export function parseHtmlTag(tag, options) {
   // Create a new ElementNode to represent the parsed tag.
-  const node = ElementNode();
+  let node = ElementNode();
 
   // Extract the tag name from the tag using a regular expression.
   const name = tag.match(RGX_HTML_TAG_NAME)[1];
@@ -30,9 +36,8 @@ export function parseHtmlTag(tag, options) {
 
     // Check if the tag is a comment.
     if (node.name.startsWith('!--')) {
-      const endIndex = tag.indexOf('-->');
+      const endIndex = tag.indexOf(commentEnd);
       let value = endIndex !== -1 ? tag.slice(4, endIndex) : RAW_EMPTY;
-      const textSelector = 'text:';
 
       // Trim the comment value if the trim option is enabled.
       if (options.transform.trim) value = value.trim();
@@ -46,8 +51,21 @@ export function parseHtmlTag(tag, options) {
         return false;
       }
 
+      node = CommentNode(value);
+
+      if (options.need.position && options.need.loc) {
+        const { start, end } = options.index;
+        const { loc, line, column } = options.fn;
+        const Loc = loc();
+        Loc.start.line = line(start);
+        Loc.start.column = column(Loc.start.line, '<!--');
+        Loc.end.line = line(end);
+        Loc.end.column = column(Loc.end.line, '-->', 2);
+        node.loc = Loc;
+      }
+
       // Return a CommentNode for regular comments.
-      return CommentNode(value);
+      return node;
     }
   }
 
@@ -89,13 +107,15 @@ export function parseHtmlTag(tag, options) {
       name = /{(.*?)}/g.exec(name)[1];
     }
 
+    const select = tree[0];
+
     // If the attribute value contains '=' or '{', wrap it in curly braces
-    if (includes('={', tree[0])) {
+    if (includes('={', select)) {
       value = '{' + value + '}';
     }
 
     // If the match contains attribute name and value, parse and add it to the node's attributes.
-    attribute(name, value, node, options);
+    attribute(name, value, node, select, tempTag, options);
   }
 
   // If it's a special element, extract its raw content and add it as a child node.
@@ -104,7 +124,35 @@ export function parseHtmlTag(tag, options) {
     const raw = rgxRaw.exec(tag);
     let text = raw ? raw.groups.raw : '';
     if (options.transform.trim) text = text.trim();
-    push(TextNode(text), node.children);
+    const content = TextNode(text);
+    if (options.need.position) {
+      const startIndex = options.index.start + size(tempTag);
+      const rawSize = size(raw.groups.raw);
+
+      if (options.need.index) {
+        content.start = startIndex;
+        content.end = startIndex + rawSize;
+      }
+
+      if (options.need.loc) {
+        const { start, end } = options.index;
+        const { loc, line, column } = options.fn;
+        let Loc = loc();
+        Loc.start.line = line(start);
+        Loc.start.column = column(Loc.start.line, tempTag);
+        Loc.end.line = line(end);
+        Loc.end.column = column(Loc.end.line, '</' + name + '>', 2);
+        node.loc = Loc;
+
+        Loc = loc();
+        Loc.start.line = line(startIndex);
+        Loc.start.column = column(Loc.start.line, tempTag, 2);
+        Loc.end.line = line(startIndex + rawSize);
+        Loc.end.column = column(Loc.end.line, '</' + name + '>');
+        content.loc = Loc;
+      }
+    }
+    push(content, node.children);
   }
 
   // Return the parsed ElementNode.
@@ -118,17 +166,41 @@ export function parseHtmlTag(tag, options) {
  * @param {Object} node - HTML node.
  * @param {Object} options - Options object.
  */
-function attribute(name, value, node, options) {
+function attribute(name, value, node, select, tag, options) {
   // If value is falsy, set it to undefined
   if (!value) value = undefined;
 
   // If affixing is enabled in options, affix the attribute name
   if (options.attribute.affix) {
     const af = attributeAffix(name, options);
-    push(AttributeNode(af.name, value, af.prefix, af.suffix), node.attributes);
+    const attribute = AttributeNode(af.name, value, af.prefix, af.suffix);
+    push(attribute, node.attributes);
   } else {
     // Otherwise, set the attribute name as is
-    push(AttributeNode(name, value), node.attributes);
+    const attribute = AttributeNode(name, value);
+    if (options.need.position) {
+      const { start } = options.index;
+      const section = size(tag.slice(0, tag.indexOf(select)));
+      let selectIndex = start + section;
+      let startIndex = selectIndex;
+      const selectSize = size(select);
+      if (select.startsWith(RAW_WHITESPACE)) startIndex++;
+
+      if (options.need.index) {
+        attribute.start = startIndex;
+        attribute.end = selectIndex + selectSize;
+      }
+      if (options.need.loc) {
+        const { loc, line, column } = options.fn;
+        const Loc = loc();
+        Loc.start.line = line(startIndex);
+        Loc.start.column = column(Loc.start.line, select);
+        Loc.end.line = line(selectIndex + selectSize);
+        Loc.end.column = column(Loc.end.line, select, 2);
+        attribute.loc = Loc;
+      }
+    }
+    push(attribute, node.attributes);
   }
 }
 

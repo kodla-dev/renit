@@ -1,4 +1,13 @@
 /**
+ * Creates and returns a DocumentNode object.
+ * @param {Array} children
+ * @returns {Object}
+ */
+export function DocumentNode(children = []) {
+  return { type: 'Document', children };
+}
+
+/**
  * Creates and returns a textNode object.
  * @param {string} text
  * @returns {Object}

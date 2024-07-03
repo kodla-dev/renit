@@ -66,6 +66,24 @@ export const RGX_HTML_OUTSIDE_TAGS =
   /(?:(?:<(\w+)\b[^<>]*>[\s\S]*?<\/\1>)|(?:<(\w+|\W+)\b[^<>]*>))|([^<>]+)/g;
 
 /**
+ * The start of an HTML comment.
+ * @type {string}
+ */
+export const commentStart = '<!--';
+
+/**
+ * The text indicator within an HTML comment.
+ * @type {string}
+ */
+export const textSelector = 'text:';
+
+/**
+ * The end of an HTML comment.
+ * @type {string}
+ */
+export const commentEnd = '-->';
+
+/**
  * Function to generate options for HTML parsing.
  * @param {Object} options - Options object.
  * @returns {Object} - Merged options object.
@@ -92,6 +110,10 @@ export function parseHtmlOptions(opts) {
     transform: {
       whitespace: true, // Flag to preserve or remove whitespace in parsed HTML
       trim: false, // Flag to trim whitespace from tag content
+    },
+    position: {
+      index: false, // Flag to include index positions.
+      loc: false, // Flag to include line and column positions.
     },
   };
 
