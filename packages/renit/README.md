@@ -10,8 +10,6 @@ _Renit_ is a powerful JavaScript framework with a very small footprint, built fo
 
 ## Get Started
 
-- [Examples][EXAMPLE]
-- [Try Renit REPL][REPL]
 - [Documentation][RENIT]
 
 ### Easy to use
@@ -50,8 +48,10 @@ Create the simplest components in the world.
 <h1>Hello {name}!</h1>
 
 <style>
-  .this h1 {
-    color: red;
+  .this {
+    h1 {
+      color: red;
+    }
   }
 </style>
 ```
