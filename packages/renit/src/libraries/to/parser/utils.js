@@ -63,7 +63,7 @@ export const RGX_HTML_FIRST_TAG = /<(?:\/|)[a-zA-Z0-9](?:"[^"]*"|'[^']*'|{[^{]*}
  * @type {RegExp}
  */
 export const RGX_HTML_OUTSIDE_TAGS =
-  /(?:(?:<(\w+)\b[^<>]*>[\s\S]*?<\/\1>)|(?:<(\w+|\W+)\b[^<>]*>))|([^<>]+)/g;
+  /(?:(?:<!--[\s\S]*?-->)|(?:<(\w+)\b[^<>]*>[\s\S]*?<\/\1>)|(?:<(\w+|\W+)\b[^<>]*>))|([^<>]+)/g;
 
 /**
  * The start of an HTML comment.
