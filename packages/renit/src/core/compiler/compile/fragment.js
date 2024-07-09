@@ -3,8 +3,8 @@ import { isEmpty, isUndefined } from '../../../libraries/is/index.js';
 import { size } from '../../../libraries/math/index.js';
 import { DOM_ELEMENT_SELECTOR, RAW_EMPTY, RAW_WHITESPACE } from '../../define.js';
 import { Component } from '../template/component.js';
-import { addThisStyleAttribute, prepareStyle } from '../utils/ast.js';
-import { isStyle } from '../utils/index.js';
+import { isStyle } from '../utils/node.js';
+import { addThisStyleAttribute, prepareStyle } from '../utils/style.js';
 
 export default {
   /**
@@ -57,7 +57,7 @@ export default {
     component.appendBlock('<' + node.name + space);
 
     // Compile and append each attribute
-    map(child => compile(child, component), node.attributes);
+    map(child => compile(child, component, component), node.attributes);
 
     // If there are attributes, trim the last block
     if (!emptyAttributes) component.trimBlock();
@@ -66,7 +66,7 @@ export default {
     component.appendBlock(node.voidElement ? '/>' : '>');
 
     // Compile and append each child node
-    map(child => compile(child, component), node.children);
+    map(child => compile(child, component, component), node.children);
 
     // Append the closing tag if the element is not void
     if (!node.voidElement) component.appendBlock('</' + node.name + '>');

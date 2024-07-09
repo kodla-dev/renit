@@ -1,6 +1,6 @@
 import { each, push } from '../../../libraries/collect/index.js';
 import { createSource } from '../source.js';
-import { generateJavaScript } from '../utils/ast.js';
+import { generateJavaScript } from '../utils/script.js';
 
 /**
  * Class representing a template for generating JavaScript code.

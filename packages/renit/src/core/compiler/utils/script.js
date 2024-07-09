@@ -1,7 +1,5 @@
-import { parse as parseJs } from 'acorn';
-import { simple as walkJs, full as walkJsFull, recursive as walkJsRecursive } from 'acorn-walk';
 import { generate as generateJs } from 'astring';
-import { generate as generateStyle, parse as parseCss, walk as walkCss } from 'css-tree';
+import { parse as parseJs } from 'meriyah';
 import { clone } from '../../../helpers/index.js';
 import {
   each,
@@ -12,43 +10,32 @@ import {
   map,
   prepend,
   push,
+  reverse,
   split,
   unique,
 } from '../../../libraries/collect/index.js';
 import { isArray, isEmpty, isNull, isString, isUndefined } from '../../../libraries/is/index.js';
 import { size } from '../../../libraries/math/index.js';
-import { RAW_EMPTY, RAW_WHITESPACE } from '../../define.js';
+import { RAW_EMPTY } from '../../define.js';
 import { createSource } from '../source.js';
+import { visitCondition, visitFull, visitSimple } from '../visit.js';
+import { ProgramPattern } from './constant.js';
+import { $u } from './index.js';
 import {
-  $u,
-  AttributePattern,
-  ProgramPattern,
-  RawPattern,
-  StringAttributePattern,
-  generateStyleHash,
   getExpressions,
   isArrowFunctionExpression,
   isAssignmentExpression,
   isCallExpression,
-  isClassSelector,
   isDollarSign,
   isExportNamedDeclaration,
   isExpressionStatement,
   isFunctionExpression,
-  isIdSelector,
   isIdentifier,
   isImportDeclaration,
   isLiteral,
   isMemberExpression,
-  isPseudoClassSelector,
   isSequenceExpression,
-} from './index.js';
-
-/**
- * Array to store global styles.
- * @type {Array}
- */
-const globalStyles = [];
+} from './node.js';
 
 /**
  * Converts the provided JavaScript code into an Abstract Syntax Tree (AST).
@@ -57,8 +44,8 @@ const globalStyles = [];
  */
 export function javaScriptToAST(code) {
   return parseJs(code, {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
+    module: true,
+    ranges: true,
   });
 }
 
@@ -79,24 +66,6 @@ export function generateJavaScript(ast) {
  */
 export function javaScriptSyntaxCorrection(code) {
   return generateJavaScript(javaScriptToAST(code));
-}
-
-/**
- * Converts the provided CSS code into an Abstract Syntax Tree (AST).
- * @param {string} code The CSS code to convert.
- * @returns {object} The Abstract Syntax Tree (AST) representation of the CSS code.
- */
-export function cssToAST(code) {
-  return parseCss(code);
-}
-
-/**
- * Generates CSS from an Abstract Syntax Tree (AST).
- * @param {object} ast - The Abstract Syntax Tree (AST) representing CSS.
- * @returns {string} The generated CSS as a string.
- */
-export function generateCss(ast) {
-  return generateStyle(ast);
 }
 
 /**
@@ -202,8 +171,7 @@ export function findDependencies(ast, content) {
   let hasParameters = false;
   let isCallee = false;
 
-  // Walk the AST to find dependencies.
-  walkJs(ast, {
+  visitFull(ast, {
     CallExpression(node) {
       if (isMemberExpression(node.callee)) isCallee = true;
       each(argument => {
@@ -273,7 +241,7 @@ export function functionExpressionAnalysis(expression) {
     case 'CallExpression':
       own.call = true;
       own.arguments = map(arg => arg.name || arg.raw, expression.arguments);
-      if (expression.callee.type == 'MemberExpression') {
+      if (isMemberExpression(expression.callee)) {
         own.function = compileMemberExpression(expression.callee);
       } else {
         own.function = expression.callee.name;
@@ -282,13 +250,13 @@ export function functionExpressionAnalysis(expression) {
     case 'ArrowFunctionExpression':
       own.lambda = true;
       own.params = map(arg => arg.name, expression.params);
-      if (expression.body.type == 'Identifier') {
+      if (isIdentifier(expression.body)) {
         own.function = expression.body.name;
       }
-      if (expression.body.type == 'CallExpression') {
+      if (isCallExpression(expression.body)) {
         own.call = true;
         own.arguments = map(arg => arg.name || arg.raw, expression.body.arguments);
-        if (expression.body.callee.type == 'MemberExpression') {
+        if (isMemberExpression(expression.body.callee)) {
           own.function = compileMemberExpression(expression.body.callee);
         } else {
           own.function = expression.body.callee.name;
@@ -314,7 +282,7 @@ export function functionExpressionAnalysis(expression) {
  */
 export function updateLiteral(ast, changedStyles) {
   // Process the AST to update string literals with changed styles
-  walkJsFull(ast, node => {
+  visitFull(ast, node => {
     if (isLiteral(node) && isString(node.value)) {
       const change = changedStyles.find(change => change.old == node.value);
       if (change) {
@@ -348,7 +316,7 @@ export function prepareScript(ast, dependencies, changedStyles) {
   const functionNames = [];
 
   // Walk through the AST recursively to process labeled statements
-  walkJsRecursive(ast, null, {
+  visitSimple(ast, {
     LabeledStatement(node) {
       if (isIdentifier(node.label) && isDollarSign(node.label)) {
         const localDependencies = [];
@@ -457,15 +425,14 @@ export function prepareScript(ast, dependencies, changedStyles) {
       $u();
     }
   */
-  walkJsRecursive(ast, null, {
-    Function(node) {
-      if (isUndefined(node.isComputed)) {
-        updateNode(node);
-      }
-    },
+  const injectedNodes = [];
+  visitFull(ast, node => {
+    if (has('Function', node.type)) {
+      updateNode(node);
+    }
   });
 
-  walkJsRecursive(ast, null, {
+  visitSimple(ast, {
     FunctionDeclaration(node) {
       push(node.id.name, functionNames);
     },
@@ -484,34 +451,44 @@ export function prepareScript(ast, dependencies, changedStyles) {
    * @param {Object} astNode - The AST node to update.
    */
   function updateNode(astNode) {
+    // console.log(JSON.stringify(astNode, 0, 2));
     let dependencyAdded = false;
-    walkJsFull(astNode, node => {
-      const foundDependencies = findDependencies(node);
-      if (!isEmpty(foundDependencies)) {
-        each(dependency => {
-          if (has(dependency, dependencies)) {
-            push(dependency, updatedDependencies);
-            if (!dependencyAdded) {
-              const lastNode = last(astNode.body.body);
-              replaceNodeWithCode(lastNode, extractCode(lastNode) + `\n` + $u());
-              dependencyAdded = true;
-            }
+
+    visitCondition(
+      astNode,
+      {
+        Identifier(node, parent) {
+          const foundDependencies = findDependencies(parent);
+          if (!isEmpty(foundDependencies)) {
+            each(dependency => {
+              if (has(dependency, dependencies)) {
+                push(dependency, updatedDependencies);
+                if (!dependencyAdded) {
+                  const lastNode = last(astNode.body.body);
+                  push(lastNode, injectedNodes);
+                  dependencyAdded = true;
+                }
+              }
+            }, foundDependencies);
           }
-        }, foundDependencies);
-      } else {
-        if (isIdentifier(node)) {
+
           const name = node.name;
           if (has(name, dependencies)) {
             push(name, updatedDependencies);
             if (!dependencyAdded) {
               const lastNode = last(astNode.body.body);
-              replaceNodeWithCode(lastNode, extractCode(lastNode) + `\n` + $u());
+              push(lastNode, injectedNodes);
               dependencyAdded = true;
             }
           }
-        }
-      }
-    });
+        },
+      },
+      node => {
+        if (has('Function', node.type)) return false;
+        return true;
+      },
+      ['body', 'expression', 'left', 'argument', 'callee', 'object', 'test', 'properties', 'value']
+    );
   }
 
   /**
@@ -537,6 +514,10 @@ export function prepareScript(ast, dependencies, changedStyles) {
     generatedCode[node.start] = code;
   }
 
+  each(node => {
+    replaceNodeWithCode(node, extractCode(node) + `\n` + $u());
+  }, reverse(injectedNodes));
+
   return {
     raw: join(RAW_EMPTY, generatedCode),
     functionNames: functionNames,
@@ -544,156 +525,4 @@ export function prepareScript(ast, dependencies, changedStyles) {
     updatedDependencies: unique(updatedDependencies),
     hasUpdatedDependencies: !isEmpty(updatedDependencies),
   };
-}
-
-/**
- * Prepares the style by processing the given AST (Abstract Syntax Tree) and options.
- * @param {Object} ast - The abstract syntax tree representing CSS.
- * @param {Object} options - Options for processing the AST.
- * @returns {Object} An object containing the processed CSS, modified styles, and global styles.
- */
-export function prepareStyle(ast, options) {
-  const thisId = genId();
-  const changedStyles = [];
-  let has = {
-    this: {
-      name: false,
-      type: false,
-    },
-  };
-
-  /**
-   * Walks through the CSS AST and processes each node.
-   */
-  walkCss(ast, (node, item) => {
-    const isId = isIdSelector(node);
-    const isClass = isClassSelector(node);
-
-    if (isId || isClass) {
-      if (node.name == 'this') {
-        node.name = thisId;
-        has.this.name = thisId;
-
-        if (isId) has.this.type = 'id';
-        if (isClass) has.this.type = 'class';
-        return;
-      }
-
-      const findChange = changedStyles.find(change => change.old == node.name);
-      if (findChange) {
-        node.name = findChange.new;
-        return;
-      }
-
-      const id = genId();
-      push({ old: node.name, new: id }, changedStyles);
-      node.name = id;
-      return;
-    }
-
-    if (isPseudoClassSelector(node) && (node.name == 'g' || node.name == 'global')) {
-      const raw = node.children.head.data.value + '{}';
-      const ast = cssToAST(raw);
-      const prepare = prepareStyle(ast, options);
-      const findGlobal = globalStyles.find(global => global.old == prepare.changedStyles[0].old);
-      const attribute = clone(RawPattern);
-      attribute.value = prepare.raw.replace('{}', RAW_EMPTY);
-      item.data = attribute;
-
-      if (isUndefined(findGlobal)) {
-        push(prepare.changedStyles[0], globalStyles);
-      } else {
-        findGlobal.new = prepare.changedStyles[0].new;
-      }
-      return;
-    }
-
-    if (isPseudoClassSelector(node) && (node.name == 's' || node.name == 'static')) {
-      const raw = node.children.head.data.value;
-      const ast = cssToAST(raw + '{}');
-      const prepare = prepareStyle(ast, options);
-      const findGlobalIndex = globalStyles.findIndex(
-        global => global.old == prepare.changedStyles[0].old
-      );
-      if (findGlobalIndex != -1) globalStyles.splice(findGlobalIndex, 1);
-      const attribute = clone(RawPattern);
-      attribute.value = raw;
-      item.data = attribute;
-      return;
-    }
-  });
-
-  /**
-   * Generates a unique ID for CSS selectors.
-   * @returns {string} The generated unique ID.
-   */
-  function genId() {
-    return generateStyleHash(options.css.hash.min, options.css.hash.max);
-  }
-
-  return {
-    raw: generateCss(ast),
-    has,
-    changedStyles,
-  };
-}
-
-/**
- * Adds the 'this' style attribute to a node based on the provided style.
- * @param {Object} node - The node to which the style attribute will be added.
- * @param {Object} style - The style object containing the 'this' attribute information.
- */
-export function addThisStyleAttribute(node, style) {
-  const name = style.has.this.name;
-  const type = style.has.this.type;
-
-  if (name) {
-    let index = node.attributes.findIndex(attribute => attribute.name == type);
-    if (index != -1) {
-      const attribute = node.attributes[index];
-      // If the attribute value is an array, prepend the name
-      if (isArray(attribute.value)) {
-        const pattern = clone(StringAttributePattern);
-        pattern.content = name;
-        prepend(pattern, node.attributes[index].value);
-      } else {
-        // Otherwise, append the name to the existing value
-        node.attributes[index].value = attribute.value + RAW_WHITESPACE + name;
-      }
-    } else {
-      // If the attribute does not exist, create a new one
-      const pattern = clone(AttributePattern);
-      pattern.name = type;
-      pattern.value = name;
-      if (type == 'id') prepend(pattern, node.attributes);
-      else push(pattern, node.attributes);
-    }
-  }
-}
-
-/**
- * Updates the style attribute by replacing old style values with new ones
- * based on global and changed styles.
- *
- * @param {string} value - The original value of the style attribute.
- * @param {Array} changedStyles - An array of objects representing changed styles.
- * @returns {string} The updated style attribute.
- */
-export function updateStyleAttribute(value, changedStyles) {
-  const attributes = map(
-    attribute => {
-      attribute = attribute.trim();
-
-      // Find if the attribute matches any global styles to be replaced
-      const globalFind = globalStyles.find(global => global.old == attribute);
-      if (globalFind) attribute = globalFind.new;
-
-      // Find if the attribute matches any changed styles to be replaced
-      const changedFind = changedStyles.find(changed => changed.old == attribute);
-      if (changedFind) attribute = changedFind.new;
-      return attribute;
-    },
-    split(RAW_WHITESPACE, value)
-  );
-  return join(RAW_WHITESPACE, attributes);
 }

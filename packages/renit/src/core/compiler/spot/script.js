@@ -1,5 +1,5 @@
 import { isEmpty } from '../../../libraries/is/index.js';
-import { generateJavaScript } from '../utils/ast.js';
+import { generateJavaScript } from '../utils/script.js';
 
 export class ScriptSpot {
   /**

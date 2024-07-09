@@ -1,7 +1,7 @@
 import { each, push } from '../../../libraries/collect/index.js';
 import { ucfirst } from '../../../libraries/string/index.js';
 import { RAW_EMPTY, RAW_WHITESPACE } from '../../define.js';
-import { findDependencies, javaScriptToAST } from './ast.js';
+import { findDependencies, javaScriptToAST } from './script.js';
 
 /**
  * Checks if the provided string contains text within curly braces.

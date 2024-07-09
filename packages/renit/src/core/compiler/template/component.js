@@ -4,8 +4,9 @@ import { isEmpty } from '../../../libraries/is/index.js';
 import { size } from '../../../libraries/math/index.js';
 import { RAW_COMMA, RAW_EMPTY } from '../../define.js';
 import { createSource } from '../source.js';
-import { parseExports, prepareScript } from '../utils/ast.js';
-import { $el, $ltr, generateStyleHash } from '../utils/index.js';
+import { $el, $ltr } from '../utils/index.js';
+import { parseExports, prepareScript } from '../utils/script.js';
+import { generateStyleHash } from '../utils/style.js';
 
 /**
  * Class representing a component for generating JavaScript code.
@@ -110,11 +111,12 @@ export class Component {
         this.dependencies,
         this.changedStyles
       );
+
       this.functionNames = preparedScript.functionNames;
       hasComputed = preparedScript.hasComputed;
       rawScript = preparedScript.raw;
-      if (!isEmpty(preparedScript.hasUpdatedDependencies)) {
-        push(preparedScript.hasUpdatedDependencies, 1, this.updatedDependencies);
+      if (preparedScript.hasUpdatedDependencies) {
+        push(preparedScript.updatedDependencies, 1, this.updatedDependencies);
         this.updatedDependencies = unique(this.updatedDependencies);
         isUpdatedDependenciesEmpty = false;
       }
@@ -166,7 +168,12 @@ export class Component {
     const src = this.sourceJs;
     const Interface = this.interface;
 
-    if (Interface.has.spots || Interface.has.props) {
+    if (
+      Interface.has.spots ||
+      Interface.has.props ||
+      Interface.has.computed ||
+      Interface.has.updated
+    ) {
       src.add(`const $t = this;\n`);
     }
 
@@ -228,7 +235,6 @@ export class Component {
     const src = this.sourceJs;
     const Interface = this.interface;
     const options = this.options;
-
     if (Interface.has.style && options.css.compile == 'injected') {
       const hash = generateStyleHash(options.css.hash.min, options.css.hash.max);
       src.add(`$.style('${hash}', \`${this.style}\`);\n`);

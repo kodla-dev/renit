@@ -1,7 +1,7 @@
 import { each, has, includes, join, push, some } from '../../../libraries/collect/index.js';
 import { isEmpty } from '../../../libraries/is/index.js';
 import { RAW_COMMA } from '../../define.js';
-import { $el, $lamb, lambda } from '../utils/index.js';
+import { $el, $lamb, $lambda } from '../utils/index.js';
 
 /**
  * Class representing a spot for text content, with references and dependencies.
@@ -57,7 +57,7 @@ export class TextSpot {
     }
 
     // Add the content to the arguments as a lambda function.
-    push(lambda(isLambda, content), parameters);
+    push($lambda(isLambda, content), parameters);
 
     // Add dependencies to the arguments if needed.
     if (needDependencies) each(dep => push($lamb(dep), parameters), dependencies);

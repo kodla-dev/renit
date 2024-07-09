@@ -1,10 +1,15 @@
 import { each, has, join, prepend, push, split, unique } from '../../../libraries/collect/index.js';
-import { isEmpty } from '../../../libraries/is/index.js';
+import { isEmpty, isUndefined } from '../../../libraries/is/index.js';
 import { ucfirst } from '../../../libraries/string/index.js';
 import { RAW_COMMA, RAW_EMPTY, RAW_WHITESPACE } from '../../define.js';
 import { createSource } from '../source.js';
-import { functionExpressionAnalysis, javaScriptSyntaxCorrection } from '../utils/ast.js';
-import { $el, $element, $event, $u, adaptDefine, lambda } from '../utils/index.js';
+import { $element, $event } from '../utils/constant.js';
+import { $el, $lambda, $u, adaptDefine } from '../utils/index.js';
+import {
+  functionExpressionAnalysis,
+  javaScriptSyntaxCorrection,
+  javaScriptToAST,
+} from '../utils/script.js';
 
 /**
  * Class representing an EventSpot which handles event-related functionality in the AST.
@@ -50,7 +55,11 @@ export class EventSpot {
    * Initializes the event spot by analyzing the function expression and setting properties.
    */
   init() {
-    const { parentReference, name, modifier, handler } = this;
+    const { parentReference, name, expression, modifier, handler } = this;
+
+    if (isUndefined(expression)) {
+      this.expression = javaScriptToAST(handler).body[0].expression;
+    }
 
     this.own = functionExpressionAnalysis(this.expression);
     this.reference = $el(parentReference);
@@ -125,7 +134,7 @@ export class EventSpot {
         params = join(RAW_COMMA, unique(own.params));
       }
 
-      push(lambda(isLambda, call, params), parameters);
+      push($lambda(isLambda, call, params), parameters);
     }
 
     return join(RAW_COMMA, parameters);

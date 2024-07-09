@@ -5,23 +5,23 @@ import { RAW_WHITESPACE } from '../../define.js';
 import { AttributeSpot } from '../spot/attribute.js';
 import { EventSpot } from '../spot/event.js';
 import { InputSpot } from '../spot/input.js';
-import { javaScriptToAST, updateStyleAttribute } from '../utils/ast.js';
+import { $str, $var } from '../utils/index.js';
 import {
-  $str,
-  $var,
   hasSuffix,
   isClassAttribute,
   isCurlyBracesAttribute,
   isPrefixBind,
   isPrefixLine,
   isStringAttribute,
-} from '../utils/index.js';
+} from '../utils/node.js';
+import { javaScriptToAST } from '../utils/script.js';
+import { updateStyleAttribute } from '../utils/style.js';
 
 export default {
   /**
    * Compiles an attribute node, updating styles and generating the appropriate attribute string.
    */
-  Attribute({ parent, node, figure, compile }) {
+  Attribute({ parent, node, component, figure, compile }) {
     let { name, value } = node;
     if (isArray(value)) {
       // Check if all values are static
@@ -36,7 +36,7 @@ export default {
           if (isStringAttribute(value)) {
             if (isClassAttribute(node)) {
               // Update style name if the attribute is a class attribute
-              content += updateStyleAttribute(value.content, figure.changedStyles);
+              content += updateStyleAttribute(value.content, component.changedStyles);
             } else {
               content += value.content;
             }
@@ -60,7 +60,7 @@ export default {
     figure.appendBlock(name);
     if (hasValue) {
       if (isClassAttribute(node)) {
-        figure.appendBlock('=' + $str(updateStyleAttribute(value, figure.changedStyles)));
+        figure.appendBlock('=' + $str(updateStyleAttribute(value, component.changedStyles)));
       } else {
         figure.appendBlock('=' + $str(value));
       }
@@ -69,10 +69,10 @@ export default {
   },
 
   /**
-   * Compiles a curly braces attribute node, adding dependencies to the figure.
+   * Compiles a curly braces attribute node, adding dependencies to the component.
    */
-  CurlyBracesAttribute({ node, figure }) {
-    figure.addDependencies(node.dependencies, node.content);
+  CurlyBracesAttribute({ node, component }) {
+    component.addDependencies(node.dependencies, node.content);
   },
 
   /**
@@ -107,8 +107,8 @@ export default {
   /**
    * Processes a bind attribute node.
    */
-  BindAttribute({ parent, node, figure }) {
-    figure.addUpdatedDependencies(node.value[0].content.trim());
+  BindAttribute({ parent, node, component, figure }) {
+    component.addUpdatedDependencies(node.value[0].content.trim());
     figure.addSpot(new InputSpot(parent, node));
   },
 };

@@ -12,16 +12,8 @@ import {
 import { isEmpty } from '../../../libraries/is/index.js';
 import { size } from '../../../libraries/math/index.js';
 import { RAW_COMMA } from '../../define.js';
-import {
-  $el,
-  $lamb,
-  $ltr,
-  $var,
-  adaptDefine,
-  isCurlyBracesAttribute,
-  isStringAttribute,
-  lambda,
-} from '../utils/index.js';
+import { $el, $lamb, $lambda, $ltr, $var, adaptDefine } from '../utils/index.js';
+import { isCurlyBracesAttribute, isStringAttribute } from '../utils/node.js';
 
 export class AttributeSpot {
   constructor(parent, node) {
@@ -104,7 +96,7 @@ export class AttributeSpot {
       if (isLambda) needDependencies = true;
     }
 
-    push(lambda(isLambda, content), parameters);
+    push($lambda(isLambda, content), parameters);
 
     if (needDependencies && !onlyOne) each(dep => push($lamb(dep), parameters), dependencies);
 

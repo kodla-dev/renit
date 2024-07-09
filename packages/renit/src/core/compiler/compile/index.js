@@ -18,24 +18,28 @@ const compilers = Object.assign({}, document, fragment, script, element, attribu
  * @param {Object} parent - Parent node in the AST.
  * @param {Object} node - Current node being processed.
  * @param {Object} template - Template instance.
+ * @param {Object} component - Current component.
  * @param {Object} figure - Current figure.
  * @param {Object} options - Compilation options.
  * @returns {*} - Result of the compilation process for the current node.
  */
-function next(parent, node, template, figure, options) {
+function next(parent, node, template, component, figure, options) {
   const path = {
     parent,
     node,
     template,
+    component,
     figure,
     options,
-    compile: (child, subfigure = figure) => next(node, child, template, subfigure, options),
+    compile: (child, subcomponent = component, subfigure = figure) =>
+      next(node, child, template, subcomponent, subfigure, options),
   };
 
   if (node.type in compilers) {
     return compilers[node.type](path);
   }
 }
+
 /**
  * Recursively compiles an AST using the specified compilers.
  * @param {Object} ast - The AST to compile.
@@ -48,5 +52,5 @@ export function compile(ast, options) {
   const component = new Component('default', options);
   template.addComponent(component);
 
-  return next(null, ast, template, component, options);
+  return next(null, ast, template, component, component, options);
 }

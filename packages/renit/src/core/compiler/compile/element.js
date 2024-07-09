@@ -2,22 +2,22 @@ import { filter, map } from '../../../libraries/collect/index.js';
 import { isEmpty } from '../../../libraries/is/index.js';
 import { size } from '../../../libraries/math/index.js';
 import { DOM_ELEMENT_SELECTOR, RAW_EMPTY, RAW_WHITESPACE } from '../../define.js';
-import { addThisStyleAttribute, prepareStyle } from '../utils/ast.js';
-import { isStyle } from '../utils/index.js';
+import { isStyle } from '../utils/node.js';
+import { addThisStyleAttribute, prepareStyle } from '../utils/style.js';
 
 export default {
   /**
    * Compilation function for Element nodes.
    */
-  Element({ node, figure, compile, options }) {
+  Element({ node, component, figure, compile, options }) {
     // Check if the node has a stylesheet and process it if present.
     if (node.hasStyleSheet()) {
       const styles = filter(child => isStyle(child), node.children);
       if (size(styles)) {
         const style = prepareStyle(styles[0].content, options);
         if (!isEmpty(style.raw)) {
-          figure.appendStyle(style.raw);
-          figure.addChangedStyles(style.changedStyles);
+          component.appendStyle(style.raw);
+          component.addChangedStyles(style.changedStyles);
           addThisStyleAttribute(node, style);
         }
       }

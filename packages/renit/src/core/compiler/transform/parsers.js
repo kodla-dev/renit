@@ -1,6 +1,7 @@
 import { isEmpty } from '../../../libraries/is/index.js';
-import { cssToAST, javaScriptToAST } from '../utils/ast.js';
-import { hasEmbed, hasInline } from '../utils/index.js';
+import { hasEmbed, hasInline } from '../utils/node.js';
+import { javaScriptToAST } from '../utils/script.js';
+import { cssToAST } from '../utils/style.js';
 import { visit } from '../visit.js';
 
 /**

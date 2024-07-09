@@ -2,7 +2,8 @@ import { map } from '../../../libraries/collect/index.js';
 import { isArray } from '../../../libraries/is/index.js';
 import { DOM_TEXT_SELECTOR } from '../../define.js';
 import { TextSpot } from '../spot/text.js';
-import { $var, compactTextNode } from '../utils/index.js';
+import { $var } from '../utils/index.js';
+import { compactTextNode } from '../utils/node.js';
 
 export default {
   /**
@@ -29,7 +30,7 @@ export default {
    * Processes a text node containing curly braces, adding its reference,
    * content, and dependencies to the figure.
    */
-  CurlyBracesText({ node, figure }) {
+  CurlyBracesText({ node, component, figure }) {
     if (node.static) {
       figure.appendBlock($var(node.content));
       return;
@@ -37,7 +38,7 @@ export default {
 
     node.reference = figure.addReference(node);
     figure.appendBlock(DOM_TEXT_SELECTOR);
-    figure.addDependencies(node.dependencies, node.content);
+    component.addDependencies(node.dependencies, node.content);
     figure.addSpot(new TextSpot(node));
   },
 };

@@ -1,6 +1,7 @@
 import { merge } from '../../libraries/collect/index.js';
 import { isNil } from '../../libraries/is/index.js';
 import { compile } from './compile/index.js';
+import { System } from './system.js';
 import { transform } from './transform/index.js';
 
 /**
@@ -10,7 +11,7 @@ import { transform } from './transform/index.js';
  * @param {Object} [options={}] - The options to customize the compilation process.
  * @returns {Object|undefined} - The compiled output.
  */
-export function compiler(code, options = {}) {
+export function compiler(file, code, options = {}) {
   if (isNil(code)) return;
 
   const opts = {
@@ -21,8 +22,18 @@ export function compiler(code, options = {}) {
         max: 6,
       },
     },
+    cache: {
+      memory: true,
+    },
   };
   merge(opts, options);
 
-  return compile(transform(code), options);
+  const system = new System(options);
+  system.set(file, code);
+
+  if (system.isChangeCode()) {
+    system.setResult(compile(transform(code, system), options));
+  }
+
+  return system.getResult();
 }
