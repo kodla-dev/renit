@@ -49,9 +49,7 @@ Create the simplest components in the world.
 
 <style>
   .this {
-    h1 {
-      color: red;
-    }
+    color: red;
   }
 </style>
 ```
