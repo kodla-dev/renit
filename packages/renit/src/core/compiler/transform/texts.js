@@ -1,6 +1,6 @@
 import { isEmpty, isUndefined } from '../../../libraries/is/index.js';
+import { visit } from '../../../libraries/to/index.js';
 import { containsCurlyBraces, parseCurlyBraces } from '../utils/curly.js';
-import { visit } from '../visit.js';
 
 /**
  * Processes the text content of an AST, parsing curly braces and updating the node content.

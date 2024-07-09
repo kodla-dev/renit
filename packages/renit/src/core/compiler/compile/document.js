@@ -17,8 +17,8 @@ export default {
       div.children = node.children;
 
       // Add a method to check if the div has a stylesheet
-      div.hasStyleSheet = () => {
-        return some(child => isStyle(child), div.children);
+      div.has = fn => {
+        return some(child => fn(child), div.children);
       };
 
       node.children = [div];

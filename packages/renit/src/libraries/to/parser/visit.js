@@ -1,6 +1,5 @@
-import { each, some } from '../../libraries/collect/index.js';
-import { isArray, isEmpty, isObject } from '../../libraries/is/index.js';
-import { isStyle } from './utils/node.js';
+import { each, some } from '../../collect/index.js';
+import { isArray, isEmpty, isObject } from '../../is/index.js';
 
 /**
  * List of AST node property names that are commonly found and should be visited.
@@ -8,10 +7,10 @@ import { isStyle } from './utils/node.js';
  */
 // prettier-multiline-arrays-next-line-pattern: 6
 const full = [
-  'children', 'body', 'params', 'expression', 'callee', 'argument',
-  'arguments', 'property', 'object', 'left', 'right', 'test',
-  'consequent', 'declarations', 'id', 'local', 'init', 'elements',
-  'properties', 'key', 'value',
+  'children', 'attributes', 'body', 'params', 'expression', 'callee',
+  'argument', 'arguments', 'property', 'object', 'left', 'right',
+  'test', 'consequent', 'declarations', 'id', 'local', 'init',
+  'elements', 'properties', 'key', 'value',
 ];
 
 /**
@@ -217,8 +216,8 @@ function handleChildren(node, visitor) {
         if (!isEmpty(n)) return n;
         return false;
       };
-      children.hasStyleSheet = () => {
-        return some(child => isStyle(child), children.children);
+      children.has = fn => {
+        return some(child => fn(child), children.children);
       };
       visit(children, visitor);
     }, node.children);
@@ -281,6 +280,12 @@ const visitors = {
     handle(node, visitor);
   },
   Style: (node, visitor) => {
+    handle(node, visitor);
+  },
+  Selector: (node, visitor) => {
+    handle(node, visitor);
+  },
+  Atrule: (node, visitor) => {
     handle(node, visitor);
   },
 };

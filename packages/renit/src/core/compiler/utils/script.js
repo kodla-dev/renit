@@ -16,9 +16,9 @@ import {
 } from '../../../libraries/collect/index.js';
 import { isArray, isEmpty, isNull, isString, isUndefined } from '../../../libraries/is/index.js';
 import { size } from '../../../libraries/math/index.js';
+import { visitCondition, visitFull, visitSimple } from '../../../libraries/to/index.js';
 import { RAW_EMPTY } from '../../define.js';
 import { createSource } from '../source.js';
-import { visitCondition, visitFull, visitSimple } from '../visit.js';
 import { ProgramPattern } from './constant.js';
 import { $u } from './index.js';
 import {

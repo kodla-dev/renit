@@ -1,4 +1,4 @@
-import { pop, push, split } from '../../../libraries/collect/index.js';
+import { pop, split } from '../../../libraries/collect/index.js';
 import { size } from '../../../libraries/math/index.js';
 import { RAW_EMPTY } from '../../define.js';
 
@@ -59,22 +59,4 @@ export function getTemplateName(name) {
  */
 export function getBaseName(name) {
   return name.replace(/\.\w+$/, '');
-}
-
-/**
- * Finds all indexes of a substring within a given string.
- * @param {string} str - The string to search within.
- * @param {string} find - The substring to search for.
- * @returns {number[]} An array of indexes where the substring is found.
- */
-export function getIndexes(str, find) {
-  const indexes = [];
-  const findSize = size(find);
-  let from = 0;
-  for (;;) {
-    const index = str.indexOf(find, from);
-    if (index === -1) return indexes;
-    push(index, indexes);
-    from = index + findSize;
-  }
 }

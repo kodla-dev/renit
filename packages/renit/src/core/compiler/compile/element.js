@@ -11,7 +11,7 @@ export default {
    */
   Element({ node, component, figure, compile, options }) {
     // Check if the node has a stylesheet and process it if present.
-    if (node.hasStyleSheet()) {
+    if (node.has(isStyle)) {
       const styles = filter(child => isStyle(child), node.children);
       if (size(styles)) {
         const style = prepareStyle(styles[0].content, options);

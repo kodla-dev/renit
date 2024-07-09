@@ -112,4 +112,6 @@ export function toStringify(collect) {
   return `${collect}`;
 }
 
+export { astToCss, cssToAST } from './parser/parse/css.js';
 export { astToHtml, htmlToAst } from './parser/parse/html.js';
+export { visit, visitCondition, visitFull, visitSimple } from './parser/visit.js';

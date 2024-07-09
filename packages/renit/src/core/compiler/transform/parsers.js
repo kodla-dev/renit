@@ -1,8 +1,7 @@
 import { isEmpty } from '../../../libraries/is/index.js';
+import { cssToAST, visit } from '../../../libraries/to/index.js';
 import { hasEmbed, hasInline } from '../utils/node.js';
 import { javaScriptToAST } from '../utils/script.js';
-import { cssToAST } from '../utils/style.js';
-import { visit } from '../visit.js';
 
 /**
  * Processes the AST to convert JavaScript and CSS content within Script and Style nodes.
