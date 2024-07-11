@@ -1,6 +1,6 @@
 import { RAW_COMMA, RAW_EMPTY } from '../../../../core/define.js';
 import { each, has, join, push, split } from '../../../collect/index.js';
-import { isUndefined } from '../../../is/index.js';
+import { isEmpty, isUndefined } from '../../../is/index.js';
 import { size } from '../../../math/index.js';
 import { sub } from '../../../string/index.js';
 import { visitFull } from '../visit.js';
