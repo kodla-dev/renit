@@ -1,15 +1,12 @@
 import { each, has, join, prepend, push, split, unique } from '../../../libraries/collect/index.js';
-import { isEmpty, isUndefined } from '../../../libraries/is/index.js';
+import { isEmpty } from '../../../libraries/is/index.js';
 import { ucfirst } from '../../../libraries/string/index.js';
 import { RAW_COMMA, RAW_EMPTY, RAW_WHITESPACE } from '../../define.js';
 import { createSource } from '../source.js';
 import { $element, $event } from '../utils/constant.js';
 import { $el, $lambda, $u, adaptDefine } from '../utils/index.js';
-import {
-  functionExpressionAnalysis,
-  javaScriptSyntaxCorrection,
-  javaScriptToAST,
-} from '../utils/script.js';
+import { isArrowFunctionExpression } from '../utils/node.js';
+import { generateJavaScript, javaScriptSyntaxCorrection } from '../utils/script.js';
 
 /**
  * Class representing an EventSpot which handles event-related functionality in the AST.
@@ -22,11 +19,11 @@ export class EventSpot {
    * @param {Array} modifier - List of modifiers for the event.
    * @param {string} handler - The event handler code.
    */
-  constructor(parent, node, modifier, handler) {
+  constructor(parent, node, modifier, handler, expression, own) {
     this.parentReference = parent.reference;
     this.reference = null;
     this.name = node.name;
-    this.expression = node.value[0].expression;
+    this.expression = expression;
     this.modifier = modifier;
     this.modifiers = {
       prevent: ['preventDefault', 'prevent'],
@@ -37,7 +34,7 @@ export class EventSpot {
     };
     this.handler = handler;
     this.parameters = ['$t'];
-    this.own = {};
+    this.own = own;
     this.event = $event;
     this.eventName = null;
   }
@@ -55,13 +52,7 @@ export class EventSpot {
    * Initializes the event spot by analyzing the function expression and setting properties.
    */
   init() {
-    const { parentReference, name, expression, modifier, handler } = this;
-
-    if (isUndefined(expression)) {
-      this.expression = javaScriptToAST(handler).body[0].expression;
-    }
-
-    this.own = functionExpressionAnalysis(this.expression);
+    const { parentReference, name, modifier, handler } = this;
     this.reference = $el(parentReference);
     this.eventName = adaptDefine(name);
     this.own.modifier = !isEmpty(modifier);
@@ -80,7 +71,7 @@ export class EventSpot {
    * @returns {string} - The generated arguments as a string.
    */
   generateArguments(component) {
-    let { reference, handler, parameters, eventName, event, own } = this;
+    let { reference, handler, parameters, eventName, event, own, expression } = this;
     let needUpdate = false;
     let modifierContent;
     if (own.modifier) {
@@ -111,6 +102,13 @@ export class EventSpot {
         handler = javaScriptSyntaxCorrection(handler);
         const identifier = split('=', handler)[0].trim();
         push(identifier, component.updatedDependencies);
+        src.add(handler);
+      } else {
+        let exp = expression;
+        if (isArrowFunctionExpression(expression)) {
+          exp = expression.body;
+        }
+        handler = javaScriptSyntaxCorrection(generateJavaScript(exp));
         src.add(handler);
       }
 

@@ -1,5 +1,5 @@
 import { pipe } from '../../../helpers/index.js';
-import { each, filter, map, some } from '../../../libraries/collect/index.js';
+import { diff, each, filter, map, some } from '../../../libraries/collect/index.js';
 import { isArray, isEmpty, isUndefined } from '../../../libraries/is/index.js';
 import { RAW_WHITESPACE } from '../../define.js';
 import { AttributeSpot } from '../spot/attribute.js';
@@ -14,7 +14,7 @@ import {
   isPrefixLine,
   isStringAttribute,
 } from '../utils/node.js';
-import { javaScriptToAST } from '../utils/script.js';
+import { findDependencies, functionExpressionAnalysis, javaScriptToAST } from '../utils/script.js';
 import { updateStyleAttribute } from '../utils/style.js';
 
 export default {
@@ -78,11 +78,12 @@ export default {
   /**
    * Compiles an event attribute node, handling modifiers and event handlers.
    */
-  EventAttribute({ parent, node, figure }) {
+  EventAttribute({ parent, node, component, figure }) {
     let { name, value } = node;
     let handler = value;
     let modifier = [];
-    let isSuffix = hasSuffix(node);
+    let dependencies = [];
+    const isSuffix = hasSuffix(node);
 
     if (isArray(value)) {
       handler = value[0].content;
@@ -92,6 +93,11 @@ export default {
         if (!isEmpty(bind)) handler = bind[0].name;
         node.value[0].expression = javaScriptToAST(handler).body[0].expression;
       }
+
+      dependencies = value[0].dependencies;
+    } else {
+      node.expression = javaScriptToAST(handler).body[0].expression;
+      dependencies = findDependencies(node.expression, handler);
     }
 
     if (isSuffix) {
@@ -102,7 +108,11 @@ export default {
       );
     }
 
-    figure.addSpot(new EventSpot(parent, node, modifier, handler));
+    const expression = node.expression || node.value[0].expression;
+    const own = functionExpressionAnalysis(expression);
+    const diffDependencies = diff(own.arguments, dependencies);
+    component.addUpdatedDependencies(diffDependencies);
+    figure.addSpot(new EventSpot(parent, node, modifier, handler, expression, own));
   },
   /**
    * Processes a bind attribute node.

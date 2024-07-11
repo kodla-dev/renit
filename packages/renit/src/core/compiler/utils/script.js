@@ -46,6 +46,7 @@ export function javaScriptToAST(code) {
   return parseJs(code, {
     module: true,
     ranges: true,
+    directives: true,
   });
 }
 
@@ -191,6 +192,9 @@ export function findDependencies(ast, content) {
     },
     MemberExpression(node) {
       push(compileMemberExpression(node), memberExpressions);
+    },
+    UpdateExpression(node) {
+      if (isIdentifier(node.argument)) push(node.argument.name, dependencies);
     },
   });
 
@@ -451,7 +455,6 @@ export function prepareScript(ast, dependencies, changedStyles) {
    * @param {Object} astNode - The AST node to update.
    */
   function updateNode(astNode) {
-    // console.log(JSON.stringify(astNode, 0, 2));
     let dependencyAdded = false;
 
     visitCondition(
@@ -487,7 +490,19 @@ export function prepareScript(ast, dependencies, changedStyles) {
         if (has('Function', node.type)) return false;
         return true;
       },
-      ['body', 'expression', 'left', 'argument', 'callee', 'object', 'test', 'properties', 'value']
+      [
+        'body',
+        'expression',
+        'left',
+        'argument',
+        'callee',
+        'object',
+        'test',
+        'properties',
+        'value',
+        'consequent',
+        'alternate',
+      ]
     );
   }
 

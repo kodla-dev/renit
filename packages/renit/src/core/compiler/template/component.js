@@ -1,6 +1,6 @@
 import { pipe } from '../../../helpers/index.js';
 import { each, flat, join, map, push, unique } from '../../../libraries/collect/index.js';
-import { isEmpty } from '../../../libraries/is/index.js';
+import { isArray, isEmpty } from '../../../libraries/is/index.js';
 import { size } from '../../../libraries/math/index.js';
 import { RAW_COMMA, RAW_EMPTY } from '../../define.js';
 import { createSource } from '../source.js';
@@ -283,8 +283,14 @@ export class Component {
    */
   addDependencies(dependencies, content) {
     if (isEmpty(dependencies)) dependencies = content;
-    push(dependencies, this.dependencies);
-    this.dependencies = pipe(this.dependencies, flat, unique);
+
+    if (isArray(dependencies)) {
+      push(dependencies, 1, this.dependencies);
+    } else {
+      push(dependencies, this.dependencies);
+    }
+
+    this.dependencies = unique(this.dependencies);
   }
 
   /**
@@ -292,7 +298,11 @@ export class Component {
    * @param {string|string[]} content - The content to be added to the updatedDependencies list.
    */
   addUpdatedDependencies(content) {
-    push(content, this.updatedDependencies);
+    if (isArray(content)) {
+      push(content, 1, this.updatedDependencies);
+    } else {
+      push(content, this.updatedDependencies);
+    }
   }
 
   /**
