@@ -10,7 +10,7 @@ const full = [
   'children', 'attributes', 'body', 'params', 'expression', 'callee',
   'argument', 'arguments', 'property', 'object', 'left', 'right',
   'test', 'consequent', 'declarations', 'id', 'local', 'init',
-  'elements', 'properties', 'key', 'value',
+  'elements', 'properties', 'key', 'value', 'alternate',
 ];
 
 /**
