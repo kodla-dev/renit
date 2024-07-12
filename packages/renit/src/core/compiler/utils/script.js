@@ -196,6 +196,9 @@ export function findDependencies(ast, content) {
     UpdateExpression(node) {
       if (isIdentifier(node.argument)) push(node.argument.name, dependencies);
     },
+    UnaryExpression(node) {
+      if (isIdentifier(node.argument)) push(node.argument.name, dependencies);
+    },
   });
 
   // If there are member expressions and no parameters,

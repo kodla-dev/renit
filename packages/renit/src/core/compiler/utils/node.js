@@ -240,6 +240,17 @@ export function isStyle(node) {
 }
 
 /**
+ * Checks if the given attribute node is a style-related attribute.
+ * Style-related attributes are 'id' and 'class'.
+ * @param {Object} node - The attribute node to check.
+ * @param {string} node.name - The name of the attribute.
+ * @returns {boolean} - Returns true if the attribute is 'id' or 'class', false otherwise.
+ */
+export function isStyleAttribute(node) {
+  return (node || node.name) == 'id' || (node || node.name) == 'class';
+}
+
+/**
  * Checks if a node is a Script.
  * @param {Object} node - The node to check.
  * @returns {boolean} - Returns true if the node is a Script, otherwise false.

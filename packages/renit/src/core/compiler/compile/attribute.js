@@ -5,6 +5,7 @@ import { RAW_WHITESPACE } from '../../define.js';
 import { AttributeSpot } from '../spot/attribute.js';
 import { EventSpot } from '../spot/event.js';
 import { InputSpot } from '../spot/input.js';
+import { ModifierSpot } from '../spot/modifier.js';
 import { $str, $var } from '../utils/index.js';
 import {
   hasSuffix,
@@ -52,7 +53,19 @@ export default {
 
       // Compile child nodes and add a new attribute spot to the figure
       map(child => compile(child), node.value);
-      figure.addSpot(new AttributeSpot(parent, node));
+
+      if (hasSuffix(node)) {
+        figure.addSpot(new ModifierSpot(parent, node));
+      } else {
+        figure.addSpot(new AttributeSpot(parent, node));
+      }
+      return;
+    }
+
+    if (hasSuffix(node)) {
+      const dependencies = findDependencies(javaScriptToAST(node.value), node.value);
+      component.addDependencies(dependencies, node.value);
+      figure.addSpot(new ModifierSpot(parent, node, dependencies));
       return;
     }
 

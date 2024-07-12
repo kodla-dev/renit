@@ -2,7 +2,7 @@ import { isEmpty } from '../../../libraries/is/index.js';
 import { visit } from '../../../libraries/to/index.js';
 import { containsCurlyBraces, parseCurlyBraces } from '../utils/curly.js';
 import { setNodeParam } from '../utils/index.js';
-import { hasPrefix, isPrefixBind, isPrefixEvent } from '../utils/node.js';
+import { hasPrefix, hasSuffix, isPrefixBind, isPrefixEvent } from '../utils/node.js';
 
 /**
  * Processes and transforms attributes within the AST.
@@ -18,6 +18,7 @@ export function attributes(ast) {
       let value = node.value;
       let hasParentReference = false;
       const hasPrefixFlag = hasPrefix(node);
+      const hasSuffixFlag = hasSuffix(node);
 
       // Handle empty values by setting them to a default value based on the node's name.
       if (isEmpty(value)) {
@@ -42,6 +43,9 @@ export function attributes(ast) {
         if (isPrefixBind(node)) node.type = 'BindAttribute';
         hasParentReference = true;
       }
+
+      // If it has a suffix, set the parent node's reference parameter.
+      if (hasSuffixFlag) hasParentReference = true;
 
       // If the value contains a reference, set the parent node's reference parameter.
       if (hasParentReference) {

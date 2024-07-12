@@ -83,6 +83,12 @@ export const RAW_EMPTY = '';
 export const RAW_FUNCTION = 'function';
 
 /**
+ * Represents the id expression.
+ * @type {string}
+ */
+export const RAW_ID = 'id';
+
+/**
  * Constant representing the string 'input'
  * @type {string}
  */

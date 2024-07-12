@@ -1,25 +1,9 @@
 import { isEmpty, isFunction } from '../../../libraries/is/index.js';
 import { block } from './block.js';
 import { _input, _textContent } from './const.js';
-import { addEventListener, replaceWith, setAttribute } from './dom.js';
+import { addEventListener, replaceWith } from './dom.js';
 import { watch } from './reactive.js';
-
-/**
- * Sets the attribute of an element.
- * If the attribute is a property of the element, it sets the property directly,
- * otherwise, it sets the attribute using setAttribute method.
- *
- * @param {HTMLElement} element The element to set the attribute on.
- * @param {string} name The name of the attribute.
- * @param {string} value The value of the attribute.
- */
-function _attribute(element, name, value) {
-  if (name in element) {
-    element[name] = value;
-  } else {
-    setAttribute(element, name, value);
-  }
-}
+import { addAttribute, bindAttribute, modifierAttribute } from './utils.js';
 
 /**
  * Sets an attribute on an element, binding its value to a reactive function if the value is a function.
@@ -39,12 +23,12 @@ export function attribute(context, element, name, value, ...dependencies) {
       context,
       value,
       newValue => {
-        _attribute(element, name, newValue);
+        bindAttribute(element, name, newValue);
       },
       dependencies
     );
   } else {
-    _attribute(element, name, value);
+    bindAttribute(element, name, value);
   }
 }
 
@@ -101,13 +85,13 @@ export function text(context, node, content, ...dependencies) {
       context,
       content,
       value => {
-        _attribute(node, _textContent, value);
+        addAttribute(node, _textContent, value);
       },
       dependencies
     );
   } else {
     // Otherwise, set the text content directly
-    _attribute(node, _textContent, content);
+    addAttribute(node, _textContent, content);
   }
 }
 
@@ -138,5 +122,20 @@ export function html(context, node, content, ...dependencies) {
   } else {
     // If content is not a function, directly replace the node's content
     replaceWith(node, block(content));
+  }
+}
+
+export function modifier(context, node, name, dependent, condition) {
+  if (isFunction(condition)) {
+    watch(
+      context,
+      condition,
+      value => {
+        modifierAttribute(node, name, dependent, value);
+      },
+      [condition]
+    );
+  } else {
+    modifierAttribute(node, name, dependent, condition);
   }
 }

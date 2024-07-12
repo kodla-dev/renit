@@ -1,6 +1,15 @@
 import { each } from '../../../libraries/collect/index.js';
-import { isElement, isObject, isText } from '../../../libraries/is/index.js';
 import {
+  isArray,
+  isElement,
+  isEmpty,
+  isNil,
+  isObject,
+  isText,
+} from '../../../libraries/is/index.js';
+import { _class } from './const.js';
+import {
+  add,
   appendChild,
   createAnchor,
   createTreeWalker,
@@ -12,7 +21,9 @@ import {
   nextSibling,
   parentNode,
   remove,
+  removeAttribute,
   replaceWith,
+  setAttribute,
 } from './dom.js';
 
 // Creates a new resolved promise.
@@ -89,6 +100,95 @@ export function tick(fn) {
   fn && resolved.then(fn);
   // Return a resolved promise, signaling that the function has been scheduled for execution
   return resolved;
+}
+
+/**
+ * Sets the attribute of an element.
+ * If the attribute is a property of the element, it sets the property directly,
+ * otherwise, it sets the attribute using setAttribute method.
+ *
+ * @param {HTMLElement} element The element to set the attribute on.
+ * @param {string} name The name of the attribute.
+ * @param {string} value The value of the attribute.
+ */
+export function addAttribute(element, name, value) {
+  if (name in element) {
+    element[name] = value;
+  } else {
+    setAttribute(element, name, value);
+  }
+}
+
+/**
+ * Deletes an attribute from a specified element.
+ * If the attribute exists as a property of the element, it is set to null.
+ * Otherwise, it removes the attribute from the element.
+ *
+ * @param {Element} element - The element from which the attribute will be deleted.
+ * @param {string} name - The name of the attribute to be deleted.
+ */
+function deleteAttribute(element, name) {
+  if (name in element) {
+    element[name] = null;
+  } else {
+    removeAttribute(element, name);
+  }
+}
+
+/**
+ * Binds an attribute to an element.
+ * If the value is not null or undefined, it adds the attribute to the element.
+ * Otherwise, it deletes the attribute from the element.
+ *
+ * @param {Element} element - The element to which the attribute will be bound.
+ * @param {string} name - The name of the attribute to be bound.
+ * @param {any} value - The value of the attribute to be bound. If null or undefined, the attribute is deleted.
+ */
+export function bindAttribute(element, name, value) {
+  if (!isNil(value)) addAttribute(element, name, value);
+  else deleteAttribute(element, name);
+}
+
+/**
+ * Toggles a class on an element based on a condition.
+ * If the condition is true, the class is added to the element.
+ * If the condition is false, the class is removed from the element.
+ *
+ * @param {Element} element - The HTML element on which to toggle the class.
+ * @param {boolean} condition - The condition to determine whether to add or remove the class.
+ * @param {string} className - The class name to be toggled.
+ */
+function toggleClass(element, condition, className) {
+  const list = element.classList;
+  if (condition) {
+    add(list, className);
+  } else {
+    remove(list, className);
+    if (isEmpty(list)) deleteAttribute(element, _class);
+  }
+}
+
+/**
+ * Modifies an attribute of a node based on a condition.
+ * @param {Element} node - The node to modify.
+ * @param {string} name - The name of the attribute to modify.
+ * @param {string|string[]} dependent - The value(s) of the attribute.
+ * @param {boolean} condition - The condition to determine how to modify the attribute.
+ */
+export function modifierAttribute(node, name, dependent, condition) {
+  let fn;
+
+  if (name == _class) {
+    fn = toggleClass;
+  }
+
+  if (isArray(dependent)) {
+    each(value => {
+      fn(node, condition, value);
+    }, dependent);
+  } else {
+    fn(node, condition, dependent);
+  }
 }
 
 /**

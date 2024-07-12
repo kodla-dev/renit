@@ -1,7 +1,6 @@
 import {
   each,
   every,
-  flat,
   has,
   includes,
   join,
@@ -13,7 +12,13 @@ import { isEmpty } from '../../../libraries/is/index.js';
 import { size } from '../../../libraries/math/index.js';
 import { RAW_COMMA } from '../../define.js';
 import { $el, $lamb, $lambda, $ltr, $var, adaptDefine } from '../utils/index.js';
-import { isCurlyBracesAttribute, isStringAttribute } from '../utils/node.js';
+import {
+  isCurlyBracesAttribute,
+  isIdentifier,
+  isStringAttribute,
+  isStyleAttribute,
+} from '../utils/node.js';
+import { generateJavaScript, updateLiteral } from '../utils/script.js';
 
 export class AttributeSpot {
   constructor(parent, node) {
@@ -30,15 +35,15 @@ export class AttributeSpot {
   /**
    * Generates the attribute code.
    */
-  generate({ updatedDependencies }) {
-    this.init(updatedDependencies);
+  generate({ updatedDependencies, changedStyles }) {
+    this.init(updatedDependencies, changedStyles);
     return `$.attribute(${this.generateArguments(updatedDependencies)});`;
   }
 
   /**
    * Initializes the attribute spot by processing values and dependencies.
    */
-  init(updatedDependencies) {
+  init(updatedDependencies, changedStyles) {
     const { reference, name, values } = this;
     this.reference = $el(reference);
     this.define = adaptDefine(name);
@@ -48,16 +53,31 @@ export class AttributeSpot {
     let content = '';
 
     if (onlyOne) {
-      const value = values[0];
+      let value = values[0];
+      if (!isIdentifier(value.expression) && isStyleAttribute(name)) {
+        updateLiteral(value.expression, changedStyles);
+        value.content = generateJavaScript(value.expression);
+      }
+
       content += value.content.trim();
-      if (has(value.content, updatedDependencies)) {
-        push(value.content, this.dependencies);
+
+      if (isEmpty(value.dependencies)) {
+        if (has(value.content, updatedDependencies)) {
+          push(value.content, this.dependencies);
+        }
+      } else {
+        push(value.dependencies, 1, this.dependencies);
       }
     } else {
       each(value => {
         if (isStringAttribute(value)) {
           content += value.content;
         } else if (isCurlyBracesAttribute(value)) {
+          if (!isIdentifier(value.expression) && isStyleAttribute(name)) {
+            updateLiteral(value.expression, changedStyles);
+            value.content = generateJavaScript(value.expression);
+          }
+
           content += $var(value.content.trim());
 
           if (isEmpty(value.dependencies)) {
@@ -65,13 +85,13 @@ export class AttributeSpot {
               push(value.content, this.dependencies);
             }
           } else {
-            push(value.dependencies, this.dependencies);
+            push(value.dependencies, 1, this.dependencies);
           }
-
-          this.dependencies = unique(flat(this.dependencies));
         }
       }, values);
     }
+
+    this.dependencies = unique(this.dependencies);
 
     if (!onlyOne) {
       content = $ltr(content);

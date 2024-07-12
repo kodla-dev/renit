@@ -142,11 +142,20 @@ export function previousSibling(node) {
 }
 
 /**
+ * Adds a property to a node.
+ * @param {Object} node - The node to which the property will be added.
+ * @param {any} property - The property to be added to the node.
+ */
+export function add(node, property) {
+  node.add(property);
+}
+
+/**
  * Removes the given node from its parent node.
  * @param {Node} node The node to remove.
  */
-export function remove(node) {
-  node.remove();
+export function remove(node, property) {
+  node.remove(property);
 }
 
 /**
@@ -205,6 +214,15 @@ export function replaceChild(element, node, child) {
  */
 export function setAttribute(element, qualifiedName, value) {
   element.setAttribute(qualifiedName, value);
+}
+
+/**
+ * Removes an attribute from a specified element.
+ * @param {Element} element - The element from which the attribute will be removed.
+ * @param {string} qualifiedName - The name of the attribute to be removed.
+ */
+export function removeAttribute(element, qualifiedName) {
+  element.removeAttribute(qualifiedName);
 }
 
 /**
