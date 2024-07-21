@@ -82,7 +82,7 @@ export function size(collect) {
  * @param {Array|String} collect - The array or array-like object.
  * @returns {number} - Returns the length of the array or array-like object.
  */
-function length(collect) {
+export function length(collect) {
   return collect.length;
 }
 
