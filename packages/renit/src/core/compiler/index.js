@@ -1,8 +1,5 @@
 import { merge } from '../../libraries/collect/index.js';
 import { isNil } from '../../libraries/is/index.js';
-import { compile } from './compile/index.js';
-import { System } from './system.js';
-import { transform } from './transform/index.js';
 
 /**
  * Compiles the given code by transforming it into an AST and then compiling the AST.
@@ -27,13 +24,4 @@ export function compiler(file, code, options = {}) {
     },
   };
   merge(opts, options);
-
-  const system = new System(options);
-  system.set(file, code);
-
-  if (system.isChangeCode()) {
-    system.setResult(compile(transform(code, system), options));
-  }
-
-  return system.getResult();
 }
