@@ -4,7 +4,6 @@ import {
   RAW_CLICK,
   RAW_INPUT,
   RAW_STYLE,
-  RAW_TEXTCONTENT,
   RAW_VALUE,
 } from '../../define.js';
 
@@ -43,9 +42,3 @@ export const _value = RAW_VALUE;
  * @type {string}
  */
 export const _input = RAW_INPUT;
-
-/**
- * Name of the text content property.
- * @type {string}
- */
-export const _textContent = RAW_TEXTCONTENT;

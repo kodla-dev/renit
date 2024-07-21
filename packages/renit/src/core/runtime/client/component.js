@@ -1,51 +1,38 @@
-import { isUndefined } from '../../../libraries/is/index.js';
-import { computed, updateTrackers } from './reactive.js';
-import { mount } from './utils.js';
+import { share } from './share.js';
+import { append, safe } from './utils.js';
 
-/**
- * Creates a reactive component.
- *
- * @param {Function} init - Function to initialize the component.
- * @param {Object} [props] - Optional properties to initialize the component with.
- * @returns {Function} A function to mount the component to a target.
- */
-export function component(init, props) {
-  const context = {
-    $_c: [], // List of computed functions
-    $_w: [], // List of watchers
-    $p: !isUndefined(props) ? props : {}, // Initial properties
+export let current, context;
 
-    /**
-     * Adds a computed function with its dependencies to the context.
-     *
-     * @param {Function} computedFn - The computed function to add.
-     * @param {...Function} dependencies - The dependencies of the computed function.
-     */
-    $c(computedFn, ...dependencies) {
-      computed(context.$_c, computedFn, dependencies);
-    },
+export function component(init) {
+  return (options = {}, needMount = true) => {
+    context = options.context || {};
+    let prev = current;
+    let prevCD = share.cd;
+    let component = (current = { options });
+    share.cd = null;
 
-    /**
-     * Executes the trackers and returns the provided value.
-     *
-     * @param {any} value - The value to return after executing trackers.
-     * @returns {any} The provided value.
-     */
-    $u(value) {
-      updateTrackers(context.$_w, context.$_c);
-      return value;
-    },
+    try {
+      component.dom = init(options);
+    } finally {
+      current = prev;
+      share.cd = prevCD;
+      context = null;
+    }
+
+    const r = { component };
+
+    if (needMount) {
+      r.mount = target => {
+        target.appendChild(component.dom);
+      };
+    }
+
+    return r;
   };
+}
 
-  // Initialize the component context
-  init = init.call(context);
-
-  /**
-   * Mounts the component to the provided target element.
-   *
-   * @param {Element} target - The target element to mount the component to.
-   */
-  return target => {
-    mount(target, init);
-  };
+export function call(node, component, context, option = {}) {
+  option.context = { ...context };
+  let c = safe(() => component(option, 0));
+  append(node, c.component.dom);
 }

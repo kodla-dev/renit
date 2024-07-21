@@ -1,141 +1,119 @@
-import { isEmpty, isFunction } from '../../../libraries/is/index.js';
 import { block } from './block.js';
-import { _input, _textContent } from './const.js';
-import { addEventListener, replaceWith } from './dom.js';
+import { _input } from './const.js';
 import { watch } from './reactive.js';
-import { addAttribute, bindAttribute, modifierAttribute } from './utils.js';
+import { event, modifier, modifiers, text } from './static.js';
+import { bindAttribute } from './utils.js';
 
 /**
- * Sets an attribute on an element, binding its value to a reactive function if the value is a function.
+ * Binds an attribute to a DOM element and sets up a watch on specified dependencies.
  *
- * @param {Object} context - The context for reactive binding.
- * @param {Element} element - The element on which the attribute will be set.
- * @param {string} name - The name of the attribute.
- * @param {any} value - The value to set for the attribute.
- * @param {...any} dependencies - Dependencies that determine when the content should be updated.
+ * @param {Element} element - The DOM element to bind the attribute to.
+ * @param {string} name - The name of the attribute to bind.
+ * @param {Function} value - Function to get the current value of the attribute.
+ * @param {...Function} dependencies - Functions to get the dependencies to watch.
  */
-export function attribute(context, element, name, value, ...dependencies) {
-  // If dependencies are empty, set them to the value
-  if (isEmpty(dependencies)) dependencies = [value];
-
-  if (isFunction(value)) {
-    watch(
-      context,
-      value,
-      newValue => {
-        bindAttribute(element, name, newValue);
-      },
-      dependencies
-    );
-  } else {
-    bindAttribute(element, name, value);
-  }
-}
-
-/**
- * Adds an event listener to an element, binding its callback to a reactive function.
- *
- * @param {Object} context - The context for reactive binding.
- * @param {Element} element - The element to which the event listener will be added.
- * @param {string} type - The event type (e.g., 'click', 'input').
- * @param {function} callback - The callback function to execute when the event occurs.
- */
-export function event(context, element, type, callback) {
-  if (!callback) return;
-  addEventListener(element, type, callback);
-  // TODO: add removeEventListener to context
+export function Attribute(element, name, value, ...dependencies) {
+  // Set up a watch on the specified dependencies
+  watch(
+    value,
+    newValue => {
+      // Bind the new value to the attribute
+      bindAttribute(element, name, newValue);
+    },
+    undefined,
+    dependencies
+  );
 }
 
 /**
  * Binds an input element's attribute and event to reactive functions.
  *
- * @param {Object} context - The context for reactive binding.
  * @param {Element} element - The input element to bind.
  * @param {string} name - The name of the attribute to bind.
  * @param {function} get - The reactive function to retrieve the attribute value.
  * @param {function} set - The optional setter function to update the attribute value.
  */
-export function input(context, element, name, get, set) {
+export function Input(element, name, get, set) {
   // Bind the attribute to a reactive function
-  attribute(context, element, name, get);
+  Attribute(element, name, get);
 
   // If a setter function is provided, bind the 'input' event to update the attribute value
   if (set) {
-    event(context, element, _input, () => {
+    event(element, _input, () => {
       set(element[name]);
     });
   }
 }
 
 /**
- * Binds text content of a node to a reactive function or value.
+ * Dynamically updates the text content of a DOM node and sets up a watch on specified dependencies.
  *
- * @param {Object} context - The context for reactive binding.
- * @param {Node} node - The node whose text content will be bound.
- * @param {function|string} content - The reactive function or value providing the text content.
- * @param {...Function} dependencies - Optional dependencies that trigger updates.
+ * @param {Node} node - The DOM node to update the text content of.
+ * @param {Function} content - Function to get the current text content.
+ * @param {...Function} dependencies - Functions to get the dependencies to watch.
  */
-export function text(context, node, content, ...dependencies) {
-  // If dependencies are empty, set them to the content
-  if (isEmpty(dependencies)) dependencies = [content];
-
-  // If content is a function, watch its changes and update the text node reactively
-  if (isFunction(content)) {
-    watch(
-      context,
-      content,
-      value => {
-        addAttribute(node, _textContent, value);
-      },
-      dependencies
-    );
-  } else {
-    // Otherwise, set the text content directly
-    addAttribute(node, _textContent, content);
-  }
+export function Text(node, content, ...dependencies) {
+  // Set up a watch on the specified dependencies
+  watch(
+    content,
+    value => {
+      // Update the text content of the node
+      text(node, value);
+    },
+    undefined,
+    dependencies
+  );
 }
 
 /**
- * Updates the HTML content of a given node.
+ * Dynamically updates the inner HTML of a DOM node and sets up a watch on specified dependencies.
  *
- * @param {Object} context - The context in which the function operates.
- * @param {HTMLElement} node - The DOM node to be updated.
- * @param {Function|string} content - The new content to be set. Can be a function or a string.
- * @param {...any} dependencies - Dependencies that determine when the content should be updated.
+ * @param {Node} node - The DOM node to update the inner HTML of.
+ * @param {Function} content - Function to get the current HTML content.
+ * @param {...Function} dependencies - Functions to get the dependencies to watch.
  */
-export function html(context, node, content, ...dependencies) {
-  // If dependencies are not provided, use content as the dependency
-  if (isEmpty(dependencies)) dependencies = [content];
-
-  // If content is a function, set up a watcher to update the node when content changes
-  if (isFunction(content)) {
-    watch(
-      context,
-      content,
-      value => {
-        const element = block(value);
-        replaceWith(node, element);
-        node = element;
-      },
-      dependencies
-    );
-  } else {
-    // If content is not a function, directly replace the node's content
-    replaceWith(node, block(content));
-  }
+export function Html(node, content, ...dependencies) {
+  // Set up a watch on the specified dependencies
+  watch(
+    content,
+    value => {
+      const element = block(value); // Create a new element with the content
+      node.replaceWith(element); // Replace the old node with the new element
+      node = element; // Update the reference to the node
+    },
+    undefined,
+    dependencies
+  );
 }
 
-export function modifier(context, node, name, dependent, condition) {
-  if (isFunction(condition)) {
-    watch(
-      context,
-      condition,
-      value => {
-        modifierAttribute(node, name, dependent, value);
-      },
-      [condition]
-    );
-  } else {
-    modifierAttribute(node, name, dependent, condition);
-  }
+/**
+ * Dynamically updates a node's attribute based on a condition and sets up a watch on the specified dependencies.
+ *
+ * @param {Node} node - The DOM node to update.
+ * @param {String} name - The name of the attribute to update.
+ * @param {Any} dependent - The value of the attribute to update.
+ * @param {Function} condition - A function that returns the condition to check.
+ */
+export function Modifier(node, name, dependent, condition) {
+  // Set up a watch on the specified condition
+  watch(condition, value => {
+    // Update the node's attribute based on the condition
+    modifier(node, name, dependent, value);
+  });
+}
+
+/**
+ * Dynamically updates a node's attributes based on a condition and sets up a watch on the specified dependencies.
+ *
+ * @param {Node} node - The DOM node to update.
+ * @param {String[]} name - The name of the attribute to update.
+ * @param {Any} dependent - The value of the attribute to update.
+ * @param {Function} condition - A function that returns the condition to check.
+ */
+export function Modifiers(node, name, dependent, condition) {
+  // Set up a watch on the specified condition
+  watch(condition, value => {
+    // Update the node's attributes based on the condition
+    modifiers(node, name, dependent, value);
+  });
 }

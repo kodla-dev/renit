@@ -1,45 +1,31 @@
-import { each } from '../../../libraries/collect/index.js';
 import {
   isArray,
   isElement,
-  isEmpty,
+  isFunction,
   isNil,
-  isObject,
+  isObjects,
   isText,
 } from '../../../libraries/is/index.js';
 import { _class } from './const.js';
-import {
-  add,
-  appendChild,
-  createAnchor,
-  createTreeWalker,
-  currentNode,
-  firstChild,
-  insertBefore,
-  lastChild,
-  nextNode,
-  nextSibling,
-  parentNode,
-  remove,
-  removeAttribute,
-  replaceWith,
-  setAttribute,
-} from './dom.js';
+import { attribute } from './static.js';
 
 // Creates a new resolved promise.
 const resolved = Promise.resolve();
+
+// Alias for console.error to log error messages.
+export const error = console.error;
 
 /**
  * Mounts a view into a container element, either by appending it as a child or inserting it before a specific node.
  * @param {HTMLElement|Text} container The container element or text node.
  * @param {HTMLElement} view The view element to mount.
  */
-export function mount(container, view) {
+export function append(container, view) {
   if (!view) return;
   if (isText(container)) {
-    insertBefore(parentNode(container), view, container);
+    container.parentNode.insertBefore(view, container);
   } else {
-    appendChild(container, view);
+    container.appendChild(view);
   }
 }
 
@@ -50,17 +36,17 @@ export function mount(container, view) {
  */
 export function reference(html) {
   // Create a tree walker to traverse the HTML.
-  const walker = createTreeWalker(html, 128);
+  const walker = document.createTreeWalker(html, 128);
 
   // Initialize arrays to store nodes to replace and references.
   const replaces = [];
   const references = [];
 
   // Traverse the tree walker.
-  while (nextNode(walker)) {
-    const node = currentNode(walker);
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
     const content = node.textContent;
-    const next = nextSibling(node);
+    const next = node.nextSibling;
 
     // If the node's text content is 'e', replace it with the next sibling node.
     if (content == 'e') {
@@ -69,23 +55,22 @@ export function reference(html) {
 
     // If the node's text content is 't', replace it with a newly created anchor node.
     else if (content == 't') {
-      replaces.push([node, createAnchor()]);
+      replaces.push([node, document.createTextNode('')]);
     }
   }
 
   // Replace nodes and build the list of references.
-  each(e => {
+  for (let i = 0, n = replaces.length; i < n; ++i) {
+    const e = replaces[i];
     const el = e[0];
     const target = e[1];
-
     if (isText(target)) {
-      replaceWith(el, target);
+      el.replaceWith(target);
     } else if (isElement(target)) {
-      remove(el);
+      el.remove();
     }
-
     references.push(target);
-  }, replaces);
+  }
 
   return references;
 }
@@ -103,23 +88,6 @@ export function tick(fn) {
 }
 
 /**
- * Sets the attribute of an element.
- * If the attribute is a property of the element, it sets the property directly,
- * otherwise, it sets the attribute using setAttribute method.
- *
- * @param {HTMLElement} element The element to set the attribute on.
- * @param {string} name The name of the attribute.
- * @param {string} value The value of the attribute.
- */
-export function addAttribute(element, name, value) {
-  if (name in element) {
-    element[name] = value;
-  } else {
-    setAttribute(element, name, value);
-  }
-}
-
-/**
  * Deletes an attribute from a specified element.
  * If the attribute exists as a property of the element, it is set to null.
  * Otherwise, it removes the attribute from the element.
@@ -131,7 +99,7 @@ function deleteAttribute(element, name) {
   if (name in element) {
     element[name] = null;
   } else {
-    removeAttribute(element, name);
+    element.removeAttribute(name);
   }
 }
 
@@ -145,7 +113,7 @@ function deleteAttribute(element, name) {
  * @param {any} value - The value of the attribute to be bound. If null or undefined, the attribute is deleted.
  */
 export function bindAttribute(element, name, value) {
-  if (!isNil(value)) addAttribute(element, name, value);
+  if (!isNil(value)) attribute(element, name, value);
   else deleteAttribute(element, name);
 }
 
@@ -158,36 +126,13 @@ export function bindAttribute(element, name, value) {
  * @param {boolean} condition - The condition to determine whether to add or remove the class.
  * @param {string} className - The class name to be toggled.
  */
-function toggleClass(element, condition, className) {
+export function toggleClass(element, condition, className) {
   const list = element.classList;
   if (condition) {
-    add(list, className);
+    list.add(className);
   } else {
-    remove(list, className);
-    if (isEmpty(list)) deleteAttribute(element, _class);
-  }
-}
-
-/**
- * Modifies an attribute of a node based on a condition.
- * @param {Element} node - The node to modify.
- * @param {string} name - The name of the attribute to modify.
- * @param {string|string[]} dependent - The value(s) of the attribute.
- * @param {boolean} condition - The condition to determine how to modify the attribute.
- */
-export function modifierAttribute(node, name, dependent, condition) {
-  let fn;
-
-  if (name == _class) {
-    fn = toggleClass;
-  }
-
-  if (isArray(dependent)) {
-    each(value => {
-      fn(node, condition, value);
-    }, dependent);
-  } else {
-    fn(node, condition, dependent);
+    list.remove(className);
+    if (!list.length) deleteAttribute(element, _class);
   }
 }
 
@@ -201,8 +146,8 @@ export function location(html) {
   let end;
   if (html.nodeType == 11) {
     // DocumentFragment
-    start = firstChild(html);
-    end = lastChild(html);
+    start = html.firstChild;
+    end = html.lastChild;
   } else {
     start = end = html;
   }
@@ -218,7 +163,7 @@ export function location(html) {
 export function eachNodes(start, end, fn) {
   let next;
   while (start) {
-    next = nextSibling(start);
+    next = start.nextSibling;
     fn(start);
     if (start == end) break;
     start = next;
@@ -231,16 +176,93 @@ export function eachNodes(start, end, fn) {
  * @param {Node} end - The end node of the range to be removed.
  */
 export function removeRange(start, end) {
-  eachNodes(start, end, n => remove(n));
+  eachNodes(start, end, n => n.remove());
 }
 
 /**
- * Generates a unique key for each item in an array.
+ * Generates a unique key for for item in an array.
  * @param {*} item - The current item in the array.
  * @param {number} index - The index of the current item.
  * @param {Array} array - The array containing the items.
  * @returns {*} The unique key for the current item.
  */
-export function eachKey(item, index, array) {
-  return isObject(array[0]) ? item : index;
+export function forKey(item, index, array) {
+  return isObjects(array[0]) ? item : index;
+}
+
+/**
+ * A no-operation function that returns the input value.
+ * @param {Any} a - The input value.
+ * @returns {Any} The same input value.
+ */
+export function noop(a) {
+  return a;
+}
+
+/**
+ * Safely executes a callback function, catching and ignoring any errors.
+ * @param {Function} callback - The callback function to execute.
+ * @returns {Any} The result of the callback function, or undefined if an error occurred.
+ */
+export function safe(callback) {
+  try {
+    return callback?.();
+  } catch (e) {
+    error(e);
+  }
+}
+
+/**
+ * Safely executes a list of callback functions, catching and ignoring any errors.
+ * @param {Array<Function>} list - The list of callback functions to execute.
+ */
+export function safeGroup(list) {
+  try {
+    list?.forEach(fn => fn?.());
+  } catch (e) {
+    error(e);
+  }
+}
+
+/**
+ * Safely executes a list of callback functions and collects their results.
+ * If only functions are collected, the `onlyFn` parameter should be true.
+ * @param {Array<Function>} list - The list of callback functions to execute.
+ * @param {Array} results - The array to collect the results.
+ * @param {Boolean} [onlyFn=false] - If true, only functions will be collected.
+ */
+export function safeMulti(list, results, onlyFn) {
+  list?.forEach(callback => {
+    let result = safe(callback);
+    result && (!onlyFn || isFunction(result)) && results.push(result);
+  });
+}
+
+/**
+ * Removes an item from a list if it exists.
+ * @param {Array} list - The list to remove the item from.
+ * @param {Any} item - The item to remove.
+ */
+export function removeItem(list, item) {
+  let i = list.indexOf(item);
+  if (i >= 0) list.splice(i, 1);
+}
+
+/**
+ * Compares two arrays for equality.
+
+ * @param {Array} a - The first array to compare.
+ * @param {Array} b - The second array to compare.
+ * @returns {boolean} True if the arrays are not equal, false otherwise.
+ */
+export function compareArray(a, b) {
+  let a0 = isArray(a);
+  let a1 = isArray(b);
+  if (a0 !== a1) return true;
+  if (!a0) return a !== b;
+  if (a.length !== b.length) return true;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return true;
+  }
+  return false;
 }
