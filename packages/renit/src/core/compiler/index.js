@@ -1,5 +1,6 @@
 import { merge } from '../../libraries/collect/index.js';
 import { isNil } from '../../libraries/is/index.js';
+import { transform } from './transform/index.js';
 
 /**
  * Compiles the given code by transforming it into an AST and then compiling the AST.
@@ -19,9 +20,9 @@ export function compiler(file, code, options = {}) {
         max: 6,
       },
     },
-    cache: {
-      memory: true,
-    },
   };
+
   merge(opts, options);
+
+  return transform(code);
 }
