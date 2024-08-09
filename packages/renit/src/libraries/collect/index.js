@@ -5,8 +5,6 @@
   ------------------------------------------------------------------------------
 */
 
-import { DEV } from '../../core/env.js';
-import { Renit } from '../../core/fault.js';
 import { pipe } from '../../helpers/index.js';
 import {
   isArray,
@@ -34,13 +32,11 @@ import { toArray } from '../to/index.js';
  * @param {Function} fn - The function to apply.
  * @param {Array|Object|Promise} [collect] - The collection of values.
  * @returns {*} Returns the result of applying the function to the collection values.
- * @throws {Renit} - Throws a Renit error if development mode.
  */
 export function apply(fn, collect) {
   if (isUndefined(collect)) return collect => apply(fn, collect);
   if (isCollect(collect)) return fn(...values(collect));
   if (isPromise(collect)) return collect.then(c => apply(fn, c));
-  if (DEV) throw new Renit("Type error in 'apply' function");
 }
 
 /**
@@ -83,7 +79,6 @@ export function chunk(length, collect) {
  * @param {number|Array|Object|Promise} [type] - The second argument or collection.
  * @param {Array|Object|Promise} [collect] - The second collection.
  * @returns {Array|Object|Promise} Returns the difference between the two collections.
- * @throws {Renit} - Throws a Renit error if development mode.
  */
 export function diff(values, type, collect) {
   if (isUndefined(collect)) {
@@ -114,7 +109,6 @@ export function diff(values, type, collect) {
 
   if (isPromise(values)) return values.then(v => diff(v, collect));
   if (isPromise(collect)) return collect.then(c => diff(values, c));
-  if (DEV) throw new Renit("Type error in 'diff' function");
 }
 
 /**
@@ -122,7 +116,6 @@ export function diff(values, type, collect) {
  *
  * @param {Function} fn - The function to apply to each element.
  * @param {Array|Object|Promise} collect - The collection to iterate over.
- * @throws {Renit} - Throws a Renit error if development mode.
  */
 export function each(fn, collect) {
   if (isUndefined(collect)) return collect => each(fn, collect);
@@ -138,7 +131,6 @@ export function each(fn, collect) {
       fn(key, value, index);
     }, object);
   } else if (isPromise(collect)) return collect.then(c => each(fn, c));
-  else if (DEV) throw new Renit("Type error in 'each' function");
 }
 
 /**
@@ -146,13 +138,11 @@ export function each(fn, collect) {
  *
  * @param {*} collect - The object to retrieve entries from.
  * @returns {Array<Array>} Returns an array of [key, value] pairs.
- * @throws {Renit} - Throws a Renit error if development mode.
  */
 export function entries(collect) {
   if (isUndefined(collect)) return collect => entries(collect);
   if (isObject(collect)) return Object.entries(collect);
   if (isPromise(collect)) return collect.then(c => entries(c));
-  if (DEV) throw new Renit("Type error in 'entries' function");
 }
 
 /**
@@ -161,13 +151,11 @@ export function entries(collect) {
  * @param {Function} fn - The function to test each element with.
  * @param {Array|Object|Promise} [collect] - The collection to check.
  * @returns {boolean|Promise<boolean>} Returns true if every element satisfies the provided function, otherwise false.
- * @throws {Renit} - Throws a Renit error if development mode.
  */
 export function every(fn, collect) {
   if (isUndefined(collect)) return collect => every(fn, collect);
   if (isCollect(collect)) return values(collect).every(fn);
   if (isPromise(collect)) return collect.then(c => every(fn, c));
-  if (DEV) throw new Renit("Type error in 'every' function");
 }
 
 /**
@@ -176,7 +164,6 @@ export function every(fn, collect) {
  * @param {*} fn - The function to test each element with or a boolean for default filtering.
  * @param {*} collect - The collection to filter.
  * @returns {*} Returns the filtered collection.
- * @throws {Renit} - Throws a Renit error if development mode.
  */
 export function filter(fn, collect) {
   if (isUndefined(collect)) {
@@ -207,8 +194,6 @@ export function filter(fn, collect) {
   }
 
   if (isPromise(collect)) return collect.then(c => filter(fn, c));
-
-  if (DEV) throw new Renit("Type error in 'filter' function");
 }
 
 /**
@@ -231,7 +216,6 @@ function filtered(item) {
  * @param {*} depth - The depth to flatten the collection to.
  * @param {*} collect - The collection to flatten.
  * @returns {*} Returns the flattened collection.
- * @throws {Renit} - Throws a Renit error if development mode.
  */
 export function flat(depth, collect) {
   if (isUndefined(collect)) {
@@ -242,7 +226,6 @@ export function flat(depth, collect) {
 
   if (isCollect(collect)) return values(collect).flat(depth);
   if (isPromise(collect)) return collect.then(c => flat(depth, c));
-  if (DEV) throw new Renit("Type error in 'flat' function");
 }
 
 /**
@@ -333,14 +316,12 @@ function buildKeyMap(item, index, paths) {
  * @param {*} items - The item or items to check for in the collection.
  * @param {Array|string} collect - The collection to check.
  * @returns {boolean} Returns true if the collection contains the item(s), otherwise false.
- * @throws {Renit} - Throws a Renit error if development mode.
  */
 export function has(items, collect) {
   if (isUndefined(collect)) return collect => has(collect);
   if (isArray(collect) || isString(collect)) return includes(items, collect);
   if (isObject(collect)) return hasOwn(items, collect);
   // TODO: Add support for multiple items
-  if (DEV) throw new Renit("Type error in 'has' function");
 }
 
 /**
@@ -369,13 +350,11 @@ export function hasOwn(item, collect) {
  *
  * @param {Object|Promise} [collect] - The object to extract keys from.
  * @returns {Array|Promise} Returns an array of keys.
- * @throws {Renit} - Throws a Renit error if development mode.
  */
 export function keys(collect) {
   if (isUndefined(collect)) return collect => keys(collect);
   if (isObject(collect)) return Object.keys(collect);
   if (isPromise(collect)) return collect.then(c => keys(c));
-  if (DEV) throw new Renit("Type error in 'keys' function");
 }
 
 /**
@@ -384,7 +363,6 @@ export function keys(collect) {
  * @param {Function|boolean} [fn] - The function to test each element with or a boolean for default criteria.
  * @param {Array|Object|Promise} collect - The collection to retrieve the last element from.
  * @returns {*} Returns the last element in the collection.
- * @throws {Renit} - Throws a Renit error if development mode.
  */
 export function last(fn, collect) {
   if (isUndefined(collect)) {
@@ -400,7 +378,6 @@ export function last(fn, collect) {
     return collect[key[size(key) - 1]];
   }
   if (isPromise(collect)) return collect.then(c => last(fn, c));
-  if (DEV) throw new Renit("Type error in 'last' function");
 }
 
 /**
@@ -428,7 +405,6 @@ export async function loop(fn, length) {
  * @param {Function} fn - The function to apply to each element.
  * @param {*} collect - The original collection.
  * @returns {*} Returns a new collection with the results of applying the function to each element.
- * @throws {Renit} - Throws a Renit error if development mode.
  */
 export function map(fn, collect) {
   if (isUndefined(collect)) return collect => map(fn, collect);
@@ -455,7 +431,6 @@ export function map(fn, collect) {
     return collection;
   }
   if (isPromise(collect)) return collect.then(c => map(fn, c));
-  if (DEV) throw new Renit("Type error in 'map' function");
 }
 
 /**
@@ -464,7 +439,6 @@ export function map(fn, collect) {
  * @param {Array|Object|Promise} seed - The first collection.
  * @param {Array|Object|Promise} collect - The second collection.
  * @returns {Array|Object|Promise} Returns the merged collection.
- * @throws {Renit} - Throws a Renit error if development mode.
  */
 export function merge(seed, collect) {
   if (isUndefined(collect)) return collect => merge(seed, collect);
@@ -475,7 +449,6 @@ export function merge(seed, collect) {
 
   if (isPromise(seed)) return seed.then(s => merge(s, collect));
   if (isPromise(collect)) return collect.then(c => merge(seed, c));
-  if (DEV) throw new Renit("Type error in 'merge' function");
 }
 
 /**
@@ -484,7 +457,6 @@ export function merge(seed, collect) {
  * @param {Array|Object|Promise} seed - The initial value or partial result of the merge.
  * @param {Array|Object|Promise} collect - The value to merge with the seed.
  * @returns {Array|Object|Promise} The merged result.
- * @throws {Renit} - Throws a Renit error if development mode.
  */
 export function mergeDeep(seed, collect) {
   if (isUndefined(collect)) return collect => mergeDeep(seed, collect);
@@ -495,7 +467,6 @@ export function mergeDeep(seed, collect) {
 
   if (isPromise(seed)) return seed.then(s => mergeDeep(s, collect));
   if (isPromise(collect)) return collect.then(c => mergeDeep(seed, c));
-  if (DEV) throw new Renit("Type error in 'mergeDeep' function");
 }
 
 /**
@@ -705,7 +676,6 @@ export function prepend(key, value, collect) {
  * @param {*} value - The value to add to the collection or object.
  * @param {Array|Object|Promise} collect - The collection or object to which the key-value pair or element is added.
  * @returns {Array|Object|Promise} Returns the updated collection or object.
- * @throws {Renit} - Throws a Renit error if development mode.
  */
 export function push(key, value, collect) {
   if (isUndefined(collect)) {
@@ -727,8 +697,6 @@ export function push(key, value, collect) {
   }
 
   if (isPromise(collect)) return collect.then(c => push(key, value, c));
-
-  if (DEV) throw new Renit("Type error in 'push' function");
 }
 
 /**
@@ -738,7 +706,6 @@ export function push(key, value, collect) {
  * @param {*} [seed] - The initial value or collection to start the reduction.
  * @param {Array|Object} [collect] - The collection to reduce.
  * @returns {*} Returns the reduced value.
- * @throws {Renit} - Throws a Renit error if in development mode.
  */
 export function reduce(fn, seed, collect) {
   if (isUndefined(collect)) {
@@ -757,8 +724,6 @@ export function reduce(fn, seed, collect) {
     }, collect);
     return seed;
   }
-
-  if (DEV) throw new Renit("Type error in 'reduce' function");
 }
 
 /**
@@ -785,12 +750,10 @@ export function remove(keys, collect) {
  *
  * @param {*} collect - The array to reverse.
  * @returns {*} Returns a new array with reversed elements.
- * @throws {Renit} - Throws a Renit error if development mode.
  */
 export function reverse(collect) {
   if (isUndefined(collect)) return collect => reverse(collect);
   if (isArray(collect)) return collect.reverse();
-  if (DEV) throw new Renit("Type error in 'reverse' function");
 }
 
 /**
@@ -825,7 +788,6 @@ export function shift(count, collect) {
  * @param {(number|number[])} key - The starting index or an array containing [start, limit].
  * @param {*} collect - The array to extract a section from.
  * @returns {*} Returns a new array containing the extracted section.
- * @throws {Renit} - Throws a Renit error if in development mode.
  */
 export function slice(key, collect) {
   if (isUndefined(collect)) return collect => slice(key, collect);
@@ -856,8 +818,6 @@ export function slice(key, collect) {
     }
     return collection;
   }
-
-  if (DEV) throw new Renit("Type error in 'slice' function");
 }
 
 /**
@@ -930,7 +890,6 @@ export function some(key, value, collect) {
  * @param {*} key - The starting index or an array containing [start, deleteCount, ...items].
  * @param {*} collect - The array to modify.
  * @returns {*} Returns a new array with the modified contents.
- * @throws {Renit} - Throws a Renit error if development mode.
  */
 export function splice(key, collect) {
   if (isUndefined(collect)) return collect => splice(key, collect);
@@ -957,8 +916,6 @@ export function splice(key, collect) {
   }
 
   if (isPromise(collect)) return collect.then(c => splice(key, c));
-
-  if (DEV) throw new Renit("Type error in 'splice' function");
 }
 
 /**
@@ -1149,12 +1106,10 @@ export function value(key, collect) {
  *
  * @param {Array|Object|Promise} [collect] - The collection to extract values from.
  * @returns {Array} Returns an array of values.
- * @throws {Renit} - Throws a Renit error if development mode.
  */
 export function values(collect) {
   if (isUndefined(collect)) return collect => values(collect);
   if (isArray(collect)) return collect;
   if (isObject(collect)) return Object.values(collect);
   if (isPromise(collect)) return collect.then(c => values(c));
-  if (DEV) throw new Renit("Type error in 'values' function");
 }
