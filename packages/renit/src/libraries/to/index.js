@@ -115,3 +115,11 @@ export function toStringify(collect) {
 export { astToCss, cssToAST } from './parser/parse/css.js';
 export { astToHtml, htmlToAst } from './parser/parse/html.js';
 export { visit, visitCondition, visitFull, visitSimple } from './parser/visit.js';
+export {
+  makeHash,
+  makeQuery,
+  parseHash,
+  parseQuery,
+  routeToPath,
+  routeToRegExp,
+} from './uri/index.js';
