@@ -885,6 +885,36 @@ export function some(key, value, collect) {
 }
 
 /**
+ * Sorts a collection based on the provided comparator function.
+ *
+ * @param {Function|Array} [fn] - Comparator function to determine the order of elements.
+ * @param {Array} [collect] - The collection of elements to sort.
+ * @returns {Array} - The sorted collection.
+ */
+export function sort(fn, collect) {
+  if (isUndefined(collect)) {
+    if (isUndefined(fn)) return collect => sort(fn, collect);
+    if (isArray(fn)) {
+      return sort(void 0, fn);
+    } else {
+      return collect => sort(fn, collect);
+    }
+  }
+
+  if (isUndefined(fn)) {
+    if (every(item => isNumber(item), collect)) {
+      collect.sort((a, b) => a - b);
+    } else {
+      collect.sort();
+    }
+  } else {
+    collect.sort(fn);
+  }
+
+  return collect;
+}
+
+/**
  * Changes the contents of an array by removing or replacing existing elements and/or adding new elements in place.
  *
  * @param {*} key - The starting index or an array containing [start, deleteCount, ...items].
