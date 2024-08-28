@@ -47,3 +47,67 @@ export const SVGElements = [
  * @type {string[]}
  */
 export const NITElements = ['if', 'elseif', 'else', 'for'];
+
+/**
+ * Constant representing the string '$event'.
+ * @type {string}
+ */
+export const $event = '$event';
+
+/**
+ * Constant representing the string '$element'.
+ * @type {string}
+ */
+export const $element = '$element';
+
+/**
+ * A pattern representing an empty Program node in an AST.
+ * @type {Object}
+ */
+export const ProgramPattern = {
+  type: 'Program',
+  body: [],
+};
+
+/**
+ * Pattern for a div element node.
+ * @type {Object}
+ */
+export const ElementDivPattern = {
+  type: 'Element',
+  name: 'div',
+  voidElement: false,
+  attributes: [],
+  children: [],
+};
+
+/**
+ * Pattern for an attribute node.
+ * @type {Object}
+ */
+export const AttributePattern = {
+  type: 'Attribute',
+  prefix: undefined,
+  name: '',
+  suffix: undefined,
+  value: '',
+};
+
+/**
+ * Pattern for a string attribute node.
+ * @type {Object}
+ */
+export const StringAttributePattern = {
+  type: 'StringAttribute',
+  content: '',
+};
+
+/**
+ * Pattern for a raw node.
+ * @type {Object}
+ */
+export const RawPattern = {
+  type: 'Raw',
+  loc: null,
+  value: '',
+};

@@ -1,5 +1,7 @@
 import { merge } from '../../libraries/collect/index.js';
 import { isNil } from '../../libraries/is/index.js';
+import { compile } from './compile/index.js';
+import defaultOptions from './options.js';
 import { transform } from './transform/index.js';
 
 /**
@@ -11,18 +13,8 @@ import { transform } from './transform/index.js';
  */
 export function compiler(file, code, options = {}) {
   if (isNil(code)) return;
+  options.component = { file };
+  options = merge(options, defaultOptions);
 
-  const opts = {
-    css: {
-      compile: 'injected',
-      hash: {
-        min: 1,
-        max: 6,
-      },
-    },
-  };
-
-  merge(opts, options);
-
-  return transform(code);
+  return compile(transform(code), options);
 }

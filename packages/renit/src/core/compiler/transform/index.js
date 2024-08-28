@@ -1,9 +1,13 @@
 import { each } from '../../../libraries/collect/index.js';
 import { htmlToAst } from '../../../libraries/to/index.js';
+import { attributes } from './attributes.js';
+import { blocks } from './blocks.js';
+import { parsers } from './parsers.js';
+import { texts } from './texts.js';
 import { types } from './types.js';
 
 // List of transformation functions to be applied to the AST.
-const transforms = [types];
+const transforms = [types, parsers, blocks, attributes, texts];
 
 /**
  * Transforms HTML code into an AST and applies a series of transformations to it.
