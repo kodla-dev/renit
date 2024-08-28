@@ -420,7 +420,9 @@ export function isForBlock(node) {
  * @returns {boolean} True if the node is a ghost element, otherwise false.
  */
 export function isGhostElement(node) {
-  return isTextNode(node) || isIfBlock(node) || isForBlock(node);
+  return (
+    (isTextNode(node) && !RGX_WHITESPACE.test(node.content)) || isIfBlock(node) || isForBlock(node)
+  );
 }
 
 /**
