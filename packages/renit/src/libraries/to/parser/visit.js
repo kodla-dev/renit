@@ -276,6 +276,15 @@ const visitors = {
   Attribute: (node, visitor) => {
     handle(node, visitor);
   },
+  EventAttribute: (node, visitor) => {
+    handle(node, visitor);
+  },
+  BindAttribute: (node, visitor) => {
+    handle(node, visitor);
+  },
+  ModifierAttribute: (node, visitor) => {
+    handle(node, visitor);
+  },
   Script: (node, visitor) => {
     handle(node, visitor);
   },

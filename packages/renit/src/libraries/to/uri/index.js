@@ -15,7 +15,9 @@ import { isArray, isNil, isRegExp, isString } from '../../is/index.js';
 import { length } from '../../math/index.js';
 import { sub } from '../../string/index.js';
 
-const RGX = /*#__PURE__*/ /(\/|^)([:*][^/]*?)(\?)?(?=[/.]|$)/g;
+const routeRgx = /(\/|^)([:*][^/]*?)(\?)?(?=[/.]|$)/g;
+const uriRgx =
+  /^(?:([^:\/?#]+):\/\/)?((?:([^\/?#@]*)@)?([^\/?#:]*)(?:\:(\d*))?)?([^?#]*)(?:\?([^#]*))?(?:#((?:.|\n)*))?/i;
 
 /**
  * Parses a string based on specific delimiters and returns an object representation.
@@ -170,8 +172,27 @@ export function routeToRegExp(path, loose = false) {
  * @returns {string} The resulting URL path.
  */
 export function routeToPath(route, values) {
-  return route.replace(RGX, (x, lead, key, optional) => {
+  return route.replace(routeRgx, (x, lead, key, optional) => {
     x = values[key == '*' ? 'wild' : sub(1, key)];
     return x ? '/' + x : optional || key == '*' ? '' : '/' + key;
   });
+}
+
+export function parseUri(uri) {
+  const parts = uri.match(uriRgx);
+  const auth = (parts[3] || '').split(':');
+  const host = length(auth) ? (parts[2] || '').replace(/(.*\@)/, '') : parts[2];
+  return {
+    uri: parts[0],
+    protocol: parts[1],
+    host: host,
+    hostname: parts[4],
+    port: parts[5],
+    auth: parts[3],
+    user: auth[0],
+    password: auth[1],
+    path: parts[6],
+    query: parts[7],
+    hash: parts[8],
+  };
 }
