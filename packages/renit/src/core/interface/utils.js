@@ -17,6 +17,9 @@ export const sourceDir = path.resolve(baseDir, './src');
 /** Path to the build directory */
 export const buildDir = path.resolve(baseDir, './build');
 
+/** Path to the public directory */
+export const publicDir = path.resolve(baseDir, './public');
+
 /** Path to the index.html file in the source directory */
 export const indexHtmlPath = path.resolve(sourceDir, './index.html');
 
@@ -156,6 +159,7 @@ export async function defineOptions(args) {
       outDir: buildDir,
       emptyOutDir: true,
     },
+    publicDir,
   };
 
   // Handle command line parameter
