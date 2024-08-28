@@ -14,6 +14,9 @@
     "email": "dev@kodla.net"
   },
   "type": "module",
+  "bin": {
+    "renit": "./src/core/interface/index.js"
+  },
   "exports": {
     ".": {
       "default": "./src/index.js",
@@ -47,6 +50,14 @@
       "default": "./src/libraries/math/index.js",
       "types": "./type/index.d.ts"
     },
+    "./router": {
+      "default": "./src/libraries/router/index.js",
+      "types": "./type/index.d.ts"
+    },
+    "./server": {
+      "default": "./src/libraries/server/index.js",
+      "types": "./type/index.d.ts"
+    },
     "./store": {
       "default": "./src/libraries/store/index.js",
       "types": "./type/index.d.ts"
@@ -70,7 +81,8 @@
   },
   "dependencies": {
     "astring": "^1.8.6",
-    "meriyah": "^4.5.0"
+    "meriyah": "^4.5.0",
+    "vite": "^5.4.0"
   },
   "engines": {
     "node": ">= 18"
