@@ -1,19 +1,15 @@
+import { clone } from '../../../helpers/index.js';
 import {
   isArray,
+  isCollect,
   isElement,
-  isFunction,
+  isEqual,
   isNil,
   isObjects,
   isText,
 } from '../../../libraries/is/index.js';
 import { _class } from './const.js';
 import { attribute } from './static.js';
-
-// Creates a new resolved promise.
-const resolved = Promise.resolve();
-
-// Alias for console.error to log error messages.
-export const error = console.error;
 
 /**
  * Mounts a view into a container element, either by appending it as a child or inserting it before a specific node.
@@ -73,18 +69,6 @@ export function reference(html) {
   }
 
   return references;
-}
-
-/**
- * Executes a function asynchronously in the next tick of the event loop.
- * @param {Function} fn - The function to execute.
- * @returns {Promise} - A promise that resolves after the function has been executed.
- */
-export function tick(fn) {
-  // If a function is provided, wait for the current tick to finish before executing it
-  fn && resolved.then(fn);
-  // Return a resolved promise, signaling that the function has been scheduled for execution
-  return resolved;
 }
 
 /**
@@ -200,45 +184,6 @@ export function noop(a) {
 }
 
 /**
- * Safely executes a callback function, catching and ignoring any errors.
- * @param {Function} callback - The callback function to execute.
- * @returns {Any} The result of the callback function, or undefined if an error occurred.
- */
-export function safe(callback) {
-  try {
-    return callback?.();
-  } catch (e) {
-    error(e);
-  }
-}
-
-/**
- * Safely executes a list of callback functions, catching and ignoring any errors.
- * @param {Array<Function>} list - The list of callback functions to execute.
- */
-export function safeGroup(list) {
-  try {
-    list?.forEach(fn => fn?.());
-  } catch (e) {
-    error(e);
-  }
-}
-
-/**
- * Safely executes a list of callback functions and collects their results.
- * If only functions are collected, the `onlyFn` parameter should be true.
- * @param {Array<Function>} list - The list of callback functions to execute.
- * @param {Array} results - The array to collect the results.
- * @param {Boolean} [onlyFn=false] - If true, only functions will be collected.
- */
-export function safeMulti(list, results, onlyFn) {
-  list?.forEach(callback => {
-    let result = safe(callback);
-    result && (!onlyFn || isFunction(result)) && results.push(result);
-  });
-}
-
-/**
  * Removes an item from a list if it exists.
  * @param {Array} list - The list to remove the item from.
  * @param {Any} item - The item to remove.
@@ -246,6 +191,25 @@ export function safeMulti(list, results, onlyFn) {
 export function removeItem(list, item) {
   let i = list.indexOf(item);
   if (i >= 0) list.splice(i, 1);
+}
+
+/**
+ * Compares a stored value in an object with a new value, updates it if necessary,
+ * and triggers a callback if the values differ.
+ *
+ * @param {Object} w - The object containing the value to compare, its callback, and state.
+ * @param {*} value - The new value to compare with the stored value.
+ */
+export function compare(w, value) {
+  if (!isEqual(w.v, value)) {
+    for (let key in value) {
+      const v = value[key];
+      if (isCollect(v)) value[key] = clone(v);
+    }
+    w.v = value;
+    if (!w.idle) w.cb(value);
+  }
+  w.idle = false;
 }
 
 /**
@@ -265,4 +229,22 @@ export function compareArray(a, b) {
     if (a[i] !== b[i]) return true;
   }
   return false;
+}
+
+/**
+ * Executes a function to retrieve a value, then either compares and updates the stored value or
+ * directly updates it, and triggers a callback function.
+ *
+ * @param {Object} w - The object containing the function to execute, the value, and the callback.
+ * @returns {*} The value obtained from the executed function.
+ */
+export function fire(w) {
+  let value = w.t();
+  if (w.ch) {
+    w.ch(w, value);
+  } else {
+    w.v = value;
+    w.cb(w.v);
+  }
+  return value;
 }

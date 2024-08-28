@@ -1,7 +1,8 @@
 import { isArray, isNull, isNumber } from '../../../libraries/is/index.js';
+import { safeMulti } from '../common.js';
+import { share, unMount } from '../share.js';
 import { addCD, newCD, removeCD, watch, watchArray } from './reactive.js';
-import { share, unMount } from './share.js';
-import { append, eachNodes, location, removeRange, safeMulti } from './utils.js';
+import { append, eachNodes, location, removeRange } from './utils.js';
 
 /** @type {Object} Temporary blocks */
 let blocks = {};
@@ -12,7 +13,7 @@ let blocks = {};
  * @param {string} html The HTML string representing the block.
  * @returns {DocumentFragment|Node} The content of the block.
  */
-export function block(html, option = 0) {
+export function block(html) {
   let block = blocks[html];
   if (!block) {
     let element = document.createElement('template');
@@ -21,7 +22,7 @@ export function block(html, option = 0) {
     if (content.childNodes.length == 1) content = content.firstChild;
     block = blocks[html] = content;
   }
-  return option & 1 ? block.cloneNode(true) : block;
+  return block.cloneNode(true);
 }
 
 /**

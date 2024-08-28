@@ -1,7 +1,7 @@
 import { isArray } from '../../../libraries/is/index.js';
-import { current } from './component.js';
-import { share } from './share.js';
-import { compareArray, error, removeItem, tick } from './utils.js';
+import { error } from '../common.js';
+import { current, share, tick } from '../share.js';
+import { compareArray, removeItem } from './utils.js';
 
 /**
  * Represents a change detector that tracks dependencies and updates.
@@ -91,7 +91,7 @@ export function computed(computed, ...dependencies) {
  * @param {Function} onChange - Callback function to call when the dependency changes.
  * @param {Function} dependency - Function to get the current value of the dependency.
  */
-function Watch(getContent, onChange, dependency) {
+export function Watch(getContent, onChange, dependency) {
   this.c = getContent; // Current content function
   this.cb = onChange; // Callback function
   this.t = dependency; // Dependency function
@@ -107,6 +107,9 @@ function Watch(getContent, onChange, dependency) {
  * @param {Array<Function>} [dependencies] - Array of dependency functions to watch.
  */
 export function watch(getContent, onChange, option, dependencies) {
+  // All watchers
+  const watchers = [];
+
   // If no dependencies are provided, use the getContent function as the only dependency
   if (!dependencies || !dependencies.length) {
     dependencies = [getContent];
@@ -117,7 +120,10 @@ export function watch(getContent, onChange, option, dependencies) {
     const watch = new Watch(getContent, onChange, dependencies[i]);
     option && Object.assign(watch, option);
     share.cd.watch.push(watch);
+    watchers.push(watch);
   }
+
+  return watchers;
 }
 
 /**

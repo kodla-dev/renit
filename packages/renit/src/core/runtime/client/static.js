@@ -1,6 +1,6 @@
+import { unMount } from '../share.js';
 import { block } from './block.js';
 import { _class } from './const.js';
-import { unMount } from './share.js';
 import { toggleClass } from './utils.js';
 
 /**
