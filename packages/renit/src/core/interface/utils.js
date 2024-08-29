@@ -300,6 +300,10 @@ export function VitePluginRenit(options) {
         }
 
         if (/index.css/.test(id)) {
+          options.app.component = {
+            file: 'index.css',
+            name: 'default',
+          };
           const cs = compilerStyle(code, options.app);
           if (cs.code.length) results.code = cs.code;
           return results;
