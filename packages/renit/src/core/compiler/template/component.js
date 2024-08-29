@@ -380,7 +380,7 @@ export class Component {
     this.changedStyles = pipe(
       this.changedStyles,
       flat,
-      unique(item => item.old)
+      unique(item => item.old && item.type && item.new)
     );
   }
 

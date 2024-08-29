@@ -21,6 +21,7 @@ import {
   hasSuffix,
   isAttribute,
   isClassAttribute,
+  isClassOrIdAttribute,
   isCurlyBracesAttribute,
   isModifierAttribute,
   isPrefixAttribute,
@@ -57,9 +58,16 @@ export default {
         let content = '';
         each(value => {
           if (isStringAttribute(value)) {
-            if (isClassAttribute(node)) {
+            if (isClassOrIdAttribute(node)) {
+              let type = 'id';
+              if (isClassAttribute(node)) type = 'class';
               // Update style name if the attribute is a class attribute
-              content += updateStyleAttribute(value.content, component.changedStyles);
+              content += updateStyleAttribute(
+                value.content,
+                type,
+                component.changedStyles,
+                options.component
+              );
             } else {
               content += value.content;
             }
@@ -111,8 +119,12 @@ export default {
     const hasValue = !isUndefined(value);
 
     if (hasValue) {
-      if (isClassAttribute(node)) {
-        figure.appendBlock('=' + $str(updateStyleAttribute(value, component.changedStyles)));
+      if (isClassOrIdAttribute(node)) {
+        let type = 'id';
+        if (isClassAttribute(node)) type = 'class';
+        figure.appendBlock(
+          '=' + $str(updateStyleAttribute(value, type, component.changedStyles, options.component))
+        );
       } else {
         figure.appendBlock('=' + $str(value));
       }

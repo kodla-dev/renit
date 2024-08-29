@@ -368,6 +368,24 @@ export function isClassAttribute(node) {
 }
 
 /**
+ * Checks if a node is a IdAttribute.
+ * @param {Object} node - The node to check.
+ * @returns {boolean} - Returns true if the node is a IdAttribute, otherwise false.
+ */
+export function isIdAttribute(node) {
+  return node.name == 'id';
+}
+
+/**
+ * Checks if a node is a IdAttribute.
+ * @param {Object} node - The node to check.
+ * @returns {boolean} - Returns true if the node is a IdAttribute, otherwise false.
+ */
+export function isClassOrIdAttribute(node) {
+  return isClassAttribute(node) || isIdAttribute(node);
+}
+
+/**
  * Checks if a node's name is a dollar sign ('$').
  * @param {Object} node - The node to check.
  * @returns {boolean} - Returns true if the node's name is '$', otherwise false.

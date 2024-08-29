@@ -39,9 +39,16 @@ export default {
     // Filter out style elements at the root level
     const rootStyle = filter(child => isStyle(child), node.children);
 
-    if (size(rootStyle)) {
+    if (size(rootStyle) || options.$.external.style) {
+      // external style
+      let content;
+      if (options.$.external.style) {
+        content = options.$.external.style;
+      } else {
+        content = rootStyle[0].content;
+      }
       // Prepare the style content
-      const style = prepareStyle(rootStyle[0].content, options);
+      const style = prepareStyle(content, options);
       if (!isEmpty(style.raw)) {
         component.appendStyle(style.raw);
         component.addChangedStyles(style.changedStyles);
