@@ -261,7 +261,7 @@ export class IfSpot {
    */
   trimBlock() {
     if (this.ssr) {
-      this.block[length(this.block) - 1] = this.block[length(this.block) - 1].trim();
+      this.block[length(this.block) - 1] = this.block[length(this.block) - 1].trimEnd();
     } else {
       this.block = this.block.trim();
     }
@@ -347,7 +347,7 @@ export class ElseIfSpot {
    */
   trimBlock() {
     if (this.ssr) {
-      this.block[length(this.block) - 1] = this.block[length(this.block) - 1].trim();
+      this.block[length(this.block) - 1] = this.block[length(this.block) - 1].trimEnd();
     } else {
       this.block = this.block.trim();
     }
@@ -414,7 +414,7 @@ export class ElseSpot {
    */
   trimBlock() {
     if (this.ssr) {
-      this.block[length(this.block) - 1] = this.block[length(this.block) - 1].trim();
+      this.block[length(this.block) - 1] = this.block[length(this.block) - 1].trimEnd();
     } else {
       this.block = this.block.trim();
     }

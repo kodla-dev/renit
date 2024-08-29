@@ -18,15 +18,3 @@ export function compiler(file, code, options = {}) {
 
   return compile(transform(code), options);
 }
-
-// const a = compiler(
-//   'file.nit',
-//   `
-
-//   <h1>Hello</h1>
-//   <p class="deneme">asd</p>
-
-// `.trim(),
-//   { generate: 'csr', css: { compile: 'injected' } }
-// );
-// console.log(a.js);
