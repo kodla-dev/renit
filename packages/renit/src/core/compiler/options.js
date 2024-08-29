@@ -1,4 +1,4 @@
-import { generateStyle } from './utils/style.js';
+import { generateStylePattern } from './utils/style.js';
 
 const defaultOptions = {
   // Defines the default generation mode for the application.
@@ -6,8 +6,8 @@ const defaultOptions = {
 
   // Configuration settings for CSS.
   css: {
-    // Function to generate styles based on options.
-    generate: options => generateStyle(options),
+    // Function to generate style pattern based on options.
+    pattern: options => generateStylePattern(options),
 
     // Specifies how CSS should be compiled.
     compile: 'external',
@@ -16,6 +16,19 @@ const defaultOptions = {
     hash: {
       min: 1, // Minimum length of the hash.
       max: 6, // Maximum length of the hash.
+    },
+
+    // Enables or disables CSS color support.
+    colors: true,
+
+    // Enables or disables CSS nesting support.
+    nesting: true,
+  },
+
+  // Special settings
+  $: {
+    external: {
+      style: false,
     },
   },
 };

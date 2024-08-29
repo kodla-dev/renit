@@ -1,7 +1,16 @@
+import { Features, composeVisitors, transform } from 'lightningcss';
 import { clone } from '../../../helpers/index.js';
-import { join, map, prepend, push, split } from '../../../libraries/collect/index.js';
-import { isArray } from '../../../libraries/is/index.js';
-import { astToCss, visitFull } from '../../../libraries/to/index.js';
+import {
+  each,
+  filter,
+  join,
+  map,
+  prepend,
+  push,
+  remove,
+  split,
+} from '../../../libraries/collect/index.js';
+import { isArray, isEqual } from '../../../libraries/is/index.js';
 import { RAW_EMPTY, RAW_WHITESPACE } from '../../define.js';
 import { global } from '../global.js';
 import { AttributePattern, StringAttributePattern } from './constant.js';
@@ -20,7 +29,7 @@ const styleHash = new uniqueStyleHash();
  * @param {number} options.max - The maximum value to be used in generating the style.
  * @returns {string} - The generated style hash.
  */
-export function generateStyle({ component, name, min, max }) {
+export function generateStylePattern({ component, name, min, max }) {
   return generateStyleHash(min, max, component.file + component.name + name);
 }
 
@@ -37,13 +46,57 @@ export function generateStyleHash(min, max, name) {
   return styleHash.create(name);
 }
 
-/**
- * Prepares the style by processing the given AST (Abstract Syntax Tree) and options.
- * @param {Object} ast - The abstract syntax tree representing CSS.
- * @param {Object} options - Options for processing the AST.
- * @returns {Object} An object containing the processed CSS, modified styles, and global styles.
- */
-export function prepareStyle(ast, options) {
+const cssModules = options => ({
+  Selector(selector) {
+    each((node, index) => {
+      if (node.type == 'id' || node.type == 'class') {
+        const type = node.type == 'class' ? 'class' : 'id';
+        const hash = type == 'id' ? '#' : '.';
+        const oldName = node.name;
+        const findGlobalChange = global.styles.find(
+          change => change.old == oldName && change.type == type
+        );
+        let newName;
+
+        if (findGlobalChange) {
+          newName = findGlobalChange.new;
+        } else {
+          newName = options.css.pattern({
+            name: hash + oldName,
+            min: options.css.hash.min,
+            max: options.css.hash.max,
+            component: options.component,
+          });
+          push({ type, old: oldName, new: newName }, global.styles);
+        }
+        node.name = newName;
+      }
+    }, selector);
+
+    return selector;
+  },
+});
+
+export function compilerStyle(css, options) {
+  let include;
+  if (options.css.colors) include |= Features.Colors;
+  if (options.css.nesting) include |= Features.Nesting;
+
+  const visitor = composeVisitors([cssModules(options)]);
+  const opts = {
+    code: Buffer.from(css),
+    minify: false,
+    sourceMap: false,
+    include,
+    visitor,
+  };
+  let t = transform(opts);
+  let code = RAW_EMPTY;
+  if (t.code) code = t.code.toString();
+  return { code };
+}
+
+export function prepareStyle(content, options) {
   const changedStyles = [];
   let has = {
     this: {
@@ -52,55 +105,89 @@ export function prepareStyle(ast, options) {
     },
   };
 
-  visitFull(ast, {
-    // Processes selector nodes to replace certain parts of the selector with new identifiers.
-    Selector(node) {
-      node.name = node.name.replace(
-        /[#.][^.\s]*|:(g|global|s|static)\((.*?)\)+/g,
-        (token, ...args) => {
-          const pseudo = args[0];
-          const isGlobal = pseudo == 'g' || pseudo == 'global';
-          const isStatic = pseudo == 's' || pseudo == 'static';
-          token = pseudo ? args[1] : token;
+  let include;
+  if (options.css.colors) include |= Features.Colors;
+  if (options.css.nesting) include |= Features.Nesting;
 
-          if (isStatic) return token;
+  const customModules = {
+    Selector(selector) {
+      each((node, index) => {
+        if (node.type == 'id' || node.type == 'class' || node.type == 'pseudo-class') {
+          let isGlobal = false;
+          let isStatic = false;
 
-          const first = token[0];
-          const name = token.replace(first, RAW_EMPTY);
+          if (node.type == 'pseudo-class') {
+            isGlobal = node.name == 'g' || node.name == 'global';
+            isStatic = node.name == 's' || node.name == 'static';
+          }
 
           let type;
-          if (first == '#') type = 'id';
-          else if (first == '.') type = 'class';
+          let name;
 
-          let id;
+          if (isStatic) {
+            name = RAW_EMPTY;
+            type = node.arguments[0].value.value == '.' ? 'class' : 'id';
+            node.arguments = filter(remove(0, node.arguments));
+            each(argument => (name += argument.value.value), node.arguments);
+            selector[index] = { type, name };
+            return;
+          }
+
+          const oldName = node.name;
+          let newName = oldName;
+
           let collection = isGlobal ? global.styles : changedStyles;
+          type = node.type == 'class' ? 'class' : 'id';
 
-          const findChange = collection.find(change => change.old == name);
-          if (findChange) {
-            id = findChange.new;
+          const findChange = changedStyles.find(
+            change =>
+              change.old == oldName &&
+              change.type == type &&
+              isEqual(change.component, options.component)
+          );
+          const findGlobalChange = global.styles.find(
+            change => change.old == oldName && change.type == type
+          );
+          if (findChange || findGlobalChange) {
+            newName = findChange.new || findGlobalChange.new;
           } else {
-            id = options.css.generate({
-              name,
+            const hash = type == 'id' ? '#' : '.';
+            newName = options.css.pattern({
+              name: hash + node.name,
               min: options.css.hash.min,
               max: options.css.hash.max,
               component: options.component,
             });
-            push({ old: name, new: id }, collection);
+
+            push({ type, old: oldName, new: newName, component: options.component }, changedStyles);
           }
 
-          if (name == 'this') {
-            has.this.name = id;
+          if (oldName == 'this') {
+            has.this.name = newName;
             has.this.type = type;
           }
 
-          return (type == 'id' ? '#' : '.') + id;
+          node.name = newName;
         }
-      );
-    },
-  });
+      }, selector);
 
+      return selector;
+    },
+  };
+
+  const visitor = composeVisitors([customModules]);
+  const opts = {
+    code: Buffer.from(content),
+    minify: true,
+    sourceMap: false,
+    include,
+    visitor,
+  };
+  let t = transform(opts);
+  let code = RAW_EMPTY;
+  if (t.code) code = t.code.toString();
   return {
-    raw: astToCss(ast),
+    raw: code,
     has,
     changedStyles,
   };
@@ -147,18 +234,24 @@ export function addThisStyleAttribute(node, style) {
  * @param {Array} changedStyles - An array of objects representing changed styles.
  * @returns {string} The updated style attribute.
  */
-export function updateStyleAttribute(value, changedStyles) {
+export function updateStyleAttribute(value, type, changedStyles, component) {
   const attributes = map(
     attribute => {
       attribute = attribute.trim();
 
       // Find if the attribute matches any global styles to be replaced
-      const globalFind = global.styles.find(global => global.old == attribute);
+      const globalFind = global.styles.find(
+        global => global.old == attribute && global.type == type
+      );
       if (globalFind) attribute = globalFind.new;
 
       // Find if the attribute matches any changed styles to be replaced
-      const changedFind = changedStyles.find(changed => changed.old == attribute);
+      const changedFind = changedStyles.find(
+        changed =>
+          changed.old == attribute && changed.type == type && isEqual(changed.component, component)
+      );
       if (changedFind) attribute = changedFind.new;
+
       return attribute;
     },
     split(RAW_WHITESPACE, value)

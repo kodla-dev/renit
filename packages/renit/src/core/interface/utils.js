@@ -2,6 +2,9 @@ import { exec } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { mergeDeep } from '../../libraries/collect/index.js';
+import { getBaseName, getTemplateName } from '../compiler/utils/file.js';
+import { generateId } from '../compiler/utils/index.js';
+import { compilerStyle, generateStylePattern } from '../compiler/utils/style.js';
 import { compiler } from '../index.js';
 import { ssrStyle } from './commands/dev/index.js';
 
@@ -25,6 +28,9 @@ export const indexHtmlPath = path.resolve(sourceDir, './index.html');
 
 /** Path to the index.js file in the source directory */
 export const indexJsPath = path.resolve(sourceDir, './index.js');
+
+/** Path to the index.css file in the source directory */
+export const indexCssPath = path.resolve(sourceDir, './index.css');
 
 /** Path to the config directory within the source directory */
 export const configPath = path.resolve(sourceDir, './config');
@@ -124,6 +130,17 @@ export async function defineOptions(args) {
     root: sourceDir,
     param: {},
     app: {
+      generate: 'csr',
+      css: {
+        pattern: options => generateStylePattern(options),
+        compile: 'external',
+        hash: {
+          min: 1,
+          max: 6,
+        },
+        colors: true,
+        nesting: true,
+      },
       server: {
         open: true,
         port: 5000,
@@ -142,7 +159,7 @@ export async function defineOptions(args) {
 
   // Configure Vite settings
   options.vite = {
-    clearScreen: true,
+    clearScreen: false,
     configFile: false,
     root: options.root,
     resolve: {
@@ -152,12 +169,15 @@ export async function defineOptions(args) {
         '@views': viewsPath,
       },
     },
-    plugins: [
-      VitePluginRenit(),
-    ],
+    plugins: [],
+    css: {
+      transformer: 'lightningcss',
+      lightningcss: true,
+    },
     build: {
       outDir: buildDir,
       emptyOutDir: true,
+      cssMinify: 'lightningcss',
     },
     publicDir,
   };
@@ -185,6 +205,10 @@ export async function defineOptions(args) {
     port: options.app.preview.port,
   };
 
+  options.vite.plugins = [
+    VitePluginRenit(options),
+  ];
+
   return options;
 }
 
@@ -193,104 +217,144 @@ export async function defineOptions(args) {
  *
  * @returns {Object} The Vite plugin configuration for Renit.
  */
-export function VitePluginRenit() {
-  /**
-   * Generates a unique identifier for CSS files.
-   *
-   * @returns {string} A 6-character unique identifier.
-   */
-  function genId() {
-    let id = Math.floor(Date.now() * Math.random()).toString(36);
-    if (id.length > 6) id = id.substring(id.length - 6);
-    return id;
-  }
-
+export function VitePluginRenit(options) {
   // Cache for storing generated CSS content
   let cache = {};
   // Content storage for the CSS files associated with specific ids
   let content = {};
 
-  return {
-    name: 'renit',
-    enforce: 'pre',
+  return [
+    {
+      name: 'renit',
+      enforce: 'pre',
+      /**
+       * Transforms the index HTML file by replacing custom tags with standard tags.
+       *
+       * @param {string} html - The HTML content to transform.
+       * @returns {Promise<string>} The transformed HTML content.
+       */
+      async transformIndexHtml(html) {
+        return html
+          .replace(/<renit(.*?)head(.*?)\/>/, `<renit-head />`)
+          .replace(/<renit(.*?)app(.*?)\/>/, `<renit-app />`);
+      },
 
-    /**
-     * Transforms the index HTML file by replacing custom tags with standard tags.
-     *
-     * @param {string} html - The HTML content to transform.
-     * @returns {Promise<string>} The transformed HTML content.
-     */
-    async transformIndexHtml(html) {
-      return html
-        .replace(/<renit(.*?)head(.*?)\/>/, `<renit-head />`)
-        .replace(/<renit(.*?)app(.*?)\/>/, `<renit-app />`);
-    },
+      /**
+       * Transforms `.nit` files by compiling them and handling CSS imports.
+       *
+       * @param {string} code - The code content to transform.
+       * @param {string} id - The id (path) of the module being transformed.
+       * @param {Object} transformOptions - Additional options provided by Vite.
+       * @returns {Promise<Object>} The transformed code and CSS imports.
+       */
+      async transform(code, id, transformOptions) {
+        let results = { code: '' };
+        let generate = 'csr'; // Default to client-side rendering
 
-    /**
-     * Transforms `.nit` files by compiling them and handling CSS imports.
-     *
-     * @param {string} code - The code content to transform.
-     * @param {string} id - The id (path) of the module being transformed.
-     * @param {Object} options - Additional options provided by Vite.
-     * @returns {Promise<Object>} The transformed code and CSS imports.
-     */
-    async transform(code, id, options) {
-      let results = { code: '' };
-      let generate = 'csr'; // Default to client-side rendering
+        // Switch to server-side rendering if specified
+        if (transformOptions?.ssr) generate = 'ssr';
 
-      // Switch to server-side rendering if specified
-      if (options?.ssr) generate = 'ssr';
+        if (/\.(nit)$/.test(id)) {
+          const templateName = getTemplateName(id);
+          const baseName = getBaseName(id);
+          const cssPath = baseName + '.nit.css';
+          const $ = {
+            external: {
+              style: false,
+            },
+          };
 
-      if (/\.(nit)$/.test(id)) {
-        // Compile the code using a custom compiler
-        const result = compiler(id, code, { generate });
-        results.code = result.js;
-
-        // Handle CSS generation and imports
-        if (result.css) {
-          let name = id.replace(/[^\w.\-]/g, '');
-          if (content[name] && content[name].code === result.css) {
-            results.code += `\nimport "${content[name].name}";\n`;
-            if (generate == 'ssr') ssrStyle(name, content[name]);
-          } else {
-            const c = {
-              name: name + '.' + genId() + '.css',
-              code: result.css,
-            };
-            content[name] = c;
-            cache[c.name] = content[name];
-            results.code += `\nimport "${c.name}";\n`;
-            if (generate == 'ssr') ssrStyle(name, c);
+          if (fs.existsSync(cssPath)) {
+            const cssContent = await fs.readFileSync(cssPath, 'utf-8');
+            if (cssContent.length) {
+              $.external.style = cssContent;
+            }
           }
+
+          options.app.generate = generate;
+          options.app.$ = $;
+
+          // Compile the code using a custom compiler
+          const result = compiler(id, code, options.app);
+          results.code += result.js;
+
+          // Handle CSS generation and imports
+          if (result.css) {
+            let name = templateName;
+            if (content[name] && content[name].code === result.css) {
+              results.code += `\nimport "${content[name].name}";\n`;
+              if (generate == 'ssr') ssrStyle(name, content[name]);
+            } else {
+              const c = {
+                name: name + '_' + generateId() + '.css',
+                code: result.css,
+              };
+              content[name] = c;
+              cache[c.name] = content[name];
+              results.code += `\nimport "${c.name}";\n`;
+              if (generate == 'ssr') ssrStyle(name, c);
+            }
+          }
+
+          return results;
         }
-        return results;
-      }
-    },
 
-    /**
-     * Resolves module ids for CSS imports.
-     *
-     * @param {string} name - The name of the module to resolve.
-     * @returns {Promise<string|null>} The resolved id or null if not found.
-     */
-    async resolveId(name) {
-      if (cache[name]) return name;
-      return null;
-    },
+        if (/index.css/.test(id)) {
+          const cs = compilerStyle(code, options.app);
+          if (cs.code.length) results.code = cs.code;
+          return results;
+        }
+      },
 
-    /**
-     * Loads the cached CSS content.
-     *
-     * @param {string} id - The id (path) of the module to load.
-     * @returns {Promise<string|null>} The loaded content or null if not found.
-     */
-    load(id) {
-      if (cache[id]) {
-        return cache[id].code;
-      }
-      return null;
+      handleHotUpdate({ file, server }) {
+        if (/\.(nit).(css)$/.test(file)) {
+          file = file.replace('.css', '');
+          server.moduleGraph.invalidateModule(server.moduleGraph.getModuleById(file));
+          server.ws.send({
+            type: 'full-reload',
+            path: file,
+          });
+        }
+
+        if (/index.css/.test(file)) {
+          server.moduleGraph.fileToModulesMap.forEach((modules, filePath) => {
+            if (filePath.endsWith('.nit')) {
+              modules.forEach(module => {
+                server.moduleGraph.invalidateModule(module);
+              });
+            }
+          });
+          server.ws.send({
+            type: 'full-reload',
+          });
+        }
+      },
+
+      /**
+       * Resolves module ids for CSS imports.
+       *
+       * @param {string} name - The name of the module to resolve.
+       * @returns {Promise<string|null>} The resolved id or null if not found.
+       */
+      async resolveId(name) {
+        if (cache[name]) return name;
+        return null;
+      },
+
+      /**
+       * Loads the cached CSS content.
+       *
+       * @param {string} id - The id (path) of the module to load.
+       * @returns {Promise<string|null>} The loaded content or null if not found.
+       */
+      load(id) {
+        if (cache[id]) {
+          return cache[id].code;
+        }
+        return null;
+      },
     },
-  };
+  ];
 }
 
 /**
@@ -302,7 +366,7 @@ export function VitePluginRenit() {
  * @param {boolean} [start=false] - Whether to automatically open the app in the browser.
  */
 export function printUrls(port, apiPort, generate, start = false) {
-  console.clear(); // Clear the console for a clean output
+  // console.clear(); // Clear the console for a clean output
 
   const url = `http://localhost:${port}/`; // Application URL
   const apiUrl = `http://localhost:${apiPort}/`; // API URL

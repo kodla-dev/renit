@@ -1,5 +1,5 @@
 import { isEmpty } from '../../../libraries/is/index.js';
-import { cssToAST, visit } from '../../../libraries/to/index.js';
+import { visit } from '../../../libraries/to/index.js';
 import { javaScriptToAST } from '../utils/script.js';
 
 export function parsers(ast) {
@@ -14,7 +14,7 @@ export function parsers(ast) {
     Style: node => {
       const children = node.children[0];
       if (!isEmpty(children)) {
-        node.content = cssToAST(children.content);
+        node.content = children.content;
         node.children = [];
       }
     },
