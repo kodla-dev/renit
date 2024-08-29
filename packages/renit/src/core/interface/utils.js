@@ -159,7 +159,7 @@ export async function defineOptions(args) {
 
   // Configure Vite settings
   options.vite = {
-    clearScreen: false,
+    clearScreen: true,
     configFile: false,
     root: options.root,
     resolve: {
@@ -366,7 +366,7 @@ export function VitePluginRenit(options) {
  * @param {boolean} [start=false] - Whether to automatically open the app in the browser.
  */
 export function printUrls(port, apiPort, generate, start = false) {
-  // console.clear(); // Clear the console for a clean output
+  console.clear(); // Clear the console for a clean output
 
   const url = `http://localhost:${port}/`; // Application URL
   const apiUrl = `http://localhost:${apiPort}/`; // API URL
