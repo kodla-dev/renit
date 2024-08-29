@@ -1,4 +1,4 @@
-import { merge } from '../../libraries/collect/index.js';
+import { mergeDeep } from '../../libraries/collect/index.js';
 import { isNil } from '../../libraries/is/index.js';
 import { compile } from './compile/index.js';
 import defaultOptions from './options.js';
@@ -14,7 +14,19 @@ import { transform } from './transform/index.js';
 export function compiler(file, code, options = {}) {
   if (isNil(code)) return;
   options.component = { file };
-  options = merge(options, defaultOptions);
+  options = mergeDeep(options, defaultOptions);
 
   return compile(transform(code), options);
 }
+
+// const a = compiler(
+//   'file.nit',
+//   `
+
+//   <h1>Hello</h1>
+//   <p class="deneme">asd</p>
+
+// `.trim(),
+//   { generate: 'csr', css: { compile: 'injected' } }
+// );
+// console.log(a.js);
