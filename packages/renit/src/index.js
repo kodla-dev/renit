@@ -5,6 +5,7 @@
   --------------------------------------------------------------------------------------------------
 */
 
+import { RAW_EMPTY } from './core/define.js';
 import { mount } from './core/runtime/index.js';
 import { ClientRouter, ServerRouter } from './libraries/router/index.js';
 
@@ -68,11 +69,30 @@ function csr(routes) {
  */
 function ssr(routes) {
   const router = new ServerRouter(routes);
-  return async url => {
-    const ctx = await router.run(url);
+  return async (URL, HEADERS, TEMPLATE) => {
+    const ctx = await router.run(URL);
+
     const component = ctx.component();
-    return {
-      body: component.dom,
-    };
+    const results = component.options.results;
+    const dom = component.dom;
+
+    let head = RAW_EMPTY;
+    let data = RAW_EMPTY;
+    let headers = { 'Content-Type': 'text/html' };
+    let code = 200;
+
+    if (results.css.$.length) {
+      head += `<style type="text/css">${results.css.$}</style>`;
+      results.css.clear();
+    }
+
+    if (dom.length) {
+      data += dom;
+    }
+
+    TEMPLATE = TEMPLATE.replace('</head>', head + '</head>');
+    data = TEMPLATE.replace(`<!--app-->`, data);
+
+    return { code, data, headers };
   };
 }

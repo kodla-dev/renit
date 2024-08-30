@@ -48,7 +48,7 @@ export function generateStyleHash(min, max, name) {
 
 const cssModules = options => ({
   Selector(selector) {
-    each((node, index) => {
+    each(node => {
       if (node.type == 'id' || node.type == 'class') {
         const type = node.type == 'class' ? 'class' : 'id';
         const hash = type == 'id' ? '#' : '.';

@@ -10,7 +10,7 @@ const defaultOptions = {
     pattern: options => generateStylePattern(options),
 
     // Specifies how CSS should be compiled.
-    compile: 'external',
+    compile: 'external', // injected - external
 
     // Configuration for CSS hashing.
     hash: {

@@ -1,5 +1,6 @@
 import { safe } from '../common.js';
 import { current, setContext, setCurrent } from '../share.js';
+import { collectStyle } from './utils.js';
 
 /**
  * Creates a server-side rendered component function that initializes and manages component context.
@@ -9,6 +10,9 @@ import { current, setContext, setCurrent } from '../share.js';
  */
 export function ssrComponent(init) {
   return (options = {}) => {
+    options.results = {
+      css: collectStyle,
+    };
     setContext(options.context || {}); // Set the component context
     let prev = current; // Preserve the previous component state
     let component = { options };

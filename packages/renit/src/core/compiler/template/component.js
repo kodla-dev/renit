@@ -303,6 +303,10 @@ export class Component {
           src.add(`$.style('${hash}', \`${this.style}\`);\n`);
         }
       } else if (options.css.compile == 'external') {
+        if (ssr) {
+          src.add(`$option.results.css.$ = ${$ltr(this.style)};\n`);
+        }
+
         push(this.style, this.styles);
       }
     }

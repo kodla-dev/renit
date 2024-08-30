@@ -6,7 +6,6 @@ import { getBaseName, getTemplateName } from '../compiler/utils/file.js';
 import { generateId } from '../compiler/utils/index.js';
 import { compilerStyle, generateStylePattern } from '../compiler/utils/style.js';
 import { compiler } from '../index.js';
-import { ssrStyle } from './commands/dev/index.js';
 
 /** The base directory of the current project */
 export const baseDir = process.cwd();
@@ -234,9 +233,7 @@ export function VitePluginRenit(options) {
        * @returns {Promise<string>} The transformed HTML content.
        */
       async transformIndexHtml(html) {
-        return html
-          .replace(/<renit(.*?)head(.*?)\/>/, `<renit-head />`)
-          .replace(/<renit(.*?)app(.*?)\/>/, `<renit-app />`);
+        return html.replace(/<renit(.*?)app(.*?)\/>/, `<!--app-->`);
       },
 
       /**
@@ -283,7 +280,6 @@ export function VitePluginRenit(options) {
             let name = templateName;
             if (content[name] && content[name].code === result.css) {
               results.code += `\nimport "${content[name].name}";\n`;
-              if (generate == 'ssr') ssrStyle(name, content[name]);
             } else {
               const c = {
                 name: name + '_' + generateId() + '.css',
@@ -292,7 +288,6 @@ export function VitePluginRenit(options) {
               content[name] = c;
               cache[c.name] = content[name];
               results.code += `\nimport "${c.name}";\n`;
-              if (generate == 'ssr') ssrStyle(name, c);
             }
           }
 

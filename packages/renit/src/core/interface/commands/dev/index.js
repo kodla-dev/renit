@@ -1,7 +1,7 @@
 import { createServer as createViteServer } from 'vite';
 import { mergeDeep } from '../../../../libraries/collect/index.js';
 import { createServer, sendType } from '../../../../libraries/server/index.js';
-import { getIndexHtml, getIndexJs, indexJsPath, printUrls } from '../../utils.js';
+import { getIndexHtml, getIndexJs, indexCssPath, indexJsPath, printUrls } from '../../utils.js';
 
 /**
  * Main function to execute the appropriate server setup based on options.
@@ -44,43 +44,6 @@ async function csr(options) {
   printUrls(options.vite.server.port, options.api.server.port, 'CSR'); // Print URLs for CSR
 }
 
-let styles = [];
-
-/**
- * Updates or adds CSS style content for server-side rendering.
- *
- * @param {string} name - The name of the style.
- * @param {Object} content - The CSS content.
- */
-export function ssrStyle(name, content) {
-  if (!styles[name]) {
-    styles[name] = content; // Add new style
-  } else {
-    styles[name].code = content.code; // Update existing style
-  }
-}
-
-/**
- * Clears all stored CSS styles.
- */
-export const clearStyle = () => (styles = []);
-
-/**
- * Generates the HTML `<head>` section with all CSS styles.
- *
- * @returns {Promise<string>} A promise that resolves to the HTML head section.
- */
-export async function getHead() {
-  return new Promise(resolve => {
-    let head = '';
-    for (let style in styles) {
-      style = styles[style];
-      head += `<style type="text/css" data-vite-dev-id="${style.name}">${style.code}</style>`;
-    }
-    resolve(head); // Resolve with the generated head section
-  });
-}
-
 /**
  * Sets up and starts the Vite server for server-side rendering.
  *
@@ -106,12 +69,10 @@ async function ssr(options) {
     try {
       let template = getIndexHtml(); // Get the HTML template
       template = await vite.transformIndexHtml(url, template); // Transform the HTML with Vite
+      await vite.ssrLoadModule(indexCssPath); // Load the CSS module
       const { default: render } = await vite.ssrLoadModule(indexJsPath); // Load the SSR module
       const respond = await render(url, headers, template); // Render the response
-      const head = await getHead(); // Get the head section with CSS
-      template = template.replace(`<renit-head />`, head); // Insert CSS styles into the template
-      const html = template.replace(`<renit-app />`, respond.body); // Insert rendered content into the template
-      sendType(res, 200, html, { 'Content-Type': 'text/html' }); // Send the HTML response
+      sendType(res, respond.code, respond.data, respond.headers); // Send the HTML response
     } catch (error) {
       vite.ssrFixStacktrace(error); // Fix stack trace for SSR errors
       next(error); // Pass the error to the next middleware
