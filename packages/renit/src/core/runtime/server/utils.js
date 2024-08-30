@@ -22,24 +22,24 @@ export function escape(content) {
 }
 
 /**
- * A class to collect and manage styles in an array.
+ * A class to collect and manage data in an array.
  */
-class CollectStyle {
+class CollectData {
   constructor() {
-    this.d = [];
+    this._ = [];
   }
-  get $() {
-    return join(RAW_EMPTY, this.d);
+  get raw() {
+    return join(RAW_EMPTY, this._);
   }
-  set $(val) {
-    prepend(val, this.d);
+  set add(val) {
+    prepend(val, this._);
   }
   clear() {
-    this.d = [];
+    this._ = [];
   }
 }
 
 /**
- * An instance of the CollectStyle class used to manage global styles.
+ * An instance of the CollectData class used to manage global css.
  */
-export const collectStyle = new CollectStyle();
+export const collectCss = new CollectData();

@@ -81,8 +81,8 @@ function ssr(routes) {
     let headers = { 'Content-Type': 'text/html' };
     let code = 200;
 
-    if (results.css.$.length) {
-      head += `<style type="text/css">${results.css.$}</style>`;
+    if (results.css.raw.length) {
+      head += `<style type="text/css">${results.css.raw}</style>`;
       results.css.clear();
     }
 

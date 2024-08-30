@@ -304,7 +304,7 @@ export class Component {
         }
       } else if (options.css.compile == 'external') {
         if (ssr) {
-          src.add(`$option.results.css.$ = ${$ltr(this.style)};\n`);
+          src.add(`$option.results.css.add = ${$ltr(this.style)};\n`);
         }
 
         push(this.style, this.styles);
