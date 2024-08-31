@@ -3,6 +3,7 @@ import { clone } from '../../../helpers/index.js';
 import {
   each,
   filter,
+  includes,
   join,
   map,
   prepend,
@@ -46,13 +47,28 @@ export function generateStyleHash(min, max, name) {
   return styleHash.create(name);
 }
 
+/**
+ * Creates a CSS Modules visitor that processes and renames CSS selectors.
+ *
+ * @param {Object} options - The options for CSS processing.
+ * @returns {Object} An object with a Selector method for processing CSS selectors.
+ */
 const cssModules = options => ({
+  /**
+   * Processes and renames selectors based on the provided options.
+   *
+   * @param {Object} selector - The selector to process.
+   * @returns {Object} The processed selector with updated names.
+   */
   Selector(selector) {
     each(node => {
+      // Check if the node is of type 'id' or 'class'
       if (node.type == 'id' || node.type == 'class') {
         const type = node.type == 'class' ? 'class' : 'id';
         const hash = type == 'id' ? '#' : '.';
         const oldName = node.name;
+
+        // Find if there's already a global change for the selector
         const findGlobalChange = global.styles.find(
           change => change.old == oldName && change.type == type
         );
@@ -61,6 +77,7 @@ const cssModules = options => ({
         if (findGlobalChange) {
           newName = findGlobalChange.new;
         } else {
+          // Generate a new name using the provided pattern
           newName = options.css.pattern({
             name: hash + oldName,
             min: options.css.hash.min,
@@ -77,12 +94,69 @@ const cssModules = options => ({
   },
 });
 
+/**
+ * Creates a CSS Variables Modules visitor that processes custom and unparsed CSS declarations.
+ *
+ * @param {Object} options - The options for CSS processing.
+ * @returns {Object} An object with a Declaration method for processing CSS declarations.
+ */
+const cssVariablesModules = options => ({
+  /**
+   * Processes custom and unparsed declarations, updating variable names as needed.
+   *
+   * @param {Object} declaration - The CSS declaration to process.
+   * @returns {Object} The processed declaration with updated variable names.
+   */
+  Declaration(declaration) {
+    const key = '--';
+
+    if (declaration.property == 'custom') {
+      let value = declaration.value.name;
+      if (includes(key, value)) {
+        // Generate a new name for the custom property
+        const newValue = options.css.pattern({
+          name: value,
+          min: options.css.hash.min,
+          max: options.css.hash.max,
+          component: options.component,
+        });
+        global.variables[value] = key + newValue;
+        declaration.value.name = key + newValue;
+      }
+    }
+
+    if (declaration.property === 'unparsed') {
+      each((value, index) => {
+        if (value.type == 'var') {
+          let name = value.value.name.ident;
+          if (includes(key, name)) {
+            if (global.variables[name]) {
+              // Update the name of the variable if it exists in global variables
+              declaration.value.value[index].value.name.ident = global.variables[name];
+            }
+          }
+        }
+      }, declaration.value.value);
+    }
+
+    return declaration;
+  },
+});
+
+/**
+ * Compiles CSS using the specified options and returns the resulting code.
+ *
+ * @param {string} css - The CSS code to compile.
+ * @param {Object} options - The options for CSS compilation.
+ * @returns {Object} The compiled CSS code.
+ */
 export function compilerStyle(css, options) {
   let include;
   if (options.css.colors) include |= Features.Colors;
   if (options.css.nesting) include |= Features.Nesting;
 
-  const visitor = composeVisitors([cssModules(options)]);
+  // Compose visitors for processing CSS modules and variables
+  const visitor = composeVisitors([cssModules(options), cssVariablesModules(options)]);
   const opts = {
     code: Buffer.from(css),
     minify: false,
@@ -96,6 +170,13 @@ export function compilerStyle(css, options) {
   return { code };
 }
 
+/**
+ * Prepares CSS content by applying transformations and returning processed styles.
+ *
+ * @param {string} content - The CSS content to prepare.
+ * @param {Object} options - The options for preparing the CSS.
+ * @returns {Object} The prepared CSS with raw code, tracked changes, and identified selectors.
+ */
 export function prepareStyle(content, options) {
   const changedStyles = [];
   let has = {
@@ -110,6 +191,12 @@ export function prepareStyle(content, options) {
   if (options.css.nesting) include |= Features.Nesting;
 
   const customModules = {
+    /**
+     * Processes selectors to handle global, static, and scoped styles.
+     *
+     * @param {Object} selector - The selector to process.
+     * @returns {Object} The processed selector with updated names.
+     */
     Selector(selector) {
       each((node, index) => {
         if (node.type == 'id' || node.type == 'class' || node.type == 'pseudo-class') {
@@ -139,6 +226,7 @@ export function prepareStyle(content, options) {
           let collection = isGlobal ? global.styles : changedStyles;
           type = node.type == 'class' ? 'class' : 'id';
 
+          // Find if there's a change in the current scope or globally
           const findChange = changedStyles.find(
             change =>
               change.old == oldName &&
@@ -175,7 +263,8 @@ export function prepareStyle(content, options) {
     },
   };
 
-  const visitor = composeVisitors([customModules]);
+  // Compose visitors for processing custom modules and variables
+  const visitor = composeVisitors([customModules, cssVariablesModules(options)]);
   const opts = {
     code: Buffer.from(content),
     minify: true,
