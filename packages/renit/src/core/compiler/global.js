@@ -3,6 +3,7 @@ class Global {
     // Initializes an empty array to store global styles.
     this.styles = [];
     this.variables = {};
+    this.atVariables = {};
   }
 }
 

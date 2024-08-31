@@ -144,6 +144,57 @@ const cssVariablesModules = options => ({
 });
 
 /**
+ * Creates a CSS visitor that processes and updates at-rules and variables.
+ *
+ * @param {Object} options - The options for CSS processing.
+ * @returns {Object} An object with Rule and Token methods for processing at-rules and variables.
+ */
+const cssAtVariables = options => ({
+  Rule: {
+    /**
+     * Processes unknown rules, updating variables and at-keywords if they exist in global variables.
+     *
+     * @param {Object} rule - The CSS rule to process.
+     * @returns {Array} An empty array indicating that the rule has been processed.
+     */
+    unknown(rule) {
+      const pre = rule.prelude[0];
+      if (pre.type == 'var') {
+        const name = pre.value.name.ident;
+        // Update the variable name if it exists in global variables
+        if (global.variables[name]) {
+          rule.prelude[0].value.name.ident = global.variables[name];
+        }
+      } else if (pre.type == 'token') {
+        if (pre.value.type == 'at-keyword') {
+          const name = pre.value.value;
+          // Update the at-keyword if it exists in global atVariables
+          if (global.atVariables[name]) {
+            rule.prelude = global.atVariables[name];
+          }
+        }
+      }
+
+      // Store the rule's name and prelude in global atVariables
+      global.atVariables[rule.name] = rule.prelude;
+      return [];
+    },
+  },
+  Token: {
+    /**
+     * Processes at-keyword tokens, replacing them with the corresponding value from global
+     * atVariables.
+
+     * @param {Object} token - The at-keyword token to process.
+     * @returns {Object} The corresponding value from global atVariables.
+     */
+    'at-keyword'(token) {
+      return global.atVariables[token.value];
+    },
+  },
+});
+
+/**
  * Compiles CSS using the specified options and returns the resulting code.
  *
  * @param {string} css - The CSS code to compile.
@@ -156,7 +207,11 @@ export function compilerStyle(css, options) {
   if (options.css.nesting) include |= Features.Nesting;
 
   // Compose visitors for processing CSS modules and variables
-  const visitor = composeVisitors([cssModules(options), cssVariablesModules(options)]);
+  const visitor = composeVisitors([
+    cssModules(options),
+    cssVariablesModules(options),
+    cssAtVariables(options),
+  ]);
   const opts = {
     code: Buffer.from(css),
     minify: false,
@@ -264,7 +319,11 @@ export function prepareStyle(content, options) {
   };
 
   // Compose visitors for processing custom modules and variables
-  const visitor = composeVisitors([customModules, cssVariablesModules(options)]);
+  const visitor = composeVisitors([
+    customModules,
+    cssVariablesModules(options),
+    cssAtVariables(options),
+  ]);
   const opts = {
     code: Buffer.from(content),
     minify: true,
