@@ -21,6 +21,24 @@ export function isPrefixBind(node) {
 }
 
 /**
+ * Checks if a given AST node has a prefix of '#'.
+ * @param {Object} node - The AST node to check.
+ * @returns {boolean} - Returns true if the node's prefix is '#', false otherwise.
+ */
+export function isPrefixRef(node) {
+  return node.prefix == '#';
+}
+
+/**
+ * Checks if a given AST node has a prefix of '*'.
+ * @param {Object} node - The AST node to check.
+ * @returns {boolean} - Returns true if the node's prefix is '*', false otherwise.
+ */
+export function isPrefixAction(node) {
+  return node.prefix == '*';
+}
+
+/**
  * Checks if a given AST node has a prefix of '@'.
  * @param {Object} node - The AST node to check.
  * @returns {boolean} - Returns true if the node's prefix is '@', false otherwise.
@@ -500,6 +518,26 @@ export function isBindAttribute(node) {
  */
 export function isModifierAttribute(node) {
   return node.type == 'ModifierAttribute';
+}
+
+/**
+ * Checks if the node is of type 'RefAttribute'.
+ *
+ * @param {Object} node - The node to check.
+ * @returns {boolean} - Returns `true` if the node is a modifier attribute, otherwise `false`.
+ */
+export function isRefAttribute(node) {
+  return node.type == 'RefAttribute';
+}
+
+/**
+ * Checks if the node is of type 'ActionAttribute'.
+ *
+ * @param {Object} node - The node to check.
+ * @returns {boolean} - Returns `true` if the node is a modifier attribute, otherwise `false`.
+ */
+export function isActionAttribute(node) {
+  return node.type == 'ActionAttribute';
 }
 
 /**

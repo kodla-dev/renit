@@ -2,6 +2,7 @@ import { each, join, push } from '../../../libraries/collect/index.js';
 import { isArray, isEmpty, isUndefined } from '../../../libraries/is/index.js';
 import { RAW_COMMA, RAW_EMPTY } from '../../define.js';
 import { $el, $lamb, $str, generateStringObject } from '../utils/index.js';
+import { isRefAttribute } from '../utils/node.js';
 import { checkDependencies } from '../utils/script.js';
 
 export class ComponentSpot {
@@ -15,6 +16,7 @@ export class ComponentSpot {
     this.own = {
       attributes: false,
       props: false,
+      ref: false,
     };
     this.raw = {
       props: RAW_EMPTY,
@@ -28,7 +30,12 @@ export class ComponentSpot {
       return `$parent = $.ssrCall(${this.generateArguments()});`;
     } else {
       const args = this.generateArguments();
-      return `$.${this.fn}(${args});`;
+      let src = RAW_EMPTY;
+      const ref = this.own.ref;
+      if (ref) src += `${ref} = `;
+      src += `$.${this.fn}(${args});`;
+      if (ref) src += `\n$.unMount(() => ${ref} = null);`;
+      return src;
     }
   }
 
@@ -42,6 +49,10 @@ export class ComponentSpot {
 
     if (own.attributes) {
       each(attribute => {
+        if (isRefAttribute(attribute)) {
+          own.ref = attribute.name;
+          return;
+        }
         const name = attribute.name;
         let value = attribute.value;
         let disabled = false;

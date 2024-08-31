@@ -55,6 +55,7 @@ function init(component, context, option = {}) {
 export function call(node, component, context, option = {}) {
   const c = init(component, context, option); // Initialize the component
   append(node, c.dom); // Append the component DOM to the node
+  return c;
 }
 
 /**

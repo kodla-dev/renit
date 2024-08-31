@@ -29,6 +29,7 @@ export class ScriptSpot {
       const preparedScript = prepareScript(
         ast,
         component.dependencies,
+        component.functionDependencies,
         component.changedStyles,
         this.ssr
       );

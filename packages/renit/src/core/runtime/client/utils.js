@@ -204,12 +204,25 @@ export function compare(w, value) {
   if (!isEqual(w.v, value)) {
     for (let key in value) {
       const v = value[key];
-      if (isCollect(v)) value[key] = clone(v);
+      value[key] = cloned(v);
     }
     w.v = value;
     if (!w.idle) w.cb(value);
   }
   w.idle = false;
+}
+
+/**
+ * Creates a deep clone of the provided value.
+ * If the value is an instance of a collection, it clones the collection;
+ * otherwise, it returns the value as is.
+ *
+ * @param {*} value - The value to clone.
+ * @returns {*} The deep-cloned value or the original value.
+ */
+export function cloned(value) {
+  if (isCollect(value)) return clone(value);
+  return value;
 }
 
 /**

@@ -1,8 +1,10 @@
+import { isFunction } from '../../../libraries/is/index.js';
+import { onMount, unMount } from '../share.js';
 import { block } from './block.js';
 import { _input } from './const.js';
 import { watch } from './reactive.js';
 import { event, modifier, modifiers, text } from './static.js';
-import { bindAttribute } from './utils.js';
+import { bindAttribute, cloned, compare } from './utils.js';
 
 /**
  * Binds an attribute to a DOM element and sets up a watch on specified dependencies.
@@ -116,4 +118,42 @@ export function Modifiers(node, name, dependent, condition) {
     // Update the node's attributes based on the condition
     modifiers(node, name, dependent, value);
   });
+}
+
+/**
+ * Executes an action on a DOM node, optionally based on dependent values.
+ *
+ * @param {HTMLElement} node - The DOM node on which the action is performed.
+ * @param {Function} action - The action to be executed on the node.
+ * @param {Function} [dependent] - An optional function that provides dependent values for the action.
+ */
+export function Action(node, action, dependent) {
+  let handler, value;
+
+  // If dependent values are provided, evaluate them and pass to the action
+  if (dependent) {
+    value = dependent();
+    handler = action.apply(null, [node].concat(value));
+  } else handler = action(node);
+
+  // If the handler is a function, unmount it
+  if (isFunction(handler)) unMount(handler);
+  else {
+    // Unmount if a destroy method is present
+    unMount(handler?.destroy);
+
+    // If an update method exists and there are dependent values, set up a watcher
+    if (handler?.update && dependent) {
+      watch(
+        dependent,
+        args => {
+          handler.update.apply(handler, args);
+        },
+        { ch: compare, v: cloned(value) }
+      );
+    }
+
+    // If an init method exists, call it on mount
+    handler?.init && onMount(handler.init);
+  }
 }

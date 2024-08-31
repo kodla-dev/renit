@@ -5,6 +5,7 @@ import {
   each,
   filter,
   has,
+  includes,
   join,
   last,
   map,
@@ -30,6 +31,7 @@ import {
   isDollarSign,
   isExportNamedDeclaration,
   isExpressionStatement,
+  isFunctionDeclaration,
   isFunctionExpression,
   isIdentifier,
   isImportDeclaration,
@@ -396,7 +398,7 @@ export function updateLiteral(ast, changedStyles) {
  * @returns {Object} - An object containing the raw generated code, a flag indicating if there are computed values,
  *                     an array of updated dependencies, and a flag indicating if there are updated dependencies.
  */
-export function prepareScript(ast, dependencies, changedStyles, ssr) {
+export function prepareScript(ast, dependencies, functionDependencies, changedStyles, ssr) {
   // Process the AST to update string literals with changed styles
   updateLiteral(ast, changedStyles);
   // Generate JavaScript code from the AST
@@ -527,11 +529,31 @@ export function prepareScript(ast, dependencies, changedStyles, ssr) {
     }
   */
   const injectedNodes = [];
+  let fnName;
 
   if (!ssr) {
     visitFull(ast, node => {
+      if (isFunctionDeclaration(node)) {
+        fnName = node.id.name;
+      } else if (node.type == 'VariableDeclaration') {
+        const declarator = node.declarations[0];
+        if (!isNull(declarator.init)) {
+          if (isArrowFunctionExpression(declarator.init)) {
+            fnName = declarator.id.name;
+          }
+        }
+      } else if (node.type == 'VariableDeclarator') {
+        if (!isNull(node.init)) {
+          if (isArrowFunctionExpression(node.init)) {
+            fnName = node.id.name;
+          }
+        }
+      }
+
       if (has('Function', node.type)) {
-        updateNode(node);
+        let force = 0;
+        if (includes(fnName, functionDependencies)) force = 1;
+        updateNode(node, force);
       }
     });
   }
@@ -562,17 +584,18 @@ export function prepareScript(ast, dependencies, changedStyles, ssr) {
    *
    * @param {Object} astNode - The AST node to update.
    */
-  function updateNode(astNode) {
+  function updateNode(astNode, force) {
     let dependencyAdded = false;
-    let hasReturn = false;
 
-    visitFull(astNode, {
-      ReturnStatement() {
-        hasReturn = true;
-      },
-    });
-
-    if (hasReturn) return;
+    if (!force) {
+      let hasReturn = false;
+      visitFull(astNode, {
+        ReturnStatement() {
+          hasReturn = true;
+        },
+      });
+      if (hasReturn) return;
+    }
 
     let block = false;
 
@@ -583,6 +606,13 @@ export function prepareScript(ast, dependencies, changedStyles, ssr) {
           block = true;
         },
         Identifier(node, parent) {
+          if (force && !dependencyAdded) {
+            const firstNode = block ? astNode.body.body[0] : astNode.body;
+            push({ loc: firstNode, block, start: true }, injectedNodes);
+            dependencyAdded = true;
+            return;
+          }
+
           const foundDependencies = findDependencies(parent);
 
           if (!isEmpty(foundDependencies)) {
@@ -591,7 +621,7 @@ export function prepareScript(ast, dependencies, changedStyles, ssr) {
                 push(dependency, updatedDependencies);
                 if (!dependencyAdded) {
                   const lastNode = block ? last(astNode.body.body) : astNode.body;
-                  push({ last: lastNode, block }, injectedNodes);
+                  push({ loc: lastNode, block }, injectedNodes);
                   dependencyAdded = true;
                 }
               }
@@ -604,7 +634,7 @@ export function prepareScript(ast, dependencies, changedStyles, ssr) {
             push(name, updatedDependencies);
             if (!dependencyAdded) {
               const lastNode = block ? last(astNode.body.body) : astNode.body;
-              push({ last: lastNode, block }, injectedNodes);
+              push({ loc: lastNode, block }, injectedNodes);
               dependencyAdded = true;
             }
           } else {
@@ -614,7 +644,7 @@ export function prepareScript(ast, dependencies, changedStyles, ssr) {
                 push(dep, updatedDependencies);
                 if (!dependencyAdded) {
                   const lastNode = block ? last(astNode.body.body) : astNode.body;
-                  push({ last: lastNode, block }, injectedNodes);
+                  push({ loc: lastNode, block }, injectedNodes);
                   dependencyAdded = true;
                 }
               }
@@ -668,10 +698,12 @@ export function prepareScript(ast, dependencies, changedStyles, ssr) {
   }
 
   each(node => {
-    if (node.block) {
-      replaceNodeWithCode(node.last, extractCode(node.last) + `\n` + $u());
+    if (node.start && node.block) {
+      replaceNodeWithCode(node.loc, $u() + '\n' + extractCode(node.loc));
+    } else if (node.block) {
+      replaceNodeWithCode(node.loc, extractCode(node.loc) + `\n` + $u());
     } else {
-      replaceNodeWithCode(node.last, $u(extractCode(node.last), false));
+      replaceNodeWithCode(node.loc, $u(extractCode(node.loc), false));
     }
   }, reverse(injectedNodes));
 

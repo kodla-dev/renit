@@ -12,8 +12,10 @@ import {
   hasSuffix,
   isCSR,
   isFragmentComponent,
+  isPrefixAction,
   isPrefixBind,
   isPrefixEvent,
+  isPrefixRef,
   isSSR,
 } from '../utils/node.js';
 
@@ -55,8 +57,13 @@ export function types(ast) {
             // Update the node type if it has a prefix indicating an event or binding.
             if (isPrefixEvent(attribute)) attribute.type = 'EventAttribute';
             if (isPrefixBind(attribute)) attribute.type = 'BindAttribute';
+            if (isPrefixRef(attribute)) attribute.type = 'RefAttribute';
+            if (isPrefixAction(attribute)) attribute.type = 'ActionAttribute';
           } else if (hasSuffix(attribute)) {
             attribute.type = 'ModifierAttribute';
+          } else {
+            if (attribute.name == '#') attribute.type = 'RefAttribute';
+            if (attribute.name == '*') attribute.type = 'ActionAttribute';
           }
 
           if (isSSR(attribute)) {

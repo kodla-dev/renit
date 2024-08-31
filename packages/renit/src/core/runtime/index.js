@@ -5,7 +5,7 @@
   ------------------------------------------------------------------------------
 */
 
-export { Attribute, Html, Input, Modifier, Modifiers, Text } from './client/bind.js';
+export { Action, Attribute, Html, Input, Modifier, Modifiers, Text } from './client/bind.js';
 export { block, forBlock, ifBlock, makeBlock, style } from './client/block.js';
 export { call, component, dyn } from './client/component.js';
 export { _checked, _class, _click, _style, _value } from './client/const.js';

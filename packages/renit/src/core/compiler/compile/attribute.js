@@ -11,10 +11,12 @@ import {
 } from '../../../libraries/collect/index.js';
 import { isArray, isEmpty, isUndefined } from '../../../libraries/is/index.js';
 import { RAW_WHITESPACE } from '../../define.js';
+import { ActionSpot } from '../spot/action.js';
 import { AttributeSpot } from '../spot/attribute.js';
 import { EventSpot } from '../spot/event.js';
 import { InputSpot } from '../spot/input.js';
 import { ModifierSpot, ModifiersSpot } from '../spot/modifier.js';
+import { RefSpot } from '../spot/ref.js';
 import { StaticSpot } from '../spot/static.js';
 import { $escape, $str, $var } from '../utils/index.js';
 import {
@@ -234,5 +236,16 @@ export default {
     } else {
       figure.addSpot(new ModifierSpot(parent, node));
     }
+  },
+  RefAttribute({ parent, node, figure, options }) {
+    const ssr = isSSR(options);
+    if (ssr) return;
+    figure.addSpot(new RefSpot(parent, node));
+  },
+  ActionAttribute({ parent, node, figure, component, options }) {
+    const ssr = isSSR(options);
+    if (ssr) return;
+    component.addFunctionDependencies(node.name);
+    figure.addSpot(new ActionSpot(parent, node));
   },
 };

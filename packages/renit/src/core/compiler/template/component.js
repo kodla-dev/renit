@@ -51,6 +51,8 @@ export class Component {
     this.props = [];
     /** @type {Array} Dependencies of the component */
     this.dependencies = [];
+    /** @type {Array} Function dependencies of the component */
+    this.functionDependencies = [];
     /** @type {Array} Updated dependencies of the component */
     this.updatedDependencies = [];
     /** @type {Array} Function names within the component */
@@ -153,6 +155,7 @@ export class Component {
       const preparedScript = prepareScript(
         this.scriptStatement,
         this.dependencies,
+        this.functionDependencies,
         this.changedStyles,
         ssr
       );
@@ -361,6 +364,14 @@ export class Component {
     }
 
     this.dependencies = unique(this.dependencies);
+  }
+
+  /**
+   * Adds a function name to the list of function dependencies.
+   * @param {string} name - The name of the function to add as a dependency.
+   */
+  addFunctionDependencies(name) {
+    push(name, this.functionDependencies);
   }
 
   /**

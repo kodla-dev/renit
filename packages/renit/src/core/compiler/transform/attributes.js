@@ -1,6 +1,6 @@
 import { isEmpty } from '../../../libraries/is/index.js';
 import { visit } from '../../../libraries/to/index.js';
-import { containsCurlyBraces, parseCurlyBraces } from '../utils/curly.js';
+import { containsCurlyBraces, getContentCurlyBraces, parseCurlyBraces } from '../utils/curly.js';
 import { setNodeParam } from '../utils/index.js';
 
 export function attributes(ast) {
@@ -69,6 +69,15 @@ export function attributes(ast) {
         node.value = parsed.values;
       }
 
+      setParentReference(node);
+    },
+    RefAttribute: node => {
+      setParentReference(node);
+    },
+    ActionAttribute: node => {
+      if (containsCurlyBraces(node.value)) {
+        node.value = getContentCurlyBraces(node.value);
+      }
       setParentReference(node);
     },
   });

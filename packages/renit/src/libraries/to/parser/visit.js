@@ -285,6 +285,12 @@ const visitors = {
   ModifierAttribute: (node, visitor) => {
     handle(node, visitor);
   },
+  RefAttribute: (node, visitor) => {
+    handle(node, visitor);
+  },
+  ActionAttribute: (node, visitor) => {
+    handle(node, visitor);
+  },
   Script: (node, visitor) => {
     handle(node, visitor);
   },
