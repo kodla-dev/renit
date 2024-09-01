@@ -11,7 +11,7 @@ import {
   remove,
   split,
 } from '../../../libraries/collect/index.js';
-import { isArray, isEqual } from '../../../libraries/is/index.js';
+import { isArray, isEqual, isString } from '../../../libraries/is/index.js';
 import { RAW_EMPTY, RAW_WHITESPACE } from '../../define.js';
 import { global } from '../global.js';
 import { AttributePattern, StringAttributePattern } from './constant.js';
@@ -53,13 +53,7 @@ export function generateStyleHash(min, max, name) {
  * @param {Object} options - The options for CSS processing.
  * @returns {Object} An object with a Selector method for processing CSS selectors.
  */
-const cssModules = options => ({
-  /**
-   * Processes and renames selectors based on the provided options.
-   *
-   * @param {Object} selector - The selector to process.
-   * @returns {Object} The processed selector with updated names.
-   */
+export const cssModules = options => ({
   Selector(selector) {
     each(node => {
       // Check if the node is of type 'id' or 'class'
@@ -100,13 +94,7 @@ const cssModules = options => ({
  * @param {Object} options - The options for CSS processing.
  * @returns {Object} An object with a Declaration method for processing CSS declarations.
  */
-const cssVariablesModules = options => ({
-  /**
-   * Processes custom and unparsed declarations, updating variable names as needed.
-   *
-   * @param {Object} declaration - The CSS declaration to process.
-   * @returns {Object} The processed declaration with updated variable names.
-   */
+export const cssVariablesModules = options => ({
   Declaration(declaration) {
     const key = '--';
 
@@ -144,19 +132,148 @@ const cssVariablesModules = options => ({
 });
 
 /**
+ * Configuration for custom at-rules used in CSS processing.
+ * @type {Object}
+ */
+export const customAtRules = {
+  light: {
+    prelude: null,
+    body: 'style-block',
+  },
+  dark: {
+    prelude: null,
+    body: 'style-block',
+  },
+  ltr: {
+    prelude: null,
+    body: 'style-block',
+  },
+  rtl: {
+    prelude: null,
+    body: 'style-block',
+  },
+  screen: {
+    prelude: '<custom-ident>',
+    body: 'style-block',
+  },
+  block: {
+    prelude: '<custom-ident>',
+    body: 'style-block',
+  },
+  include: {
+    prelude: '<custom-ident>',
+  },
+  includes: {
+    prelude: '<custom-ident>',
+    body: 'style-block',
+  },
+};
+
+/**
+ * Generates a nesting rule based on an attribute selector.
+ * @param {Object} rule - The rule object containing the location and style information.
+ * @param {string} key - The attribute name to be used in the selector.
+ * @param {string} name - The value to match for the attribute.
+ * @returns {Object} The generated nesting rule with attribute-based selectors.
+ */
+const attrRule = (rule, key, name) => ({
+  type: 'nesting',
+  value: {
+    loc: rule.loc,
+    style: {
+      loc: rule.loc,
+      rules: rule.body.value,
+      selectors: [
+        [
+          {
+            type: 'attribute',
+            name: key,
+            operation: {
+              operator: 'equal',
+              value: name,
+            },
+          },
+          { type: 'combinator', value: 'descendant' },
+          { type: 'nesting' },
+        ],
+      ],
+    },
+  },
+});
+
+/**
  * Creates a CSS visitor that processes and updates at-rules and variables.
  *
  * @param {Object} options - The options for CSS processing.
  * @returns {Object} An object with Rule and Token methods for processing at-rules and variables.
  */
-const cssAtVariables = options => ({
+export const cssAtVariables = options => ({
   Rule: {
-    /**
-     * Processes unknown rules, updating variables and at-keywords if they exist in global variables.
-     *
-     * @param {Object} rule - The CSS rule to process.
-     * @returns {Array} An empty array indicating that the rule has been processed.
-     */
+    custom: {
+      block(rule) {
+        global.blocks[rule.prelude.value] = rule.body.value;
+        return [];
+      },
+      include(rule) {
+        return global.blocks[rule.prelude.value];
+      },
+      includes(rule) {
+        const value = rule.body.value;
+        const blocks = global.blocks[rule.prelude.value];
+        map(block => {
+          if (block.value.rules[0].value.name == 'content') {
+            block.value.declarations = value[0].value.declarations;
+            block.value.rules = [];
+          }
+        }, blocks);
+        return blocks;
+      },
+      light: rule => attrRule(rule, 'data-theme', 'light'),
+      dark: rule => attrRule(rule, 'data-theme', 'dark'),
+      ltr: rule => attrRule(rule, 'dir', 'ltr'),
+      rtl: rule => attrRule(rule, 'rtl'),
+      screen(rule) {
+        if (isString(rule.prelude.value) && rule.prelude.value in options.css.breakpoints.sizes) {
+          let unit = options.css.breakpoints.unit;
+          let value = options.css.breakpoints.sizes[rule.prelude.value];
+          if (isString(value)) {
+            unit = value.replace(/[0-9]/g, '');
+            value = Number(value.replace(unit, ''));
+          }
+          return {
+            type: 'media',
+            value: {
+              rules: rule.body.value,
+              loc: rule.loc,
+              query: {
+                mediaQueries: [
+                  {
+                    mediaType: 'all',
+                    condition: {
+                      type: 'feature',
+                      value: {
+                        type: 'plain',
+                        name: 'min-width',
+                        value: {
+                          type: 'length',
+                          value: {
+                            type: 'value',
+                            value: {
+                              unit: unit,
+                              value: value,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          };
+        }
+      },
+    },
     unknown(rule) {
       const pre = rule.prelude[0];
       if (pre.type == 'var') {
@@ -181,15 +298,96 @@ const cssAtVariables = options => ({
     },
   },
   Token: {
-    /**
-     * Processes at-keyword tokens, replacing them with the corresponding value from global
-     * atVariables.
-
-     * @param {Object} token - The at-keyword token to process.
-     * @returns {Object} The corresponding value from global atVariables.
-     */
     'at-keyword'(token) {
       return global.atVariables[token.value];
+    },
+  },
+});
+
+/**
+ * Creates a CSS visitor that processes and converts custom units to the specified unit.
+ *
+ * @param {Object} options - The options for CSS processing.
+ * @returns {Object} An object with a Token method for processing units.
+ */
+export const cssUnits = options => ({
+  Token: {
+    dimension(token) {
+      if (token.unit === 'nt') {
+        const { multiplier, unit } = options.css.units.nt;
+        return {
+          raw: `${token.value * multiplier}${unit}`,
+        };
+      }
+    },
+  },
+});
+
+/**
+ * Creates a list of property objects from the given properties data.
+ *
+ * @param {Object} properties - An object where keys are property names and values contain the property data.
+ * @returns {Array} An array of property objects formatted for further processing.
+ */
+const createProperty = properties => {
+  const props = [];
+
+  // Iterate over the properties object and format each property
+  each((property, data) => {
+    push(
+      {
+        property: data.t,
+        value: {
+          propertyId: {
+            property: property,
+          },
+          value: data.v,
+        },
+      },
+      props
+    );
+  }, properties);
+  return props;
+};
+
+/**
+ * Creates multiple property objects from a given property and type, distributing values
+ * across provided property names.
+ *
+ * @param {Object} prop - The main property object containing the value(s) to distribute.
+ * @param {string} type - The type to assign to each created property.
+ * @param {...string} props - The property names to create from the given values.
+ * @returns {Array} An array of property objects formatted for further processing.
+ */
+const createMultipleProperty = (prop, type, ...props) => {
+  let multiple = false;
+  let v = prop.value;
+
+  // Check if the property value contains multiple dimensions
+  if (v.length > 1) {
+    multiple = true;
+  }
+
+  const prp = {};
+
+  // Distribute the property values across the provided property names
+  each((name, index) => (prp[name] = { v: multiple ? [v[index * 2]] : v, t: type }), props);
+  return createProperty(prp);
+};
+
+/**
+ * Creates a CSS visitor that processes custom properties.
+ *
+ * @returns {Object} An object with a Declaration method for processing properties.
+ */
+export const cssProperties = () => ({
+  Declaration: {
+    custom: {
+      size: prop => createMultipleProperty(prop, 'unparsed', 'width', 'height'),
+      mx: prop => createMultipleProperty(prop, 'unparsed', 'margin-left', 'margin-right'),
+      my: prop => createMultipleProperty(prop, 'unparsed', 'margin-top', 'margin-bottom'),
+      px: prop => createMultipleProperty(prop, 'unparsed', 'padding-left', 'padding-right'),
+      py: prop => createMultipleProperty(prop, 'unparsed', 'padding-top', 'padding-bottom'),
     },
   },
 });
@@ -205,18 +403,23 @@ export function compilerStyle(css, options) {
   let include;
   if (options.css.colors) include |= Features.Colors;
   if (options.css.nesting) include |= Features.Nesting;
+  if (options.css.mediaQueries) include |= Features.MediaQueries;
+  if (options.css.selectors) include |= Features.Selectors;
 
   // Compose visitors for processing CSS modules and variables
   const visitor = composeVisitors([
     cssModules(options),
     cssVariablesModules(options),
     cssAtVariables(options),
+    cssUnits(options),
+    cssProperties(options),
   ]);
   const opts = {
     code: Buffer.from(css),
     minify: false,
     sourceMap: false,
     include,
+    customAtRules,
     visitor,
   };
   let t = transform(opts);
@@ -244,6 +447,8 @@ export function prepareStyle(content, options) {
   let include;
   if (options.css.colors) include |= Features.Colors;
   if (options.css.nesting) include |= Features.Nesting;
+  if (options.css.mediaQueries) include |= Features.MediaQueries;
+  if (options.css.selectors) include |= Features.Selectors;
 
   const customModules = {
     /**
@@ -323,12 +528,15 @@ export function prepareStyle(content, options) {
     customModules,
     cssVariablesModules(options),
     cssAtVariables(options),
+    cssUnits(options),
+    cssProperties(options),
   ]);
   const opts = {
     code: Buffer.from(content),
     minify: true,
     sourceMap: false,
     include,
+    customAtRules,
     visitor,
   };
   let t = transform(opts);

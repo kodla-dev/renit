@@ -23,9 +23,29 @@ const defaultOptions = {
 
     // Enables or disables CSS nesting support.
     nesting: true,
+
+    // Enables or disables CSS media query support.
+    mediaQueries: false,
+
+    // Enables or disables custom CSS selector support.
+    selectors: false,
+
+    // Custom units.
+    units: {
+      nt: {
+        multiplier: 0.25, // Multiplier for the custom unit.
+        unit: 'rem', // Unit of measurement for the custom unit.
+      },
+    },
+
+    // Configuration for responsive design.
+    breakpoints: {
+      unit: 'rem', // Unit for breakpoints.
+      sizes: { sm: 40, md: 48, lg: 64, xl: 80, xxl: 96 }, // Breakpoint sizes.
+    },
   },
 
-  // Special settings
+  // Internal settings
   $: {
     external: {
       style: false,

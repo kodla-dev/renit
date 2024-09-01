@@ -139,6 +139,18 @@ export async function defineOptions(args) {
         },
         colors: true,
         nesting: true,
+        mediaQueries: false,
+        selectors: false,
+        units: {
+          nt: {
+            multiplier: 0.25,
+            unit: 'rem',
+          },
+        },
+        breakpoints: {
+          unit: 'rem',
+          sizes: { sm: 40, md: 48, lg: 64, xl: 80, xxl: 96 },
+        },
       },
       server: {
         open: true,
