@@ -105,8 +105,8 @@ export async function getIndexJs() {
  *
  * @param {string} dir - The directory path relative to the base directory.
  */
-export async function removeDir(dir) {
-  console.clear();
+export async function removeDir(dir, clearScreen) {
+  if (clearScreen) console.clear();
   const p = path.resolve(baseDir, dir);
   if (fs.existsSync(p)) {
     fs.rmSync(p, { recursive: true, force: true });
@@ -128,6 +128,7 @@ export async function defineOptions(args) {
     base: baseDir,
     root: sourceDir,
     param: {},
+    clearScreen: true,
     app: {
       generate: 'csr',
       css: {
@@ -200,6 +201,8 @@ export async function defineOptions(args) {
   // Merge with external config
   const config = await getConfig();
   mergeDeep(config, options);
+
+  options.vite.clearScreen = options.clearScreen;
 
   // Configure Vite server settings
   options.vite.server = {
@@ -326,7 +329,6 @@ export function VitePluginRenit(options) {
             path: file,
           });
         }
-
         if (/index.css/.test(file)) {
           server.moduleGraph.fileToModulesMap.forEach((modules, filePath) => {
             if (filePath.endsWith('.nit')) {
@@ -376,8 +378,8 @@ export function VitePluginRenit(options) {
  * @param {string} generate - The generation type (e.g., 'csr' or 'ssr').
  * @param {boolean} [start=false] - Whether to automatically open the app in the browser.
  */
-export function printUrls(port, apiPort, generate, start = false) {
-  console.clear(); // Clear the console for a clean output
+export function printUrls(port, apiPort, clearScreen, generate, start = false) {
+  if (clearScreen) console.clear(); // Clear the console for a clean output
 
   const url = `http://localhost:${port}/`; // Application URL
   const apiUrl = `http://localhost:${apiPort}/`; // API URL

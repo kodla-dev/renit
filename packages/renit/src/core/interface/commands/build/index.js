@@ -8,7 +8,7 @@ export default async function (options) {
 async function csr(options) {
   try {
     await build(options.vite);
-    console.clear();
+    if (options.clearScreen) console.clear();
     console.log(color.green('✓'), 'Build successful.');
   } catch (error) {
     console.log(color.red('✗'), 'Build failed.');

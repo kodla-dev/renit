@@ -7,5 +7,10 @@ export default async function (options) {
 
 async function csr(options) {
   await preview(options.vite);
-  printUrls(options.vite.preview.port, options.api.server.port, 'CSR + Preview');
+  printUrls(
+    options.vite.preview.port,
+    options.api.server.port,
+    options.clearScreen,
+    'CSR + Preview'
+  );
 }

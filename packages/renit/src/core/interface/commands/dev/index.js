@@ -41,7 +41,7 @@ async function api(options) {
 async function csr(options) {
   const app = await createViteServer(options.vite); // Create a Vite server instance
   await app.listen(); // Start the Vite server
-  printUrls(options.vite.server.port, options.api.server.port, 'CSR'); // Print URLs for CSR
+  printUrls(options.vite.server.port, options.api.server.port, options.clearScreen, 'CSR'); // Print URLs for CSR
 }
 
 /**
@@ -82,6 +82,6 @@ async function ssr(options) {
   const port = options.app.server.port;
 
   app.listen(port, () => {
-    printUrls(port, options.api.server.port, 'SSR + Hydration', true); // Print URLs for SSR
+    printUrls(port, options.api.server.port, options.clearScreen, 'SSR + Hydration', true); // Print URLs for SSR
   });
 }
