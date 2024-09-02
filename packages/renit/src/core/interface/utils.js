@@ -278,7 +278,7 @@ export function VitePluginRenit(options) {
           const templateName = getTemplateName(id);
           const baseName = getBaseName(id);
           const cssPath = baseName + '.nit.css';
-          const externalStyle = false;
+          let externalStyle = false;
 
           if (fs.existsSync(cssPath)) {
             const cssContent = await fs.readFileSync(cssPath, 'utf-8');
