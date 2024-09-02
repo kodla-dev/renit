@@ -3,6 +3,7 @@ import { clone } from '../../../helpers/index.js';
 import {
   each,
   filter,
+  flat,
   includes,
   join,
   map,
@@ -300,22 +301,25 @@ const cssAtVariables = options => ({
       },
     },
     unknown(rule) {
-      const pre = rule.prelude[0];
-      if (pre.type == 'var') {
-        const name = pre.value.name.ident;
-        // Update the variable name if it exists in global variables
-        if (global.variables[name]) {
-          rule.prelude[0].value.name.ident = global.variables[name];
-        }
-      } else if (pre.type == 'token') {
-        if (pre.value.type == 'at-keyword') {
-          const name = pre.value.value;
-          // Update the at-keyword if it exists in global atVariables
-          if (global.atVariables[name]) {
-            rule.prelude = global.atVariables[name];
+      const prelude = rule.prelude;
+
+      each((pre, index) => {
+        if (pre.type == 'var') {
+          const name = pre.value.name.ident;
+          if (global.variables[name]) {
+            rule.prelude[0].value.name.ident = global.variables[name];
+          }
+        } else if (pre.type == 'token') {
+          if (pre.value.type == 'at-keyword') {
+            const name = pre.value.value;
+            const globalVariable = global.atVariables[name];
+            if (globalVariable) {
+              rule.prelude[index] = globalVariable;
+              rule.prelude = flat(rule.prelude);
+            }
           }
         }
-      }
+      }, prelude);
 
       // Store the rule's name and prelude in global atVariables
       global.atVariables[rule.name] = rule.prelude;
