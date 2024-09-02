@@ -47,6 +47,7 @@ const defaultOptions = {
 
   // Internal settings
   $: {
+    kit: false,
     external: {
       style: false,
     },

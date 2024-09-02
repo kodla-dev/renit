@@ -4,7 +4,7 @@ import path from 'node:path';
 import { mergeDeep } from '../../libraries/collect/index.js';
 import { getBaseName, getTemplateName } from '../compiler/utils/file.js';
 import { generateId } from '../compiler/utils/index.js';
-import { compilerStyle, generateStylePattern } from '../compiler/utils/style.js';
+import { compilerStyle, cssKit, generateStylePattern } from '../compiler/utils/style.js';
 import { compiler } from '../index.js';
 
 /** The base directory of the current project */
@@ -161,6 +161,12 @@ export async function defineOptions(args) {
         open: true,
         port: 5001,
       },
+      $: {
+        kit: true,
+        external: {
+          style: false,
+        },
+      },
     },
     api: {
       server: {
@@ -223,6 +229,8 @@ export async function defineOptions(args) {
     VitePluginRenit(options),
   ];
 
+  options.vite.css.lightningcss = cssKit(options.app);
+
   return options;
 }
 
@@ -270,21 +278,17 @@ export function VitePluginRenit(options) {
           const templateName = getTemplateName(id);
           const baseName = getBaseName(id);
           const cssPath = baseName + '.nit.css';
-          const $ = {
-            external: {
-              style: false,
-            },
-          };
+          const externalStyle = false;
 
           if (fs.existsSync(cssPath)) {
             const cssContent = await fs.readFileSync(cssPath, 'utf-8');
             if (cssContent.length) {
-              $.external.style = cssContent;
+              externalStyle = cssContent;
             }
           }
 
           options.app.generate = generate;
-          options.app.$ = $;
+          options.app.$.external.style = externalStyle;
 
           // Compile the code using a custom compiler
           const result = compiler(id, code, options.app);

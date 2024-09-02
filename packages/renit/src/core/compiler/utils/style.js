@@ -53,7 +53,7 @@ export function generateStyleHash(min, max, name) {
  * @param {Object} options - The options for CSS processing.
  * @returns {Object} An object with a Selector method for processing CSS selectors.
  */
-export const cssModules = options => ({
+const cssModules = options => ({
   Selector(selector) {
     each(node => {
       // Check if the node is of type 'id' or 'class'
@@ -94,7 +94,7 @@ export const cssModules = options => ({
  * @param {Object} options - The options for CSS processing.
  * @returns {Object} An object with a Declaration method for processing CSS declarations.
  */
-export const cssVariablesModules = options => ({
+const cssVariablesModules = options => ({
   Declaration(declaration) {
     const key = '--';
 
@@ -132,10 +132,35 @@ export const cssVariablesModules = options => ({
 });
 
 /**
+ * Processes CSS declarations to check and replace custom variables.
+ * @returns {Object} An object containing a method to handle CSS declarations.
+ */
+const cssCheckVariablesModules = () => ({
+  Declaration(declaration) {
+    const key = '--';
+    if (declaration.property === 'unparsed') {
+      each((value, index) => {
+        if (value.type == 'var') {
+          let name = value.value.name.ident;
+          if (includes(key, name)) {
+            if (global.variables[name]) {
+              // Update the name of the variable if it exists in global variables
+              declaration.value.value[index].value.name.ident = global.variables[name];
+            }
+          }
+        }
+      }, declaration.value.value);
+    }
+
+    return declaration;
+  },
+});
+
+/**
  * Configuration for custom at-rules used in CSS processing.
  * @type {Object}
  */
-export const customAtRules = {
+const customRules = {
   light: {
     prelude: null,
     body: 'style-block',
@@ -207,7 +232,7 @@ const attrRule = (rule, key, name) => ({
  * @param {Object} options - The options for CSS processing.
  * @returns {Object} An object with Rule and Token methods for processing at-rules and variables.
  */
-export const cssAtVariables = options => ({
+const cssAtVariables = options => ({
   Rule: {
     custom: {
       block(rule) {
@@ -310,7 +335,7 @@ export const cssAtVariables = options => ({
  * @param {Object} options - The options for CSS processing.
  * @returns {Object} An object with a Token method for processing units.
  */
-export const cssUnits = options => ({
+const cssUnits = options => ({
   Token: {
     dimension(token) {
       if (token.unit === 'nt') {
@@ -380,7 +405,7 @@ const createMultipleProperty = (prop, type, ...props) => {
  *
  * @returns {Object} An object with a Declaration method for processing properties.
  */
-export const cssProperties = () => ({
+const cssProperties = () => ({
   Declaration: {
     custom: {
       size: prop => createMultipleProperty(prop, 'unparsed', 'width', 'height'),
@@ -391,6 +416,41 @@ export const cssProperties = () => ({
     },
   },
 });
+
+/**
+ * Configures and returns the CSS kit settings based on provided options.
+ * @param {Object} options - Configuration options for the CSS kit.
+ * @returns {Object} An object containing the CSS kit configuration.
+ * @property {number} include - Bitmask representing enabled CSS features.
+ * @property {Object} customAtRules - Custom at-rules configuration.
+ * @property {Array} visitor - Array of visitor functions for processing CSS.
+ */
+export function cssKit(options) {
+  // Sets default component information for the CSS kit.
+  options.component = { file: 'csskit.css', name: 'default' };
+
+  let include;
+
+  // Conditionally include features based on the provided options.
+  if (options.css.colors) include |= Features.Colors;
+  if (options.css.nesting) include |= Features.Nesting;
+  if (options.css.mediaQueries) include |= Features.MediaQueries;
+  if (options.css.selectors) include |= Features.Selectors;
+
+  // Reference to custom at-rules.
+  const customAtRules = customRules;
+
+  // Array of visitor functions for processing CSS.
+  const visitor = composeVisitors([
+    cssCheckVariablesModules(options),
+    cssAtVariables(options),
+    cssUnits(options),
+    cssProperties(options),
+  ]);
+
+  // Return the CSS kit configuration.
+  return { include, customAtRules, visitor };
+}
 
 /**
  * Compiles CSS using the specified options and returns the resulting code.
@@ -406,14 +466,21 @@ export function compilerStyle(css, options) {
   if (options.css.mediaQueries) include |= Features.MediaQueries;
   if (options.css.selectors) include |= Features.Selectors;
 
-  // Compose visitors for processing CSS modules and variables
-  const visitor = composeVisitors([
+  let customAtRules = customRules;
+  let visitors = [
     cssModules(options),
     cssVariablesModules(options),
     cssAtVariables(options),
     cssUnits(options),
     cssProperties(options),
-  ]);
+  ];
+
+  if (options.$.kit) {
+    visitors = [cssModules(options), cssVariablesModules(options)];
+    customAtRules = {};
+  }
+  // Compose visitors for processing CSS modules and variables
+  const visitor = composeVisitors(visitors);
   const opts = {
     code: Buffer.from(css),
     minify: false,
@@ -523,17 +590,33 @@ export function prepareStyle(content, options) {
     },
   };
 
-  // Compose visitors for processing custom modules and variables
-  const visitor = composeVisitors([
+  const modules = [
     customModules,
     cssVariablesModules(options),
     cssAtVariables(options),
     cssUnits(options),
     cssProperties(options),
-  ]);
+  ];
+  let visitors = modules;
+  let minify = true;
+  let customAtRules = customRules;
+
+  if (options.$.kit) {
+    visitors = [customModules, cssVariablesModules(options)];
+    minify = false;
+    customAtRules = {};
+  }
+  if (options.css.compile == 'injected' || options.generate == 'ssr') {
+    minify = true;
+    visitors = modules;
+    customAtRules = customRules;
+  }
+
+  // Compose visitors for processing custom modules and variables
+  const visitor = composeVisitors(visitors);
   const opts = {
     code: Buffer.from(content),
-    minify: true,
+    minify,
     sourceMap: false,
     include,
     customAtRules,
