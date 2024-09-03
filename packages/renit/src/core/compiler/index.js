@@ -16,5 +16,5 @@ export function compiler(file, code, options = {}) {
   options.component = { file };
   options = mergeDeep(options, defaultOptions);
 
-  return compile(transform(code), options);
+  return compile(transform(code, options), options);
 }

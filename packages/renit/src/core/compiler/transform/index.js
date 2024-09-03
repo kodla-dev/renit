@@ -15,7 +15,7 @@ const transforms = [types, parsers, blocks, attributes, texts];
  * @param {string} code - The HTML code to transform.
  * @returns {Object} - The transformed AST.
  */
-export function transform(code) {
+export function transform(code, options) {
   // Convert the HTML code to an AST with specific options.
   let ast = htmlToAst(code, {
     attribute: { affix: true },
@@ -24,7 +24,7 @@ export function transform(code) {
   });
 
   // Apply each transformation function to the AST.
-  each(transform => transform(ast), transforms);
+  each(transform => transform(ast, options), transforms);
 
   // Return the transformed AST.
   return ast;

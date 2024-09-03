@@ -1,6 +1,5 @@
 import { isEmpty } from '../../../libraries/is/index.js';
 import { ScriptSpot } from '../spot/script.js';
-import { isCSR, isSSR } from '../utils/node.js';
 import { extractJavaScript } from '../utils/script.js';
 
 export default {
@@ -8,8 +7,6 @@ export default {
    * Processes a script node, extracting imports and exports, and adding script content to a figure.
    */
   Script({ node, template, component, figure, options }) {
-    if ((isSSR(options) && isCSR(node)) || (isCSR(options) && isSSR(node))) return;
-
     // Extract JavaScript content from the script node.
     const extract = extractJavaScript(node.content);
 

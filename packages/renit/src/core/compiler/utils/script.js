@@ -715,3 +715,15 @@ export function prepareScript(ast, dependencies, functionDependencies, changedSt
     hasUpdatedDependencies: !isEmpty(updatedDependencies),
   };
 }
+
+/**
+ * Removes environment-specific code blocks from the JavaScript content.
+ * @param {string} content - The JavaScript content to process.
+ * @param {string} generate - The target generation environment, either 'csr' or 'ssr'.
+ * @returns {string} The processed content with unnecessary code blocks removed.
+ */
+export function javaScriptClearEnv(content, generate) {
+  const remove = generate === 'ssr' ? 'csr' : 'ssr';
+  const pattern = new RegExp(`//\\s*if:${remove}[\\s\\S]*?//\\s*endif\\s*`, 'g');
+  return content.replace(pattern, '').trim();
+}

@@ -1,12 +1,13 @@
 import { isEmpty } from '../../../libraries/is/index.js';
 import { visit } from '../../../libraries/to/index.js';
-import { javaScriptToAST } from '../utils/script.js';
+import { javaScriptClearEnv, javaScriptToAST } from '../utils/script.js';
 
-export function parsers(ast) {
+export function parsers(ast, options) {
   visit(ast, {
     Script: node => {
       const children = node.children[0];
       if (!isEmpty(children)) {
+        children.content = javaScriptClearEnv(children.content, options.generate);
         node.content = javaScriptToAST(children.content);
         node.children = [];
       }
