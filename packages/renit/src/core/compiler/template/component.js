@@ -67,6 +67,8 @@ export class Component {
     this.context = false;
     /** @type {boolean} Has inside component */
     this.insideComponent = false;
+    /** @type {boolean} Has update identifier */
+    this.hasUpdate = false;
   }
 
   /**
@@ -225,7 +227,7 @@ export class Component {
     const ssr = this.ssr;
 
     if (!ssr) {
-      if (Interface.has.updated) {
+      if (Interface.has.updated || this.hasUpdate) {
         src.add(`const $u = $.update();\n`);
       } else if (Interface.has.props || Interface.has.spots || Interface.has.computed) {
         src.add(`$.update();\n`);

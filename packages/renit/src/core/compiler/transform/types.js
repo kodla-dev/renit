@@ -6,17 +6,14 @@ import { visit } from '../../../libraries/to/index.js';
 import { HTMLElements, NITElements, SVGElements } from '../utils/constant.js';
 import { setNodeParam } from '../utils/index.js';
 import {
-  hasCSR,
   hasPrefix,
-  hasSSR,
   hasSuffix,
-  isCSR,
+  hasTop,
   isFragmentComponent,
   isPrefixAction,
   isPrefixBind,
   isPrefixEvent,
   isPrefixRef,
-  isSSR,
 } from '../utils/node.js';
 
 /**
@@ -30,11 +27,7 @@ export function types(ast) {
 
       // Handle script and style elements
       if (name == 'script') {
-        if (hasSSR(node)) {
-          setNodeParam(node, 'generate', 'ssr');
-        } else if (hasCSR(node)) {
-          setNodeParam(node, 'generate', 'csr');
-        }
+        if (hasTop(node)) return (node.type = 'TopScript');
         return (node.type = 'Script');
       }
       if (name == 'style') return (node.type = 'Style');
@@ -64,12 +57,6 @@ export function types(ast) {
           } else {
             if (attribute.name == '#') attribute.type = 'RefAttribute';
             if (attribute.name == '*') attribute.type = 'ActionAttribute';
-          }
-
-          if (isSSR(attribute)) {
-            setNodeParam(node, 'generate', 'ssr');
-          } else if (isCSR(attribute)) {
-            setNodeParam(node, 'generate', 'csr');
           }
         }
 

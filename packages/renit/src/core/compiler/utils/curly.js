@@ -52,6 +52,8 @@ export function parseCurlyBraces(input, type) {
       let staticText = false;
       let literalsTag = '=';
       let literalsText = false;
+      let dynamicTag = '*';
+      let dynamicText = false;
 
       if (content.startsWith(htmlTag)) {
         content = content.replace(htmlTag, RAW_EMPTY);
@@ -71,6 +73,12 @@ export function parseCurlyBraces(input, type) {
         literalsText = true;
       }
 
+      if (content.startsWith(dynamicTag)) {
+        content = content.replace(dynamicTag, RAW_EMPTY);
+        segment = segment.replace(dynamicTag, RAW_EMPTY);
+        dynamicText = true;
+      }
+
       const expression = javaScriptToAST(segment).body[0].body[0].expression;
       const dependencies = findDependencies(expression, content);
       push(
@@ -82,6 +90,7 @@ export function parseCurlyBraces(input, type) {
           html,
           literals: literalsText,
           static: staticText,
+          dynamic: dynamicText,
         },
         values
       );

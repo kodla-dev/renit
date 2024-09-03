@@ -623,6 +623,16 @@ export function hasCSR(node) {
 }
 
 /**
+ * Checks if a given node has an `top` attribute.
+ *
+ * @param {Object} node - The node to check.
+ * @returns {boolean} - Returns `true` if the node has an `ssr` attribute, otherwise `false`.
+ */
+export function hasTop(node) {
+  return hasAttributes(node) && some(attribute => attribute.name == 'top', node.attributes);
+}
+
+/**
  * Retrieves the expressions from a given node.
  * @param {Object} node - The node from which to retrieve expressions.
  * @returns {Array} - An array of expressions from the node.

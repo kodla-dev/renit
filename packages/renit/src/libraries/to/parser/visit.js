@@ -294,6 +294,9 @@ const visitors = {
   Script: (node, visitor) => {
     handle(node, visitor);
   },
+  TopScript: (node, visitor) => {
+    handle(node, visitor);
+  },
   Style: (node, visitor) => {
     handle(node, visitor);
   },

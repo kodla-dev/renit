@@ -7,6 +7,9 @@ export default {
    * Processes a script node, extracting imports and exports, and adding script content to a figure.
    */
   Script({ node, template, component, figure, options }) {
+    // if has update identifier
+    if (node.hasUpdate) component.hasUpdate = true;
+
     // Extract JavaScript content from the script node.
     const extract = extractJavaScript(node.content);
 
@@ -28,5 +31,8 @@ export default {
         figure.addSpot(new ScriptSpot(extract.others, options));
       }
     }
+  },
+  TopScript({ node, template }) {
+    template.topScriptStatement = node.content;
   },
 };

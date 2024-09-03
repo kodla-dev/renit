@@ -22,6 +22,7 @@ export class TextSpot {
     this.reference = node.reference;
     this.content = node.content;
     this.dependencies = node.dependencies;
+    this.dynamic = node.dynamic;
     this.html = node.html;
     this.parameters = [];
     this.fn = RAW_EMPTY;
@@ -48,7 +49,7 @@ export class TextSpot {
    * @returns {string} - The generated arguments for the text spot function.
    */
   generateCSRArguments(component) {
-    let { reference, content, dependencies, parameters, html, fn } = this;
+    let { reference, content, dynamic, dependencies, parameters, html, fn } = this;
     const hasDependencies = !isEmpty(dependencies);
     let isLambda = false;
     let needDependencies = false;
@@ -63,6 +64,8 @@ export class TextSpot {
     } else {
       isLambda = checkDependencies(content, component.updatedDependencies);
     }
+
+    if (dynamic) isLambda = true;
 
     // Add the content to the arguments as a lambda function.
     push($lambda(isLambda, content), parameters);

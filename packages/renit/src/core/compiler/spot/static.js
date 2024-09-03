@@ -3,6 +3,7 @@ import { RAW_EMPTY, RAW_WHITESPACE } from '../../define.js';
 import { $el, $escape, $ltr, $var, adaptDefine } from '../utils/index.js';
 import {
   isClassAttribute,
+  isClassOrIdAttribute,
   isCurlyBracesAttribute,
   isCurlyBracesText,
   isElementNode,
@@ -51,9 +52,16 @@ export class StaticSpot {
     } else if (type == 'element') {
       each(value => {
         if (isStringAttribute(value)) {
-          if (isClassAttribute(node)) {
-            // Update style name if the attribute is a class attribute
-            content += updateStyleAttribute(value.content, component.changedStyles);
+          if (isClassOrIdAttribute(node)) {
+            let type = 'id';
+            if (isClassAttribute(node)) type = 'class';
+            // Update style name if the attribute is a id or class attribute
+            content += updateStyleAttribute(
+              value.content,
+              type,
+              component.changedStyles,
+              component.options.component
+            );
           } else {
             content += value.content;
           }

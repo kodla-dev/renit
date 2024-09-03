@@ -1,4 +1,5 @@
 import { each, push } from '../../../libraries/collect/index.js';
+import { isEmpty } from '../../../libraries/is/index.js';
 import { createSource } from '../source.js';
 import { generateJavaScript } from '../utils/script.js';
 
@@ -16,6 +17,8 @@ export class Template {
     this.sourceJs = {};
     /** @type {Object} The source CSS object */
     this.sourceCss = {};
+    /** @type {Object} Top script statements */
+    this.topScriptStatement = {};
   }
 
   /**
@@ -32,7 +35,10 @@ export class Template {
     this.generateRuntime();
 
     // Generate import statements
-    this.generateimports();
+    this.generateImports();
+
+    // Generate top script statement
+    this.generateTopScript();
 
     // Generate components
     this.generateComponents();
@@ -54,10 +60,19 @@ export class Template {
   /**
    * Generates the import statements from the importStatements array.
    */
-  generateimports() {
+  generateImports() {
     each(importStatement => {
       this.sourceJs.add(generateJavaScript(importStatement));
     }, this.importStatements);
+  }
+
+  /**
+   * Generates the top script statements from the topScriptStatement object.
+   */
+  generateTopScript() {
+    if (!isEmpty(this.topScriptStatement)) {
+      this.sourceJs.add(generateJavaScript(this.topScriptStatement));
+    }
   }
 
   /**

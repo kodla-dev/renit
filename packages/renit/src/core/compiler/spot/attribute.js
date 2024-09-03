@@ -36,6 +36,7 @@ export class AttributeSpot {
     this.parameters = [];
     this.onlyOne = false;
     this.fn = RAW_EMPTY;
+    this.dynamic = false;
   }
 
   /**
@@ -83,13 +84,16 @@ export class AttributeSpot {
         } else {
           push(value.dependencies, 1, this.dependencies);
         }
+        if (value.dynamic) this.dynamic = true;
       } else {
         each(value => {
           if (isStringAttribute(value)) {
+            const trimVal = value.content.trim();
+            if (!trimVal.length) return;
             if (ssr) {
-              push($str(value.content.trim()), contents);
+              push($str(trimVal), contents);
             } else {
-              push(value.content.trim(), contents);
+              push(trimVal, contents);
             }
           } else if (isCurlyBracesAttribute(value)) {
             if (!isIdentifier(value.expression) && isStyleAttribute(name)) {
@@ -110,6 +114,7 @@ export class AttributeSpot {
             } else {
               push(value.dependencies, 1, this.dependencies);
             }
+            if (value.dynamic) this.dynamic = true;
           }
         }, values);
       }
@@ -131,7 +136,7 @@ export class AttributeSpot {
    * Generates the arguments for the attribute code.
    */
   generateCSRArguments(component) {
-    let { reference, content, define, dependencies, parameters, onlyOne, fn } = this;
+    let { reference, content, dynamic, define, dependencies, parameters, onlyOne, fn } = this;
     const hasDependencies = !isEmpty(dependencies);
     let isLambda = false;
     let needDependencies = false;
@@ -145,6 +150,8 @@ export class AttributeSpot {
     } else {
       isLambda = checkDependencies(content, component.updatedDependencies);
     }
+
+    if (dynamic) isLambda = true;
 
     push($lambda(isLambda, content), parameters);
 
