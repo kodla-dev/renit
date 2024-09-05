@@ -19,8 +19,8 @@ export default {
 
     // Check if node has parameters and extract the fragment if present
     if (node.params) {
-      if (node.params.fragment) {
-        fragment = node.params.fragment;
+      if (node.params.name) {
+        fragment = node.params.name;
       }
     }
 

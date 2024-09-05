@@ -10,16 +10,16 @@ import { append, fire } from './utils.js';
  * @returns {Function} A function that takes options and returns the component.
  */
 export function component(init) {
-  return (options = {}) => {
-    setContext(options.context || {}); // Set the component context
+  return (option = {}) => {
+    setContext(option.context || {}); // Set the component context
     let prev = current; // Preserve the previous component state
     let prevCD = share.cd; // Preserve the previous context data
-    let component = { options };
+    let component = { option };
     setCurrent(component); // Set the current component
     share.cd = null; // Clear shared context data
 
     try {
-      component.dom = init(options); // Initialize component DOM
+      component.dom = init(option); // Initialize component DOM
     } finally {
       setCurrent(prev); // Restore the previous component state
       share.cd = prevCD; // Restore the previous context data
@@ -69,7 +69,7 @@ export function call(node, component, context, option = {}) {
  * @param {Function} [ch] - Optional callback for change handling.
  * @returns {Object} The initialized component.
  */
-export function dyn(node, component, context, option = {}, props, ch) {
+export function callDyn(node, component, context, option = {}, props, ch) {
   let c, pw;
 
   if (props) {

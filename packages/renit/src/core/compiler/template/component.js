@@ -65,6 +65,8 @@ export class Component {
     this.default = false;
     /** @type {boolean} Need context */
     this.context = false;
+    /** @type {boolean} Need current */
+    this.current = false;
     /** @type {boolean} Has inside component */
     this.insideComponent = false;
     /** @type {boolean} Has update identifier */
@@ -234,6 +236,7 @@ export class Component {
       }
     }
 
+    if (this.current) src.add(`const $current = $.current;\n`);
     if (this.context) src.add(`const $context = $.context;\n`);
 
     if (Interface.has.props) src.add(Interface.raw.props);

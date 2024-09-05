@@ -6,10 +6,10 @@ import { visit } from '../../../libraries/to/index.js';
 import { HTMLElements, NITElements, SVGElements } from '../utils/constant.js';
 import { setNodeParam } from '../utils/index.js';
 import {
+  hasAtName,
   hasPrefix,
   hasSuffix,
   hasTop,
-  isFragmentComponent,
   isPrefixAction,
   isPrefixBind,
   isPrefixEvent,
@@ -40,9 +40,9 @@ export function types(ast) {
           const attribute = node.attributes[i];
 
           // Handle fragment components
-          if (isFragmentComponent(attribute)) {
+          if (hasAtName(attribute)) {
             node.type = 'Fragment';
-            setNodeParam(node, 'fragment', attribute.value);
+            setNodeParam(node, 'name', attribute.value);
             push(i, removed);
           }
 
@@ -71,6 +71,8 @@ export function types(ast) {
       // Handle HTML, SVG and NIT elements
       if (has(name, HTMLElements) || has(name, SVGElements)) return;
       if (has(name, NITElements)) return (node.type = ucfirst(name) + 'Block');
+
+      if (name.startsWith('slot:')) return (node.type = 'SlotContent');
 
       // Default to Component type
       return (node.type = 'Component');

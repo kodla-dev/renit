@@ -1,5 +1,6 @@
 import { each, filter, push, remove, some } from '../../../libraries/collect/index.js';
 import { isEmpty, isUndefined } from '../../../libraries/is/index.js';
+import { length } from '../../../libraries/math/index.js';
 import { RAW_WHITESPACE, RGX_WHITESPACE } from '../../define.js';
 
 /**
@@ -93,14 +94,11 @@ export function hasInline(node) {
 }
 
 /**
- * Checks if the given node is a fragment component.
- *
- * A fragment component is identified by having a prefix of '@' and a name of 'name'.
- *
- * @param {object} node The node to check.
- * @returns {boolean} True if the node is a fragment component, otherwise false.
+ * Checks if a given node has a prefix and if it matches '@name'.
+ * @param {Object} node - The node object to be checked.
+ * @returns {boolean} True if the node has a prefix of '@' and a name of 'name', otherwise false.
  */
-export function isFragmentComponent(node) {
+export function hasAtName(node) {
   return hasPrefix(node) && node.prefix == '@' && node.name == 'name';
 }
 
@@ -129,6 +127,15 @@ export function isMemberExpression(node) {
  */
 export function isExpressionStatement(node) {
   return node.type == 'ExpressionStatement';
+}
+
+/**
+ * Checks if a node is a UpdateExpression.
+ * @param {Object} node - The node to check.
+ * @returns {boolean} - Returns true if the node is a UpdateExpression, otherwise false.
+ */
+export function isUpdateExpression(node) {
+  return node.type == 'UpdateExpression';
 }
 
 /**
@@ -711,4 +718,37 @@ export function nodeChildrenTrim(node) {
 
   // Filter out null or undefined nodes from the children array
   node.children = filter(node.children);
+}
+
+/**
+ * Trims whitespace from the start and end of an SSR block.
+ * If the block has more than one element, trims the last and first elements.
+ * Recursively removes empty or whitespace-only elements at the end of the block.
+ * @param {Array<string>} block - The SSR block to be trimmed.
+ * @returns {Array<string>} The trimmed SSR block.
+ */
+export function ssrBlockTrim(block) {
+  const len = length(block);
+
+  // If the block has more than one element, process trimming.
+  if (len > 1) {
+    const _1 = len - 1;
+
+    // If the last element is empty or only whitespace, remove it and recursively trim.
+    if (isEmpty(block[_1]) || RGX_WHITESPACE.test(block[_1])) {
+      block.pop();
+      block = ssrBlockTrim(block);
+    } else {
+      // Trim the end of the last element and the start of the first element.
+      block[_1] = block[_1].trimEnd();
+      block[0] = block[0].trimStart();
+    }
+  } else {
+    // If the block has only one element, trim it entirely.
+    block[0] = block[0].trim();
+    if (isEmpty(block[0]) || RGX_WHITESPACE.test(block[0])) {
+      block.pop();
+    }
+  }
+  return block;
 }

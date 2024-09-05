@@ -18,6 +18,11 @@ export default {
     if (ssr) figure.startBlock();
     const componentFigure = new ComponentSpot(node, ssr);
     map(child => compile(child, component, componentFigure), node.children);
+    const bootstrap = componentFigure.bootstrap();
+    if (bootstrap.hasLocalProps) {
+      component.hasUpdate = true;
+      component.addUpdatedDependencies(bootstrap.localProps);
+    }
     figure.addSpot(componentFigure);
     if (ssr) figure.endBlock();
   },

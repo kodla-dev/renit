@@ -270,6 +270,14 @@ const visitors = {
     handle(node, visitor);
     handleElement(node, visitor);
   },
+  SlotBlock: (node, visitor) => {
+    handle(node, visitor);
+    handleElement(node, visitor);
+  },
+  SlotContent: (node, visitor) => {
+    handle(node, visitor);
+    handleElement(node, visitor);
+  },
   Text: (node, visitor) => {
     handle(node, visitor);
   },

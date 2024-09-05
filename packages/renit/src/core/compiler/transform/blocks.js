@@ -3,7 +3,7 @@ import { isEmpty } from '../../../libraries/is/index.js';
 import { size } from '../../../libraries/math/index.js';
 import { sub } from '../../../libraries/string/index.js';
 import { visit } from '../../../libraries/to/index.js';
-import { RAW_WHITESPACE } from '../../define.js';
+import { RAW_EMPTY, RAW_WHITESPACE } from '../../define.js';
 import { getContentCurlyBraces } from '../utils/curly.js';
 import {
   findDependencies,
@@ -26,6 +26,14 @@ export function blocks(ast) {
     },
     ForBlock: node => {
       fixBlock(node, true);
+    },
+    SlotBlock: node => {
+      if (node.params && node.params.name) node.name = node.params.name;
+      else node.name = 'default';
+    },
+    SlotContent: node => {
+      node.name = node.name.replace('slot:', RAW_EMPTY);
+      if (!node.name) node.name = 'default';
     },
   });
 }

@@ -27,6 +27,7 @@ import {
   getExpressions,
   isArrowFunctionExpression,
   isAssignmentExpression,
+  isBlockStatement,
   isCallExpression,
   isDollarSign,
   isExportNamedDeclaration,
@@ -244,6 +245,48 @@ export function checkDependencies(content, dependencies) {
     }
     return false;
   }, dependencies);
+}
+
+/**
+ * Checks if a given identifier name is present within functions in the AST.
+ * @param {string} name - The identifier name to look for.
+ * @param {Object} ast - The AST to search within.
+ * @returns {boolean} True if the identifier is found within any function, otherwise false.
+ */
+export function checkUpdateInFunction(name, ast) {
+  let update = false;
+  visitFull(ast, node => {
+    if (has('Function', node.type)) {
+      visitCondition(
+        node,
+        {
+          Identifier(node) {
+            if (node.name == name) update = true;
+          },
+        },
+        node => {
+          if (has('Function', node.type)) return true;
+          if (isBlockStatement(node)) return true;
+          if (has('Expression', node.type)) return true;
+          if (node.type == 'Property') return true;
+          if (isIdentifier(node)) return true;
+          return false;
+        },
+        [
+          'body',
+          'expression',
+          'callee',
+          'left',
+          'object',
+          'argument',
+          'arguments',
+          'value',
+          'properties',
+        ]
+      );
+    }
+  });
+  return update;
 }
 
 /**

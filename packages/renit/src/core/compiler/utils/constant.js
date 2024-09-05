@@ -46,7 +46,7 @@ export const SVGElements = [
  *
  * @type {string[]}
  */
-export const NITElements = ['if', 'elseif', 'else', 'for'];
+export const NITElements = ['if', 'elseif', 'else', 'for', 'slot'];
 
 /**
  * Constant representing the string '$event'.

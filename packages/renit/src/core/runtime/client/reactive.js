@@ -49,6 +49,16 @@ export function removeCD(cd) {
 }
 
 /**
+ * Traverses up the parent chain of a given cd to find and return the root component.
+ * @param {Object} cd - The ChangeDetector to traverse.
+ * @returns {Object} The root component of the given ChangeDetector.
+ */
+export function componentCD(cd) {
+  while (cd.parent) cd = cd.parent;
+  return cd.component;
+}
+
+/**
  * Creates a Computed object to manage computed functions and their dependencies.
  *
  * @param {Function} computed - The computed function to manage.
