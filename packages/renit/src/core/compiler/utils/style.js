@@ -2,14 +2,12 @@ import { Features, composeVisitors, transform } from 'lightningcss';
 import { clone } from '../../../helpers/index.js';
 import {
   each,
-  filter,
   flat,
   includes,
   join,
   map,
   prepend,
   push,
-  remove,
   split,
 } from '../../../libraries/collect/index.js';
 import { isArray, isEqual, isString } from '../../../libraries/is/index.js';
@@ -542,11 +540,19 @@ export function prepareStyle(content, options) {
           let type;
           let name;
 
-          if (isStatic) {
-            name = RAW_EMPTY;
+          if (isStatic || isGlobal) {
             type = node.arguments[0].value.value == '.' ? 'class' : 'id';
-            node.arguments = filter(remove(0, node.arguments));
-            each(argument => (name += argument.value.value), node.arguments);
+            name = node.arguments[1].value.value;
+            if (isGlobal) {
+              const newName = options.css.pattern({
+                name: type + name,
+                min: options.css.hash.min,
+                max: options.css.hash.max,
+                component: options.component,
+              });
+              push({ type, old: name, new: newName }, global.styles);
+              name = newName;
+            }
             selector[index] = { type, name };
             return;
           }
@@ -554,7 +560,6 @@ export function prepareStyle(content, options) {
           const oldName = node.name;
           let newName = oldName;
 
-          let collection = isGlobal ? global.styles : changedStyles;
           type = node.type == 'class' ? 'class' : 'id';
 
           // Find if there's a change in the current scope or globally
