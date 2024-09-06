@@ -53,10 +53,14 @@ export class ModifierSpot {
     }
 
     let dependent = [];
-
     each(suffix => {
-      const name = updateStyleAttribute(suffix.name, component.changedStyles);
-      push(name, dependent);
+      const newName = updateStyleAttribute(
+        suffix.name,
+        name,
+        component.changedStyles,
+        component.options.component
+      );
+      push(newName, dependent);
     }, this.suffix);
 
     if (size(dependent) == 1) {
