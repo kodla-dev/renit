@@ -3,6 +3,7 @@ import { isArray, isEmpty } from '../../../libraries/is/index.js';
 import { size } from '../../../libraries/math/index.js';
 import { RAW_COMMA, RAW_EMPTY } from '../../define.js';
 import { $el, $lambda, $str, adaptDefine } from '../utils/index.js';
+import { isIdentifier } from '../utils/node.js';
 import { checkDependencies } from '../utils/script.js';
 import { updateStyleAttribute } from '../utils/style.js';
 
@@ -19,6 +20,7 @@ export class ModifierSpot {
     this.dependencies = isArray(this.values) ? this.values[0].dependencies : [];
     this.multiple = false;
     this.fn = RAW_EMPTY;
+    this.needBrackets = false;
   }
 
   generate(component) {
@@ -36,6 +38,7 @@ export class ModifierSpot {
     if (isArray(values)) {
       const value = values[0];
       content = value.content.trim();
+      if (!isIdentifier(value.expression)) this.needBrackets = true;
       if (isEmpty(value.dependencies)) {
         if (has(content, component.updatedDependencies)) {
           push(content, this.dependencies);
@@ -70,13 +73,23 @@ export class ModifierSpot {
       this.multiple = true;
     }
 
-    this.content = '!!' + content;
+    this.content = content;
     this.dependent = dependent;
     this.dependencies = unique(this.dependencies);
   }
 
   generateArguments(component) {
-    let { reference, content, define, dependent, dependencies, parameters, fn, multiple } = this;
+    let {
+      reference,
+      content,
+      define,
+      dependent,
+      dependencies,
+      parameters,
+      fn,
+      multiple,
+      needBrackets,
+    } = this;
     const hasDependencies = !isEmpty(dependencies);
     let isLambda = false;
 
@@ -89,6 +102,9 @@ export class ModifierSpot {
     } else {
       isLambda = checkDependencies(content, component.updatedDependencies);
     }
+
+    if (needBrackets) content = `!!(${content})`;
+    else content = `!!${content}`;
 
     push($lambda(isLambda, content), parameters);
 
