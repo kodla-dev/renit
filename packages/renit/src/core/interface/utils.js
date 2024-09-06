@@ -298,7 +298,7 @@ export function VitePluginRenit(options) {
           if (result.css) {
             let name = templateName;
             if (content[name] && content[name].code === result.css) {
-              results.code += `\nimport "${content[name].name}";\n`;
+              results.code = `\nimport "${content[name].name}";\n` + results.code;
             } else {
               const c = {
                 name: name + '_' + generateId() + '.css',
@@ -306,7 +306,7 @@ export function VitePluginRenit(options) {
               };
               content[name] = c;
               cache[c.name] = content[name];
-              results.code += `\nimport "${c.name}";\n`;
+              results.code = `\nimport "${c.name}";\n` + results.code;
             }
           }
 
