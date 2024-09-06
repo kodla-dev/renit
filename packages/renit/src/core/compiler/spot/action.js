@@ -1,6 +1,9 @@
-import { join, push } from '../../../libraries/collect/index.js';
+import { has, join, push } from '../../../libraries/collect/index.js';
 import { RAW_COMMA } from '../../define.js';
+import { createSource } from '../source.js';
+import { $element } from '../utils/constant.js';
 import { $el, $lamb } from '../utils/index.js';
+import { javaScriptSyntaxCorrection } from '../utils/script.js';
 
 export class ActionSpot {
   constructor(parent, node) {
@@ -12,8 +15,19 @@ export class ActionSpot {
 
   generate() {
     this.init();
-    const args = this.generateArguments();
-    return `$.Action(${args});`;
+
+    let { name, value, reference } = this;
+    if (name == '*') {
+      const src = createSource();
+      src.add(`$.tick(() => {\n`);
+      if (has($element, value)) value = value.replace($element, reference);
+      src.add(javaScriptSyntaxCorrection(value));
+      src.add(`});`);
+      return src.toString();
+    } else {
+      const args = this.generateArguments();
+      return `$.Action(${args});`;
+    }
   }
 
   init() {
