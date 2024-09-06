@@ -629,15 +629,14 @@ export function prepareScript(ast, dependencies, functionDependencies, changedSt
    */
   function updateNode(astNode, force) {
     let dependencyAdded = false;
+    let top = false;
 
     if (!force) {
-      let hasReturn = false;
       visitFull(astNode, {
-        ReturnStatement() {
-          hasReturn = true;
+        ReturnStatement(node) {
+          top = true;
         },
       });
-      if (hasReturn) return;
     }
 
     let block = false;
@@ -663,8 +662,13 @@ export function prepareScript(ast, dependencies, functionDependencies, changedSt
               if (has(dependency, dependencies)) {
                 push(dependency, updatedDependencies);
                 if (!dependencyAdded) {
-                  const lastNode = block ? last(astNode.body.body) : astNode.body;
-                  push({ loc: lastNode, block }, injectedNodes);
+                  if (top) {
+                    const firstNode = block ? astNode.body.body[0] : astNode.body;
+                    push({ loc: firstNode, block, start: true }, injectedNodes);
+                  } else {
+                    const lastNode = block ? last(astNode.body.body) : astNode.body;
+                    push({ loc: lastNode, block }, injectedNodes);
+                  }
                   dependencyAdded = true;
                 }
               }
@@ -676,8 +680,14 @@ export function prepareScript(ast, dependencies, functionDependencies, changedSt
           if (has(name, dependencies)) {
             push(name, updatedDependencies);
             if (!dependencyAdded) {
-              const lastNode = block ? last(astNode.body.body) : astNode.body;
-              push({ loc: lastNode, block }, injectedNodes);
+              if (top) {
+                const firstNode = block ? astNode.body.body[0] : astNode.body;
+                push({ loc: firstNode, block, start: true }, injectedNodes);
+              } else {
+                const lastNode = block ? last(astNode.body.body) : astNode.body;
+                push({ loc: lastNode, block }, injectedNodes);
+              }
+
               dependencyAdded = true;
             }
           } else {
@@ -686,8 +696,14 @@ export function prepareScript(ast, dependencies, functionDependencies, changedSt
               if (dep.startsWith(name + '[') || dep.startsWith(name + '.')) {
                 push(dep, updatedDependencies);
                 if (!dependencyAdded) {
-                  const lastNode = block ? last(astNode.body.body) : astNode.body;
-                  push({ loc: lastNode, block }, injectedNodes);
+                  if (top) {
+                    const firstNode = block ? astNode.body.body[0] : astNode.body;
+                    push({ loc: firstNode, block, start: true }, injectedNodes);
+                  } else {
+                    const lastNode = block ? last(astNode.body.body) : astNode.body;
+                    push({ loc: lastNode, block }, injectedNodes);
+                  }
+
                   dependencyAdded = true;
                 }
               }
