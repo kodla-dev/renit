@@ -73,7 +73,7 @@ function ssr(routes) {
     const ctx = await router.run(URL);
 
     const component = ctx.component();
-    const results = component.options.results;
+    const results = component.option.results;
     const dom = component.dom;
 
     let head = RAW_EMPTY;

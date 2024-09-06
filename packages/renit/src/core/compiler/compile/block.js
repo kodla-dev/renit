@@ -73,9 +73,10 @@ export default {
   SlotBlock({ node, component, figure, compile, options }) {
     const ssr = isSSR(options);
 
+    component.context = true;
+    component.current = true;
+
     if (!ssr) {
-      component.context = true;
-      component.current = true;
       node.reference = figure.addReference();
       figure.appendBlock(DOM_TEXT_SELECTOR);
 

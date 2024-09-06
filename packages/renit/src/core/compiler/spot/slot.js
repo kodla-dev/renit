@@ -35,7 +35,8 @@ export class SlotSpot {
     this.init(component);
 
     if (this.ssr) {
-      return this.generateSSR(component);
+      const args = this.generateSSRArguments(component);
+      return `$parent = $.ssrSlot(${args});`;
     } else {
       const args = this.generateCSRArguments(component);
       return `$.${this.fn}(${args});`;
@@ -87,9 +88,7 @@ export class SlotSpot {
     }
 
     this.reference = $el(reference);
-    if (!ssr) {
-      this.name = name == 'default' ? 'null' : $str(name);
-    }
+    this.name = name == 'default' ? 'null' : $str(name);
   }
 
   generateCSRArguments(component) {
@@ -156,20 +155,24 @@ export class SlotSpot {
     return `$.makeBlock(${join(RAW_COMMA, parameters)})`;
   }
 
-  generateSSR(component) {
+  generateSSRArguments(component) {
     let { name, block, spots, own, raw } = this;
-    const src = createSource();
-    src.add(`if ($option?.slots.${name}) {\n`);
-    let props = RAW_EMPTY;
-    if (own.props) props = raw.props;
-    src.add(`$parent += $option.slots.${name}(${props});\n`);
-    src.add('}');
+    const parameters = [];
+    push('$parent', parameters);
+    push(name, parameters);
+    push('$current', parameters);
+    push('$context', parameters);
+
+    if (own.props) {
+      push(raw.props, parameters);
+    }
 
     if (own.block) {
       block = ssrBlockTrim(block);
-
       if (!isEmpty(block)) {
-        src.add(' else {\n');
+        const src = createSource();
+        src.add('() => {\n');
+        src.add(`let $parent = '';\n`);
         src.add(`$parent += ${$ltr(block[0])};\n`);
         if (!isEmpty(spots)) {
           each(spot => {
@@ -179,11 +182,17 @@ export class SlotSpot {
             }
           }, spots);
         }
+        src.add(`return $parent;\n`);
         src.add('}');
+
+        if (!own.props) {
+          push('null', parameters);
+        }
+        push(src.toString(), parameters);
       }
     }
 
-    return src.toString();
+    return join(RAW_COMMA, parameters);
   }
 
   appendBlock(block) {

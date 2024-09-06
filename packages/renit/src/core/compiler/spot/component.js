@@ -72,7 +72,15 @@ export class ComponentSpot {
     let isLambda = false;
     reference = $el(reference);
     own.attributes = !isEmpty(attributes);
-    own.blocks = !isEmpty(this.blocks) || !isEmpty(filter(this.block));
+    own.blocks = !isEmpty(this.blocks);
+
+    if (!own.blocks) {
+      if (ssr) {
+        own.blocks = !isEmpty(filter(this.block));
+      } else {
+        own.blocks = !isEmpty(this.block);
+      }
+    }
 
     const props = [];
 
@@ -269,15 +277,22 @@ export class ComponentSpot {
     block = ssrBlockTrim(block);
     if (isEmpty(block)) return false;
 
-    let localProps = RAW_EMPTY;
+    const param = ['$context'];
+
+    let localProps = false;
     if (!isEmpty(content.attributes)) {
       const namesMap = map(attribute => attribute.name, content.attributes);
       localProps = `{${join(RAW_COMMA, namesMap)}}`;
+      push('$localProps', param);
     }
 
-    src.add(`(${localProps}) => {\n`);
-    src.add(`let $parent = '';\n`);
+    src.add(`(${join(RAW_COMMA, param)}) => {\n`);
 
+    if (localProps) {
+      src.add(`let ${localProps} = $localProps || ({});\n`);
+    }
+
+    src.add(`let $parent = '';\n`);
     src.add(`$parent += ${$ltr(block[0])};\n`);
     if (!isEmpty(spots)) {
       each(spot => {

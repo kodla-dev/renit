@@ -9,17 +9,17 @@ import { collectCss } from './utils.js';
  * @returns {Function} A function that takes options and returns the component.
  */
 export function ssrComponent(init) {
-  return (options = {}) => {
-    options.results = {
+  return (option = {}) => {
+    option.results = {
       css: collectCss,
     };
-    setContext(options.context || {}); // Set the component context
+    setContext(option.context || {}); // Set the component context
     let prev = current; // Preserve the previous component state
-    let component = { options };
+    let component = { option };
     setCurrent(component); // Set the current component
 
     try {
-      component.dom = init(options); // Initialize component DOM
+      component.dom = init(option); // Initialize component DOM
     } finally {
       setCurrent(prev); // Restore the previous component state
       setContext(null); // Clear the context

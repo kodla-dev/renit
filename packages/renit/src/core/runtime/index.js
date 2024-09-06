@@ -15,6 +15,7 @@ export { makeSlot, slot, slotDyn } from './client/slot.js';
 export { attribute, event, html, modifier, modifiers, rootEvent, text } from './client/static.js';
 export { compare, forKey, noop, reference } from './client/utils.js';
 export { ssrCall, ssrComponent } from './server/component.js';
+export { ssrSlot } from './server/slot.js';
 export { ssrAttribute, ssrBindAttribute } from './server/static.js';
 export { escape } from './server/utils.js';
 export { context, current, onMount, tick, unMount } from './share.js';

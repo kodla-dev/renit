@@ -33,7 +33,13 @@ export function slotDyn(container, name, component, context, props, placeholder,
   let block;
   if (slot) {
     let push;
-    let w = new Watch(props, value => push(value), props);
+    let w = new Watch(
+      props,
+      value => {
+        if (push) push(value);
+      },
+      props
+    );
     Object.assign(w, { v: {}, ch, idle: true });
     fire(w);
     block = slot(component, context, w.v);
