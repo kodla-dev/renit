@@ -20,6 +20,7 @@ export class IfSpot {
     this.own = {
       blocks: false,
       elseif: false,
+      else: false,
     };
   }
 
@@ -59,6 +60,7 @@ export class IfSpot {
             this.own.elseif = true;
             spot.type = 'ElseIfSpot';
           } else if (block instanceof ElseSpot) {
+            this.own.else = true;
             spot.type = 'ElseSpot';
           }
           if (ssr) {
@@ -131,7 +133,7 @@ export class IfSpot {
       counter++;
       between = true;
     } else {
-      src.add(`${value} ? 0 : null`);
+      src.add(`${value} ? 0 : ${own.else ? '1' : 'null'}`);
     }
 
     if (own.blocks) {
