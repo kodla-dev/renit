@@ -5,6 +5,7 @@ import { length, size } from '../../../libraries/math/index.js';
 import { DOM_TEXT_SELECTOR, RAW_COMMA, RAW_EMPTY } from '../../define.js';
 import { createSource } from '../source.js';
 import { $el, $lamb, $ltr } from '../utils/index.js';
+import { ssrBlockTrim } from '../utils/node.js';
 import { BlockSpot } from './block.js';
 
 export class IfSpot {
@@ -228,6 +229,8 @@ export class IfSpot {
     } else if (content.type == 'ElseSpot') {
       src.add(`else {\n`);
     }
+
+    content.block = ssrBlockTrim(content.block);
 
     if (!isEmpty(content.block[0])) {
       src.add(`$parent += ${$ltr(content.block[0])};\n`);
