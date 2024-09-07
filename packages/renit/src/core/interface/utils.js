@@ -134,10 +134,6 @@ export async function defineOptions(args) {
       css: {
         pattern: options => generateStylePattern(options),
         compile: 'external',
-        hash: {
-          min: 1,
-          max: 6,
-        },
         colors: true,
         nesting: true,
         mediaQueries: false,
@@ -314,10 +310,7 @@ export function VitePluginRenit(options) {
         }
 
         if (/index.css/.test(id)) {
-          options.app.component = {
-            file: 'index.css',
-            name: 'default',
-          };
+          options.app.component = { file: '', name: '' };
           const cs = compilerStyle(code, options.app);
           if (cs.code.length) results.code = cs.code;
           return results;

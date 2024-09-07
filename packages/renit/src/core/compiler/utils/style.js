@@ -21,27 +21,21 @@ import { generateId } from './index.js';
 const styleHash = new uniqueStyleHash();
 
 /**
- * Generates a style hash based on the provided name, minimum, and maximum values.
+ * Generates a style hash based on the provided name.
  *
- * @param {Object} options - The options object containing name, min, and max values.
+ * @param {Object} options - The options object containing name.
  * @param {string} options.name - The name associated with the style.
- * @param {number} options.min - The minimum value to be used in generating the style.
- * @param {number} options.max - The maximum value to be used in generating the style.
  * @returns {string} - The generated style hash.
  */
-export function generateStylePattern({ component, name, min, max }) {
-  return generateStyleHash(min, max, component.file + component.name + name);
+export function generateStylePattern({ component, name }) {
+  return generateStyleHash(component.file + component.name + name);
 }
 
 /**
- * Generate a unique style hash with specified minimum and maximum lengths.
- * @param {number} min - The minimum length of the hash.
- * @param {number} max - The maximum length of the hash.
+ * Generate a unique style hash
  * @returns {string} The generated style hash.
  */
-export function generateStyleHash(min, max, name) {
-  styleHash.setMin(min);
-  styleHash.setMax(max);
+export function generateStyleHash(name) {
   if (!name) name = generateId();
   return styleHash.create(name);
 }
@@ -73,8 +67,6 @@ const cssModules = options => ({
           // Generate a new name using the provided pattern
           newName = options.css.pattern({
             name: hash + oldName,
-            min: options.css.hash.min,
-            max: options.css.hash.max,
             component: options.component,
           });
           push({ type, old: oldName, new: newName }, global.styles);
@@ -103,8 +95,6 @@ const cssVariablesModules = options => ({
         // Generate a new name for the custom property
         const newValue = options.css.pattern({
           name: value,
-          min: options.css.hash.min,
-          max: options.css.hash.max,
           component: options.component,
         });
         global.variables[value] = key + newValue;
@@ -551,8 +541,6 @@ export function prepareStyle(content, options) {
             if (isGlobal) {
               const newName = options.css.pattern({
                 name: type + name,
-                min: options.css.hash.min,
-                max: options.css.hash.max,
                 component: options.component,
               });
               push({ type, old: name, new: newName }, global.styles);
@@ -583,8 +571,6 @@ export function prepareStyle(content, options) {
             const hash = type == 'id' ? '#' : '.';
             newName = options.css.pattern({
               name: hash + node.name,
-              min: options.css.hash.min,
-              max: options.css.hash.max,
               component: options.component,
             });
 

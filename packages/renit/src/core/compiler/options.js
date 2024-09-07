@@ -12,12 +12,6 @@ const defaultOptions = {
     // Specifies how CSS should be compiled.
     compile: 'external', // injected - external
 
-    // Configuration for CSS hashing.
-    hash: {
-      min: 1, // Minimum length of the hash.
-      max: 6, // Maximum length of the hash.
-    },
-
     // Enables or disables CSS color support.
     colors: true,
 

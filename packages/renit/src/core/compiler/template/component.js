@@ -307,7 +307,7 @@ export class Component {
           const content = $ltr(`<style>${this.style}</style>`);
           src.add(`$parent += ${content};\n`);
         } else {
-          const hash = generateStyleHash(options.css.hash.min, options.css.hash.max);
+          const hash = generateStyleHash();
           src.add(`$.style('${hash}', \`${this.style}\`);\n`);
         }
       } else if (options.css.compile == 'external') {
