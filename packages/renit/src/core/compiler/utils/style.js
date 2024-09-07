@@ -113,17 +113,7 @@ const cssVariablesModules = options => ({
     }
 
     if (declaration.property === 'unparsed') {
-      each((value, index) => {
-        if (value.type == 'var') {
-          let name = value.value.name.ident;
-          if (includes(key, name)) {
-            if (global.variables[name]) {
-              // Update the name of the variable if it exists in global variables
-              declaration.value.value[index].value.name.ident = global.variables[name];
-            }
-          }
-        }
-      }, declaration.value.value);
+      declaration.value.value = changeVarIdent(declaration.value.value);
     }
 
     return declaration;
@@ -136,24 +126,39 @@ const cssVariablesModules = options => ({
  */
 const cssCheckVariablesModules = () => ({
   Declaration(declaration) {
-    const key = '--';
     if (declaration.property === 'unparsed') {
-      each((value, index) => {
-        if (value.type == 'var') {
-          let name = value.value.name.ident;
-          if (includes(key, name)) {
-            if (global.variables[name]) {
-              // Update the name of the variable if it exists in global variables
-              declaration.value.value[index].value.name.ident = global.variables[name];
-            }
-          }
-        }
-      }, declaration.value.value);
+      declaration.value.value = changeVarIdent(declaration.value.value);
     }
 
     return declaration;
   },
 });
+
+/**
+ * Updates variable identifiers in the collection, replacing them with global variables if they exist.
+ *
+ * @param {Array} collect - The collection of items to process.
+ * @returns {Array} - The updated collection.
+ */
+function changeVarIdent(collect) {
+  each((item, index) => {
+    if (item.type == 'var') {
+      let name = item.value.name.ident;
+      if (includes('--', name)) {
+        if (global.variables[name]) {
+          // Update the name of the variable if it exists in global variables
+          collect[index].value.name.ident = global.variables[name];
+        }
+      }
+    } else {
+      if (item.value?.arguments) {
+        item.value.arguments = changeVarIdent(item.value.arguments);
+      }
+    }
+  }, collect);
+
+  return collect;
+}
 
 /**
  * Configuration for custom at-rules used in CSS processing.
