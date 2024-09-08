@@ -77,21 +77,17 @@ function Computed(computed, dependency, value) {
  * @param {Function} computed - The computed function to add.
  * @param {...Function} dependencies - Optional dependencies for the computed function.
  */
-export function computed(computed, ...dependencies) {
-  const dependenciesLen = dependencies.length;
-
-  if (!dependenciesLen) {
+export function computed(computed, dependencies) {
+  if (!dependencies) {
     // If no dependencies are provided, add the computed function with no dependencies
     share.cd.computed.push(new Computed(computed));
   } else {
     // Add the computed function with each provided dependency
-    for (let i = 0; i < dependenciesLen; ++i) {
-      const dependency = dependencies[i];
-      share.cd.computed.push(new Computed(computed, dependency, dependency()));
-    }
+    const v = dependencies();
+    const c = new Computed(computed, dependencies, v);
+    if (isArray(v)) Object.assign(c, { ch: computedArray });
+    share.cd.computed.push(c);
   }
-
-  computed(); // Execute the computed function initially to set its initial value
 }
 
 /**
@@ -152,6 +148,18 @@ export function watchArray(watch, lists) {
 
   // Trigger the callback with the new value
   watch.cb(watch.v);
+}
+
+/**
+ * Updates the computed value if the array differs and calls the computed function.
+ *
+ * @param {Object} computed - The computed object.
+ * @param {Array} value - The new value to compare with the existing value.
+ * @returns {number} - Returns 0 if the arrays are equal.
+ */
+export function computedArray(computed, value) {
+  if (!compareArray(computed.v, value)) return 0;
+  computed.c(...(computed.v = value));
 }
 
 /**
@@ -222,9 +230,13 @@ function tracker(cd, flag) {
           // Track the current value of the dependency
           const value = computed.t();
           // If the value has changed, execute the computed function
-          if (computed.v != value) {
-            computed.c(); // Execute the computed function
-            computed.v = value; // Update the tracked value
+          if (computed.v !== value) {
+            if (computed.ch) {
+              computed.ch(computed, value);
+            } else {
+              computed.c(value); // Execute the computed function
+              computed.v = value; // Update the tracked value
+            }
           }
         } else {
           computed.c(); // Execute the computed function without tracking
@@ -242,7 +254,9 @@ function tracker(cd, flag) {
           if (watch.ch) {
             watch.ch(watch, value); // Execute the custom handler if defined
           } else {
-            watch.cb((watch.v = watch.c())); // Execute the callback with the new value
+            // Execute the callback with the new value
+            watch.cb(watch.c());
+            watch.v = value;
           }
           changes += flag[0];
         }
