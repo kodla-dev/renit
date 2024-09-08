@@ -11,6 +11,7 @@ import {
   isArrayLike,
   isAsync,
   isAsyncIterable,
+  isBoolean,
   isCollect,
   isEmpty,
   isEqual,
@@ -23,7 +24,7 @@ import {
   isString,
   isUndefined,
 } from '../is/index.js';
-import { size } from '../math/index.js';
+import { length, size } from '../math/index.js';
 import { toArray } from '../to/index.js';
 
 /**
@@ -115,22 +116,53 @@ export function diff(values, type, collect) {
  * Iterates over each element in a collection and applies a function.
  *
  * @param {Function} fn - The function to apply to each element.
- * @param {Array|Object|Promise} collect - The collection to iterate over.
+ * @param {boolean|Array|Object|Promise<Array|Object>} [stop=false] - A boolean to determine if the
+ * iteration should stop early, or the collection to iterate over. Can also be a promise that
+ * resolves to a collection.
+ * @param {Array|Object|Promise} collect - The collection to iterate over
+ * @returns {Promise<void>|void} - Returns a promise if any function or collection is async;
+ * otherwise, void..
  */
-export function each(fn, collect) {
-  if (isUndefined(collect)) return collect => each(fn, collect);
-  else if (isArray(collect)) {
-    loop(index => {
-      fn(collect[index], index);
-    }, collect);
+export function each(fn, stop, collect) {
+  if (isUndefined(collect)) {
+    if (isBoolean(stop)) return collect => each(fn, stop, collect);
+    return each(fn, false, stop);
+  }
+
+  if (isArray(collect)) {
+    return loop(
+      isAsync(fn)
+        ? async index => {
+            const result = await fn(collect[index], index);
+            return result;
+          }
+        : index => {
+            const result = fn(collect[index], index);
+            return result;
+          },
+      stop,
+      length(collect)
+    );
   } else if (isObject(collect)) {
     const object = keys(collect);
-    loop(index => {
-      const key = object[index];
-      const value = collect[key];
-      fn(key, value, index);
-    }, object);
-  } else if (isPromise(collect)) return collect.then(c => each(fn, c));
+    loop(
+      isAsync(fn)
+        ? async index => {
+            const key = object[index];
+            const value = collect[key];
+            const result = await fn(key, value, index);
+            return result;
+          }
+        : index => {
+            const key = object[index];
+            const value = collect[key];
+            const result = fn(key, value, index);
+            return result;
+          },
+      stop,
+      length(object)
+    );
+  } else if (isPromise(collect)) return collect.then(c => each(fn, stop, c));
 }
 
 /**
@@ -381,22 +413,39 @@ export function last(fn, collect) {
 }
 
 /**
- * Asynchronously or synchronously iterates over a collection of a specified length and applies a function to each index.
+ * Executes a function repeatedly based on the provided length or condition.
  *
- * @param {Function} fn - The function to apply to each index.
- * @param {number|Array|Object|Promise} length - The length or collection to iterate over.
- * @returns {*} Returns a Promise if the function is asynchronous and has a result, otherwise undefined.
+ * @param {Function} fn - The function to execute on each iteration.
+ * @param {boolean|number|Promise<number>|ArrayLike} [stop=false] - A boolean to determine if the
+ * loop should stop, or a length for the loop iterations, which can be a number, promise, or
+ * array-like object.
+ * @param {number} [length] - The length of iterations if `stop` is not a boolean.
+ * @returns {Promise<void>|void} - Returns a promise if the function is async or void otherwise.
  */
-export async function loop(fn, length) {
-  let index = 0;
+export function loop(fn, stop, length) {
+  if (isUndefined(length)) {
+    if (isBoolean(stop)) return length => loop(fn, stop, length);
+    return loop(fn, false, stop);
+  }
 
-  if (isPromise(length)) length = await size(length);
+  if (isPromise(length)) return size(length).then(l => loop(fn, stop, l));
   else if (isArrayLike(length)) length = size(length);
 
-  for (index; index < length; index++) {
-    const result = isAsync(fn) ? await fn(index) : fn(index);
-    if (!isUndefined(result)) return result;
+  let index = 0;
+
+  const next = () => {
+    if (index >= length) return;
+    const result = isAsync(fn) ? fn(index).then(r => check(r)) : check(fn(index));
+    return result;
+  };
+
+  function check(result) {
+    if (stop && !isUndefined(result)) return result;
+    index++;
+    return next();
   }
+
+  return next();
 }
 
 /**
