@@ -116,53 +116,22 @@ export function diff(values, type, collect) {
  * Iterates over each element in a collection and applies a function.
  *
  * @param {Function} fn - The function to apply to each element.
- * @param {boolean|Array|Object|Promise<Array|Object>} [stop=false] - A boolean to determine if the
- * iteration should stop early, or the collection to iterate over. Can also be a promise that
- * resolves to a collection.
- * @param {Array|Object|Promise} collect - The collection to iterate over
- * @returns {Promise<void>|void} - Returns a promise if any function or collection is async;
- * otherwise, void..
+ * @param {Array|Object|Promise} collect - The collection to iterate over.
  */
-export function each(fn, stop, collect) {
-  if (isUndefined(collect)) {
-    if (isBoolean(stop)) return collect => each(fn, stop, collect);
-    return each(fn, false, stop);
-  }
-
-  if (isArray(collect)) {
-    return loop(
-      isAsync(fn)
-        ? async index => {
-            const result = await fn(collect[index], index);
-            return result;
-          }
-        : index => {
-            const result = fn(collect[index], index);
-            return result;
-          },
-      stop,
-      length(collect)
-    );
+export function each(fn, collect) {
+  if (isUndefined(collect)) return collect => each(fn, collect);
+  else if (isArray(collect)) {
+    loop(index => {
+      fn(collect[index], index);
+    }, length(collect));
   } else if (isObject(collect)) {
     const object = keys(collect);
-    loop(
-      isAsync(fn)
-        ? async index => {
-            const key = object[index];
-            const value = collect[key];
-            const result = await fn(key, value, index);
-            return result;
-          }
-        : index => {
-            const key = object[index];
-            const value = collect[key];
-            const result = fn(key, value, index);
-            return result;
-          },
-      stop,
-      length(object)
-    );
-  } else if (isPromise(collect)) return collect.then(c => each(fn, stop, c));
+    loop(index => {
+      const key = object[index];
+      const value = collect[key];
+      fn(key, value, index);
+    }, length(object));
+  } else if (isPromise(collect)) return collect.then(c => each(fn, c));
 }
 
 /**
@@ -276,6 +245,40 @@ export function implode(key, glue, collect) {
   }
   if (isUndefined(glue)) return collect.join(key);
   return pluck(key, collect).join(glue);
+}
+
+/**
+ * Iterates a function with optional stop conditions.
+ *
+ * @param {Function} fn - Function to execute on each iteration.
+ * @param {boolean|*} stop - Stops iteration if a condition is met.
+ * @param {number|Array|Promise} [length] - Number of iterations or a collection to iterate.
+ * @returns {Promise|*} - Returns a result or resolves a promise if async.
+ */
+export function iterate(fn, stop, length) {
+  if (isUndefined(length)) {
+    if (isBoolean(stop)) return length => iterate(fn, stop, length);
+    return iterate(fn, false, stop);
+  }
+
+  if (isPromise(length)) return size(length).then(l => iterate(fn, stop, l));
+  else if (isArrayLike(length)) length = size(length);
+
+  let index = 0;
+
+  const next = () => {
+    if (index >= length) return;
+    const result = isAsync(fn) ? fn(index).then(r => check(r)) : check(fn(index));
+    return result;
+  };
+
+  function check(result) {
+    if (stop && !isUndefined(result)) return result;
+    index++;
+    return next();
+  }
+
+  return next();
 }
 
 /**
@@ -413,39 +416,17 @@ export function last(fn, collect) {
 }
 
 /**
- * Executes a function repeatedly based on the provided length or condition.
+ * Iterates a function a set number of times.
  *
- * @param {Function} fn - The function to execute on each iteration.
- * @param {boolean|number|Promise<number>|ArrayLike} [stop=false] - A boolean to determine if the
- * loop should stop, or a length for the loop iterations, which can be a number, promise, or
- * array-like object.
- * @param {number} [length] - The length of iterations if `stop` is not a boolean.
- * @returns {Promise<void>|void} - Returns a promise if the function is async or void otherwise.
+ * @param {Function} fn - Function to run on each iteration.
+ * @param {number} length - Number of iterations.
+ * @returns {*} - Returns result if defined.
  */
-export function loop(fn, stop, length) {
-  if (isUndefined(length)) {
-    if (isBoolean(stop)) return length => loop(fn, stop, length);
-    return loop(fn, false, stop);
+export function loop(fn, length) {
+  for (let index = 0; index < length; index++) {
+    const result = fn(index);
+    if (!isUndefined(result)) return result;
   }
-
-  if (isPromise(length)) return size(length).then(l => loop(fn, stop, l));
-  else if (isArrayLike(length)) length = size(length);
-
-  let index = 0;
-
-  const next = () => {
-    if (index >= length) return;
-    const result = isAsync(fn) ? fn(index).then(r => check(r)) : check(fn(index));
-    return result;
-  };
-
-  function check(result) {
-    if (stop && !isUndefined(result)) return result;
-    index++;
-    return next();
-  }
-
-  return next();
 }
 
 /**
@@ -1191,4 +1172,54 @@ export function values(collect) {
   if (isArray(collect)) return collect;
   if (isObject(collect)) return Object.values(collect);
   if (isPromise(collect)) return collect.then(c => values(c));
+}
+
+/**
+ * Iterates over an array, object, or promise and applies `fn` to each element.
+ *
+ * @param {Function} fn - The function to apply.
+ * @param {boolean} [stop=false] - Optional stop condition.
+ * @param {Array|Object|Promise} collect - The collection to iterate over.
+ * @returns {void|Promise<void>}
+ */
+export function walk(fn, stop, collect) {
+  if (isUndefined(collect)) {
+    if (isBoolean(stop)) return collect => walk(fn, stop, collect);
+    return walk(fn, false, stop);
+  }
+
+  if (isArray(collect)) {
+    return iterate(
+      isAsync(fn)
+        ? async index => {
+            const result = await fn(collect[index], index);
+            return result;
+          }
+        : index => {
+            const result = fn(collect[index], index);
+            return result;
+          },
+      stop,
+      length(collect)
+    );
+  } else if (isObject(collect)) {
+    const object = keys(collect);
+    iterate(
+      isAsync(fn)
+        ? async index => {
+            const key = object[index];
+            const value = collect[key];
+            const result = await fn(key, value, index);
+            return result;
+          }
+        : index => {
+            const key = object[index];
+            const value = collect[key];
+            const result = fn(key, value, index);
+            return result;
+          },
+      stop,
+      length(object)
+    );
+  } else if (isPromise(collect)) return collect.then(c => walk(fn, stop, c));
 }

@@ -588,26 +588,8 @@ describe('loop', () => {
     let total = 0;
     loop(index => {
       total += data[index];
-    }, data);
+    }, data.length);
     expect(total).toEqual(6);
-  });
-
-  it('loop:async', async () => {
-    const data = [1, 2, 3];
-    let total = 0;
-    await loop(async index => {
-      total += data[index];
-    }, data);
-    expect(total).toEqual(6);
-  });
-
-  it('loop:async:promise', async () => {
-    const data = Promise.resolve([1, 2, 3]);
-    let total = 0;
-    await loop(async index => {
-      total++;
-    }, data);
-    expect(total).toEqual(3);
   });
 });
 
