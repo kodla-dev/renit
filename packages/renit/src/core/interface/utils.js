@@ -287,8 +287,14 @@ export function VitePluginRenit(options) {
           options.app.$.external.style = externalStyle;
 
           // Compile the code using a custom compiler
-          const result = compiler(id, code, options.app);
-          results.code += result.js;
+          let result;
+          try {
+            result = compiler(id, code, options.app);
+          } catch (error) {
+            throw error;
+          }
+
+          if (result.js) results.code += result.js;
 
           // Handle CSS generation and imports
           if (result.css) {
@@ -311,8 +317,13 @@ export function VitePluginRenit(options) {
 
         if (/index.css/.test(id)) {
           options.app.component = { file: '', name: '' };
-          const cs = compilerStyle(code, options.app);
-          if (cs.code.length) results.code = cs.code;
+          let cs;
+          try {
+            cs = compilerStyle(code, options.app);
+          } catch (error) {
+            throw error;
+          }
+          if (cs.code && cs.code.length) results.code = cs.code;
           return results;
         }
       },
