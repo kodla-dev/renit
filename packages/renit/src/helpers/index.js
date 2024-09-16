@@ -28,3 +28,22 @@ function run(a, f) {
 export function clone(collect) {
   return structuredClone(collect);
 }
+
+/**
+ * Converts a synchronous function to return a Promise.
+ *
+ * @param {Function} fn - The function to convert.
+ * @returns {Function} A function that returns a Promise.
+ */
+export function prom(fn) {
+  return function (...args) {
+    return new Promise((resolve, reject) => {
+      try {
+        const result = fn(...args);
+        resolve(result);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  };
+}
