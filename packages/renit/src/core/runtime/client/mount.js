@@ -9,7 +9,7 @@ import { share } from '../share.js';
  * @param {Object} option - Options to pass to the component.
  * @returns {Object} The mounted component with a destroy method.
  */
-export function mount(target, component, option) {
+export function mount(target, component, option, clear = false) {
   let app;
   let unmount = (share.unmount = []); // Initialize unmount hooks
   share.mount = []; // Initialize mount hooks
@@ -18,7 +18,7 @@ export function mount(target, component, option) {
     app = component(option); // Create and initialize the component
     let dom = app.dom;
     delete app.dom; // Remove the DOM reference from the component
-    target.innerHTML = ''; // Clear the target element's content
+    if (clear) target.innerHTML = ''; // Clear the target element's content
     target.appendChild(dom); // Append the component's DOM to the target
     safeMulti(share.mount, unmount); // Execute mount hooks
   } finally {
