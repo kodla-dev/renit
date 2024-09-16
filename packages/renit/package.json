@@ -26,6 +26,14 @@
       "default": "./src/core/index.js",
       "types": "./type/index.d.ts"
     },
+    "./env": {
+      "default": "./src/core/interface/env.js",
+      "types": "./type/index.d.ts"
+    },
+    "./config": {
+      "default": "./src/core/interface/config.js",
+      "types": "./type/index.d.ts"
+    },
     "./runtime": {
       "default": "./src/core/runtime/index.js",
       "types": "./type/index.d.ts"
