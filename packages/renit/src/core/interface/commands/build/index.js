@@ -1,37 +1,25 @@
-import { build } from 'vite';
-import { clone } from '../../../../helpers/index.js';
-import { color, indexJsPath } from '../../utils.js';
+import api from './api.js';
+import csr from './csr.js';
+import ssr from './ssr.js';
 
-export default async function (options) {
-  const outDir = clone(options.vite.build.outDir);
-  if (options.param.csr) return csr(options, { outDir, manifest: false });
-  await csr(options, { outDir, manifest: true });
-  await ssr(options, { outDir });
-}
+/**
+ * Runs the build process based on the provided arguments.
+ *
+ * - Initializes API and CSR (Client-Side Rendering) processes.
+ * - Conditionally runs CSR based on the command line arguments.
+ * - Always runs SSR (Server-Side Rendering) after CSR.
+ *
+ * @async
+ * @param {string[]} args - Command line arguments.
+ * @returns {Promise<void>}
+ */
+export default async function (args) {
+  await api(); // Run API build process.
 
-async function csr(options, config) {
-  try {
-    if (config.manifest) options.vite.build.manifest = true;
-    if (config.outDir) options.vite.build.outDir = config.outDir + '/client';
-    await build(options.vite);
-    if (options.clearScreen) console.clear();
-    console.log(color.green('✓'), 'Build successful.');
-  } catch (error) {
-    console.log(color.red('✗'), 'Build failed.');
-  }
-}
+  // Conditionally run CSR based on the provided arguments.
+  if (args[1] == '--csr') return await csr();
 
-async function ssr(options, config) {
-  try {
-    options.vite.build.ssr = indexJsPath;
-    options.vite.build.outDir = config.outDir + '/server';
-    options.vite.build.manifest = false;
-    options.vite.build.minify = 'esbuild';
-    await build(options.vite);
-    if (options.clearScreen) console.clear();
-    console.log(color.green('✓'), 'Build successful.');
-  } catch (error) {
-    console.log(error);
-    console.log(color.red('✗'), 'Build failed.');
-  }
+  // Always run CSR before SSR.
+  await csr();
+  await ssr();
 }

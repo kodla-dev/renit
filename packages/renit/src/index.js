@@ -6,25 +6,26 @@
 */
 
 import { RAW_EMPTY } from './core/define.js';
+import config from './core/interface/config.js';
 import { mount } from './core/runtime/index.js';
-import { ClientRouter, ServerRouter } from './libraries/router/index.js';
+import { merge } from './libraries/collect/index.js';
+import { ApiRouter, ClientRouter, ServerRouter } from './libraries/router/index.js';
 
 /**
  * Initializes the application based on the environment (API, CSR, or SSR).
  *
- * @param {Array} routes - The application's route definitions.
  * @returns {Promise<void> | Object} - Returns a promise for SSR or an object for CSR.
  */
-export function start(routes) {
-  if (!import.meta.env) {
-    // If no environment variables are set, use API mode
-    return api(routes);
+export function start() {
+  if (import.meta.env.API) {
+    // If API is enabled, use API mode
+    return api();
   } else if (import.meta.env.SSR) {
     // If SSR is enabled, use Server-Side Rendering
-    return ssr(routes);
+    return ssr();
   } else {
     // Otherwise, use Client-Side Rendering
-    csr(routes);
+    csr();
   }
 }
 
@@ -34,25 +35,40 @@ export function start(routes) {
  * @param {Array} routes - The application's route definitions.
  * @returns {Array} - The routes provided.
  */
-function api(routes) {
-  return routes;
+function api() {
+  const router = new ApiRouter(config.router.routes, { base: config.base });
+  return async (req, res) => {
+    config.setRequest(req);
+    config.res = res;
+    router.setMethod(req.method);
+
+    const ctx = await router.run(config.url);
+    merge(ctx, config);
+
+    if (config.run) {
+      await config.run(config);
+    }
+  };
 }
 
 /**
  * Client-Side Rendering (CSR) mode: sets up a router and mounts components.
- *
- * @param {Array} routes - The application's route definitions.
  */
-function csr(routes) {
-  const router = new ClientRouter(routes);
+function csr() {
+  const router = new ClientRouter(config.router.routes, { base: config.base });
   let app;
+  let target = config.router.target || document.body;
 
-  // On entering a route, mount the component
-  router.on('enter', ctx => {
-    app = mount(document.body, ctx.component);
+  // On entering a route, mount the page
+  router.on('enter', async ctx => {
+    if (ctx.page) {
+      app = await mount(target, ctx.page, ctx.option, true);
+    } else {
+      target.innerHTML = _404();
+    }
   });
 
-  // On exiting a route, destroy the component
+  // On exiting a route, destroy the page
   router.on('exit', () => {
     if (app) app.destroy();
   });
@@ -63,36 +79,44 @@ function csr(routes) {
 
 /**
  * Server-Side Rendering (SSR) mode: sets up a router and returns the component's DOM.
- *
- * @param {Array} routes - The application's route definitions.
- * @returns {Function} - A function that takes a URL and returns an object with the component's DOM.
  */
-function ssr(routes) {
-  const router = new ServerRouter(routes);
-  return async (URL, HEADERS, TEMPLATE) => {
-    const ctx = await router.run(URL);
+function ssr() {
+  const router = new ServerRouter(config.router.routes, { base: config.base });
+  const content = (content, template) => template.replace(`<!--app-->`, content);
 
-    const component = ctx.component();
-    const results = component.option.results;
-    const dom = component.dom;
+  return async (req, res, template) => {
+    config.setRequest(req);
+    config.res = res;
 
-    let head = RAW_EMPTY;
-    let data = RAW_EMPTY;
-    let headers = { 'Content-Type': 'text/html' };
-    let code = 200;
+    const ctx = await router.run(config.url);
+    merge(ctx, config);
 
-    if (results.css.raw.length) {
-      head += `<style type="text/css">${results.css.raw}</style>`;
-      results.css.clear();
+    if (config.page) {
+      let data = RAW_EMPTY;
+      let head = RAW_EMPTY;
+      const page = config.page();
+      const results = page.option.results;
+      const dom = page.dom;
+
+      if (results.css.raw.length) {
+        head += `<style type="text/css">${results.css.raw}</style>`;
+        results.css.clear();
+      }
+      if (dom.length) data += dom;
+      template = template.replace('</head>', head + '</head>');
+      data = content(data, template);
+      config.html(data, 200);
+    } else {
+      config.html(content(_404(), template), 404);
     }
-
-    if (dom.length) {
-      data += dom;
-    }
-
-    TEMPLATE = TEMPLATE.replace('</head>', head + '</head>');
-    data = TEMPLATE.replace(`<!--app-->`, data);
-
-    return { code, data, headers };
   };
+}
+
+/**
+ * Returns a 404 error page HTML string.
+ *
+ * @returns {string} The HTML for the 404 error page.
+ */
+function _404() {
+  return `<h1>404</h1><p>This page could not be found.</p>`;
 }

@@ -1,44 +1,58 @@
 import { exec } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { mergeDeep } from '../../libraries/collect/index.js';
-import { getBaseName, getTemplateName } from '../compiler/utils/file.js';
-import { generateId } from '../compiler/utils/index.js';
-import { compilerStyle, cssKit, generateStylePattern } from '../compiler/utils/style.js';
-import { compiler } from '../index.js';
+import readline from 'node:readline';
+import { mergeConfig } from 'vite';
+import { join, push } from '../../libraries/collect/index.js';
+import { isUndefined } from '../../libraries/is/index.js';
+import { cssKit, generateStylePattern } from '../compiler/utils/style.js';
+import { RAW_EMPTY } from '../define.js';
+import { renit } from './plugins.js';
 
 /** The base directory of the current project */
-export const baseDir = process.cwd();
+const base = process.cwd();
 
-/** Path to the main configuration file (renit.config.js) */
-export const baseConfigPath = path.resolve(baseDir, './renit.config.js');
+/** The root directory path. */
+let root = 'app';
 
-/** Path to the source directory */
-export const sourceDir = path.resolve(baseDir, './src');
+/** The build directory path. */
+let build = 'build';
 
-/** Path to the build directory */
-export const buildDir = path.resolve(baseDir, './build');
+/** Determines whether the screen should be cleared */
+let clearScreen = true;
 
-/** Path to the public directory */
-export const publicDir = path.resolve(baseDir, './public');
+/** The port number for the app server. */
+let appServerPort = 5000;
 
-/** Path to the index.html file in the source directory */
-export const indexHtmlPath = path.resolve(sourceDir, './index.html');
+/** The port number for the api server. */
+let apiServerPort = 5001;
 
-/** Path to the index.js file in the source directory */
-export const indexJsPath = path.resolve(sourceDir, './index.js');
+/** The port number for the app preview server. */
+let appPreviewPort = 5002;
 
-/** Path to the index.css file in the source directory */
-export const indexCssPath = path.resolve(sourceDir, './index.css');
+/** The port number for the api preview server. */
+let apiPreviewPort = 5003;
 
-/** Path to the config directory within the source directory */
-export const configPath = path.resolve(sourceDir, './config');
+/**
+ * Application and API server instances.
+ *
+ * @type {Object}
+ */
+export let appServer, apiServer;
 
-/** Path to the controllers directory within the source directory */
-export const controllersPath = path.resolve(sourceDir, './controllers');
+/**
+ * Sets the application server instance.
+ *
+ * @param {Object} server - The application server instance.
+ */
+export const setAppServer = server => (appServer = server);
 
-/** Path to the views directory within the source directory */
-export const viewsPath = path.resolve(sourceDir, './views');
+/**
+ * Sets the API server instance.
+ *
+ * @param {Object} server - The API server instance.
+ */
+export const setApiServer = server => (apiServer = server);
 
 /**
  * Dynamically imports a module from the given path.
@@ -46,33 +60,44 @@ export const viewsPath = path.resolve(sourceDir, './views');
  * @param {string} path - The path to the module to import.
  * @returns {Promise<*>} - A promise that resolves to the imported module.
  */
-export const importFile = async path => await import('file://' + path);
+export const file = async path => await import(/* @vite-ignore */ 'file://' + path);
 
 /**
- * Reads and returns the content of the index.html file as a string.
+ * Resolves a sequence of paths or path segments into an absolute path.
  *
- * @returns {string} - The content of the index.html file.
+ * @returns {string} The resolved absolute path.
  */
-export const getIndexHtml = () => fs.readFileSync(indexHtmlPath, 'utf-8');
-
-/**
- * Generates functions for colorizing console output using ANSI escape codes.
- *
- * @returns {Object} - An object where each key is a color name and the value is a function
- * that wraps a given message in the appropriate ANSI escape codes for that color.
- */
-function colors() {
-  const codes = { red: 31, green: 32, yellow: 33, blue: 34, magenta: 35, cyan: 36, gray: 90 };
-  const fns = {};
-
-  for (const key in codes) {
-    fns[key] = msg => `\u001b[${codes[key]}m${msg}\u001b[39m`;
-  }
-  return fns;
+export function resolve() {
+  return path.resolve(...arguments);
 }
 
-// Export an object containing the color functions
-export const color = colors();
+/**
+ * Resolves paths relative to the base and root directories.
+ *
+ * @returns {string} The resolved path.
+ */
+export function src() {
+  return resolve(base, root, ...arguments);
+}
+
+/**
+ * Resolves the path to the build directory.
+ *
+ * @returns {string} The resolved build directory path.
+ */
+const buildDir = () => resolve(base, build);
+
+/** Path to the main configuration file (renit.config.js) */
+const configPath = resolve(base, './renit.config.js');
+
+/** Reads and returns the content of the index.html file as a string. */
+export const getIndexHtml = () => fs.readFileSync(src('index.html'), 'utf-8');
+
+/** Path to the index.css file in the source directory */
+export const indexCssPath = () => src('index.css');
+
+/** Path to the index.js file in the source directory */
+export const indexJsPath = () => src('index.js');
 
 /**
  * Loads and returns the configuration from the renit.config.js file if it exists.
@@ -80,82 +105,91 @@ export const color = colors();
  * @returns {Promise<Object|undefined>} - A promise that resolves to the configuration object or
  * undefined if the file does not exist.
  */
-export async function getConfig() {
-  if (fs.existsSync(baseConfigPath)) {
-    const config = await importFile(baseConfigPath);
+export async function getMainConfig() {
+  if (fs.existsSync(configPath)) {
+    const config = await file(configPath);
     return config.default;
   }
 }
 
 /**
- * Loads and returns the index.js file if it exists.
+ * Adjusts settings based on the provided configuration.
  *
- * @returns {Promise<Object|undefined>} - A promise that resolves to the exported content of the
- * index.js file or undefined if the file does not exist.
+ * @param {Object} mainConfig - The main configuration object.
  */
-export async function getIndexJs() {
-  if (fs.existsSync(indexJsPath)) {
-    const index = await importFile(indexJsPath);
-    return index.default;
+function solveMain(mainConfig) {
+  if (mainConfig.root) {
+    root = mainConfig.root;
+    mainConfig.root = src();
   }
+  if (mainConfig?.vite?.root) {
+    root = mainConfig.vite.root;
+    mainConfig.vite.root = mainConfig.root = src();
+  }
+  if (!isUndefined(mainConfig.clearScreen)) clearScreen = mainConfig.clearScreen;
+  if (!isUndefined(mainConfig?.vite?.clearScreen)) clearScreen = mainConfig.vite.clearScreen;
+  if (mainConfig?.app?.server?.port) appServerPort = mainConfig.app.server.port;
+  if (mainConfig?.app?.preview?.port) appPreviewPort = mainConfig.app.preview.port;
+  if (mainConfig?.api?.server?.port) apiServerPort = mainConfig.api.server.port;
+  if (mainConfig?.vite?.build?.outDir) {
+    build = mainConfig.vite.build.outDir;
+    mainConfig.vite.build.outDir = buildDir();
+  }
+  return mainConfig;
 }
 
 /**
- * Removes the specified directory and logs the result to the console.
+ * Provides default CSS options for the framework.
  *
- * @param {string} dir - The directory path relative to the base directory.
+ * @returns {Object} The default CSS configuration options.
  */
-export async function removeDir(dir, clearScreen) {
-  if (clearScreen) console.clear();
-  const p = path.resolve(baseDir, dir);
-  if (fs.existsSync(p)) {
-    fs.rmSync(p, { recursive: true, force: true });
-    console.log(color.green('✓'), 'The build folder has been cleaned.');
-  } else {
-    console.log(color.red('✗'), 'There is no build folder to clean.');
-  }
-}
+const defaultCSSOptions = () => ({
+  pattern: options => generateStylePattern(options),
+  compile: 'external',
+  colors: true,
+  nesting: true,
+  mediaQueries: false,
+  selectors: false,
+  units: {
+    nt: {
+      multiplier: 0.25,
+      unit: 'rem',
+    },
+  },
+  breakpoints: {
+    unit: 'rem',
+    sizes: { sm: 40, md: 48, lg: 64, xl: 80, xxl: 96 },
+  },
+});
 
 /**
- * Defines configuration options based on provided arguments.
+ * Returns the default configuration for the application and Vite.
  *
- * @param {string[]} args - Command line arguments.
- * @returns {Promise<Object>} The merged configuration options.
+ * @returns {Object} The default configuration object.
  */
-export async function defineOptions(args) {
-  // Initialize default options
-  const options = {
-    base: baseDir,
-    root: sourceDir,
-    param: {},
-    clearScreen: true,
+const getDefaultConfig = (main, type, command, render) => {
+  let SERVER_PORT;
+  let PREVIEW_PORT;
+
+  if (type == 'app') {
+    SERVER_PORT = appServerPort;
+    PREVIEW_PORT = appPreviewPort;
+  } else if (type == 'api') {
+    SERVER_PORT = apiServerPort;
+    PREVIEW_PORT = apiPreviewPort;
+  }
+
+  const config = {
+    root: src(),
+    clearScreen,
     app: {
-      generate: 'csr',
-      css: {
-        pattern: options => generateStylePattern(options),
-        compile: 'external',
-        colors: true,
-        nesting: true,
-        mediaQueries: false,
-        selectors: false,
-        units: {
-          nt: {
-            multiplier: 0.25,
-            unit: 'rem',
-          },
-        },
-        breakpoints: {
-          unit: 'rem',
-          sizes: { sm: 40, md: 48, lg: 64, xl: 80, xxl: 96 },
-        },
-      },
+      generate: render,
+      css: defaultCSSOptions(),
       server: {
-        open: true,
-        port: 5000,
+        port: SERVER_PORT,
       },
       preview: {
-        open: true,
-        port: 5001,
+        port: PREVIEW_PORT,
       },
       $: {
         kit: true,
@@ -166,251 +200,240 @@ export async function defineOptions(args) {
     },
     api: {
       server: {
-        port: 5002,
+        port: apiServerPort,
       },
     },
-  };
-
-  // Configure Vite settings
-  options.vite = {
-    clearScreen: true,
-    configFile: false,
-    root: options.root,
-    resolve: {
-      alias: {
-        '@config': configPath,
-        '@controllers': controllersPath,
-        '@views': viewsPath,
+    vite: {
+      root: src(),
+      clearScreen,
+      configFile: false,
+      envDir: base,
+      envPrefix: 'NIT_',
+      resolve: {
+        alias: {
+          '@config': src('config'),
+          '@controller': src('controller'),
+          '@page': src('pages'),
+        },
+        extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json', '.nit'],
+      },
+      define: {
+        'import.meta.env.API': type == 'api' ? true : false,
+        'import.meta.env.APP': type == 'app' ? true : false,
+        'import.meta.env.SERVER': type == 'app' && render == 'ssr' ? true : false,
+        'import.meta.env.CLIENT': type == 'app' && render == 'csr' ? true : false,
+      },
+      plugins: [],
+      css: {
+        transformer: 'lightningcss',
+        lightningcss: true,
+      },
+      build: {
+        outDir: buildDir(),
+        emptyOutDir: true,
+        cssMinify: 'lightningcss',
+      },
+      server: {
+        port: SERVER_PORT,
+        hmr: {
+          port: 5004,
+        },
+      },
+      preview: {
+        port: PREVIEW_PORT,
       },
     },
-    plugins: [],
-    css: {
-      transformer: 'lightningcss',
-      lightningcss: true,
-    },
-    build: {
-      outDir: buildDir,
-      emptyOutDir: true,
-      cssMinify: 'lightningcss',
-    },
-    publicDir,
+    _: { type, command, render },
   };
 
-  // Handle command line parameter
-  const param = args[1];
-  if (param == '--csr') options.param.csr = true;
+  if (type == 'app' && main.api != false) {
+    config.vite.server.proxy = {
+      '/api': `http://localhost:${config.api.server.port}`,
+    };
+  }
 
-  // Merge with external config
-  const config = await getConfig();
-  mergeDeep(config, options);
+  if (type == 'api') {
+    config.vite.server.hmr.port = 5005;
+  }
 
-  options.vite.clearScreen = options.clearScreen;
+  if (render == 'ssr') {
+    config.vite.server.middlewareMode = true;
+    config.vite.appType = 'custom';
+  }
 
-  // Configure Vite server settings
-  options.vite.server = {
-    open: true,
-    port: options.app.server.port,
-    proxy: {
-      '/api': `http://localhost:${options.api.server.port}`,
-    },
-  };
+  if (type == 'app' && command == 'build' && render == 'csr') {
+    config.vite.build.manifest = true;
+    config.vite.build.outDir = resolve(base, build, 'client');
+  }
 
-  // Configure Vite preview settings
-  options.vite.preview = {
-    open: true,
-    port: options.app.preview.port,
-  };
+  if (type == 'app' && command == 'build' && render == 'ssr') {
+    config.vite.build.ssr = indexJsPath();
+    config.vite.build.minify = 'esbuild';
+    config.vite.build.outDir = resolve(base, build, 'server');
+  }
 
-  options.vite.plugins = [
-    VitePluginRenit(options),
-  ];
+  if (type == 'api' && command == 'build') {
+    config.vite.build.ssr = indexJsPath();
+    config.vite.build.minify = 'esbuild';
+    config.vite.build.outDir = resolve(base, build, 'api');
+  }
 
-  options.vite.css.lightningcss = cssKit(options.app);
+  return config;
+};
 
-  return options;
+/**
+ * Retrieves and merges the main configuration with default configuration options.
+ *
+ * @returns {Promise<Object>} A promise that resolves to the merged configuration object.
+ */
+export async function getOptions(type, command, render) {
+  const mainConfig = solveMain(await getMainConfig());
+  const defaultConfig = getDefaultConfig(mainConfig, type, command, render);
+  const config = mergeConfig(defaultConfig, mainConfig);
+  if (type == 'app') {
+    config.vite.css.lightningcss = cssKit(config.app);
+  }
+  config.vite.plugins.push(renit(config));
+  return config;
+}
+
+let srcCache;
+
+/**
+ * Removes the root directory from the given path.
+ *
+ * @param {string} id - The path to modify.
+ * @returns {string} The path without the root directory.
+ */
+export function removeRoot(id) {
+  id = path.normalize(id);
+  if (!srcCache) srcCache = src();
+  return id.replace(srcCache, RAW_EMPTY).substring(1);
 }
 
 /**
- * A Vite plugin for the Renit framework.
+ * Removes the specified directory and logs the result to the console.
  *
- * @returns {Object} The Vite plugin configuration for Renit.
+ * @param {string} dir - The directory path relative to the base directory.
  */
-export function VitePluginRenit(options) {
-  // Cache for storing generated CSS content
-  let cache = {};
-  // Content storage for the CSS files associated with specific ids
-  let content = {};
+export async function removeDir(dir, clearScreen) {
+  if (clearScreen) console.clear();
+  const p = path.resolve(base, dir);
+  if (fs.existsSync(p)) {
+    fs.rmSync(p, { recursive: true, force: true });
+    out('The build folder has been cleaned.');
+  } else {
+    out.error('There is no build folder to clean.');
+  }
+}
 
-  return [
-    {
-      name: 'renit',
-      enforce: 'pre',
-      /**
-       * Transforms the index HTML file by replacing custom tags with standard tags.
-       *
-       * @param {string} html - The HTML content to transform.
-       * @returns {Promise<string>} The transformed HTML content.
-       */
-      async transformIndexHtml(html) {
-        return html.replace(/<renit(.*?)app(.*?)\/>/, `<!--app-->`);
-      },
-
-      /**
-       * Transforms `.nit` files by compiling them and handling CSS imports.
-       *
-       * @param {string} code - The code content to transform.
-       * @param {string} id - The id (path) of the module being transformed.
-       * @param {Object} transformOptions - Additional options provided by Vite.
-       * @returns {Promise<Object>} The transformed code and CSS imports.
-       */
-      async transform(code, id, transformOptions) {
-        let results = { code: '' };
-        let generate = 'csr'; // Default to client-side rendering
-
-        // Switch to server-side rendering if specified
-        if (transformOptions?.ssr) generate = 'ssr';
-
-        if (/\.(nit)$/.test(id)) {
-          const templateName = getTemplateName(id);
-          const baseName = getBaseName(id);
-          const cssPath = baseName + '.nit.css';
-          let externalStyle = false;
-
-          if (fs.existsSync(cssPath)) {
-            const cssContent = await fs.readFileSync(cssPath, 'utf-8');
-            if (cssContent.length) {
-              externalStyle = cssContent;
-            }
-          }
-
-          options.app.generate = generate;
-          options.app.$.external.style = externalStyle;
-
-          // Compile the code using a custom compiler
-          let result;
-          try {
-            result = compiler(id, code, options.app);
-          } catch (error) {
-            throw error;
-          }
-
-          if (result.js) results.code += result.js;
-
-          // Handle CSS generation and imports
-          if (result.css) {
-            let name = templateName;
-            if (content[name] && content[name].code === result.css) {
-              results.code = `\nimport "${content[name].name}";\n` + results.code;
-            } else {
-              const c = {
-                name: name + '_' + generateId() + '.css',
-                code: result.css,
-              };
-              content[name] = c;
-              cache[c.name] = content[name];
-              results.code = `\nimport "${c.name}";\n` + results.code;
-            }
-          }
-
-          return results;
-        }
-
-        if (/index.css/.test(id)) {
-          options.app.component = { file: '', name: '' };
-          let cs;
-          try {
-            cs = compilerStyle(code, options.app);
-          } catch (error) {
-            throw error;
-          }
-          if (cs.code && cs.code.length) results.code = cs.code;
-          return results;
-        }
-      },
-
-      handleHotUpdate({ file, server }) {
-        if (/\.(nit).(css)$/.test(file)) {
-          file = file.replace('.css', '');
-          server.moduleGraph.invalidateModule(server.moduleGraph.getModuleById(file));
-          server.ws.send({
-            type: 'full-reload',
-            path: file,
-          });
-        }
-        if (/index.css/.test(file)) {
-          server.moduleGraph.fileToModulesMap.forEach((modules, filePath) => {
-            if (filePath.endsWith('.nit')) {
-              modules.forEach(module => {
-                server.moduleGraph.invalidateModule(module);
-              });
-            }
-          });
-          server.ws.send({
-            type: 'full-reload',
-          });
-        }
-      },
-
-      /**
-       * Resolves module ids for CSS imports.
-       *
-       * @param {string} name - The name of the module to resolve.
-       * @returns {Promise<string|null>} The resolved id or null if not found.
-       */
-      async resolveId(name) {
-        if (cache[name]) return name;
-        return null;
-      },
-
-      /**
-       * Loads the cached CSS content.
-       *
-       * @param {string} id - The id (path) of the module to load.
-       * @returns {Promise<string|null>} The loaded content or null if not found.
-       */
-      load(id) {
-        if (cache[id]) {
-          return cache[id].code;
-        }
-        return null;
-      },
-    },
-  ];
+export function fixError(error) {
+  return error;
 }
 
 /**
- * Prints the URLs for the application and API, and optionally opens the app in the browser.
- *
- * @param {number} port - The port number for the application.
- * @param {number} apiPort - The port number for the API.
- * @param {string} generate - The generation type (e.g., 'csr' or 'ssr').
- * @param {boolean} [start=false] - Whether to automatically open the app in the browser.
+ * Generates functions for colorizing console output using ANSI escape codes.
  */
-export function printUrls(port, apiPort, clearScreen, generate, start = false) {
-  if (clearScreen) console.clear(); // Clear the console for a clean output
+export const color = Object.fromEntries(
+  Object.entries({ red: 31, green: 32, yellow: 33, blue: 34, magenta: 35, cyan: 36, gray: 90,
+    bold: 1, italic: 3, underline: 4
+  }).map(([k, c]) => [k, m => `\u001b[${c}m${m}\u001b[${c >= 30 ? 39 : 0}m`])
+); // prettier-ignore
 
-  const url = `http://localhost:${port}/`; // Application URL
-  const apiUrl = `http://localhost:${apiPort}/`; // API URL
+// A green arrow symbol for console output.
+export const arrow = color.green('➜ ');
+export const success = color.green('✓');
+export const fault = color.red('✗');
+
+/**
+ * Outputs messages to the console.
+ */
+export function out() {
+  console.log(success, ...arguments);
+}
+
+/**
+ * Outputs error messages to the console.
+ */
+out.error = function () {
+  console.error(fault, ...arguments);
+};
+
+/**
+ * Logs application and API URLs to the console.
+ *
+ * @param {Object} options - Configuration options.
+ */
+export function printUrls(options) {
+  const { bold, blue, gray, magenta, cyan, yellow } = color;
+  if (options.clearScreen) console.clear(); // Clear the console for a clean output
+
+  const app = `http://localhost:${options.app.server.port}/`; // Application URL
+  let api;
+  if (options.api) api = `http://localhost:${options.api.server.port}/`; // API URL
+
+  let text = [];
+
+  if (options._.render == 'csr') push('CSR', text);
+  if (options._.render == 'ssr') push('SSR + CSR', text);
+  if (api) push('API', text);
+
+  const pkg = JSON.parse(fs.readFileSync(new URL('../../../package.json', import.meta.url)));
+  const version = pkg.version;
 
   // Log the Renit framework information
-  console.log(color.blue('Renit'), color.gray('-'), color.magenta(generate), '\n');
+  console.log(bold(blue('Renit ')) + gray(version), gray('-'), magenta(join(' + ', text)), '\n');
 
   // Log the application URL
-  console.log(color.green('➜ '), 'app:', color.cyan(url));
+  console.log(arrow, `${bold('app')}:`, cyan(app));
 
-  // Log the API URLs
-  console.log(
-    color.green('➜ '),
-    'api:',
-    color.cyan(url + 'api'),
-    color.gray('or'),
-    color.cyan(apiUrl)
-  );
-
-  // If 'start' is true, open the application URL in the default browser
-  if (start) {
-    start =
-      process.platform == 'darwin' ? 'open' : process.platform == 'win32' ? 'start' : 'xdg-open';
-    exec(start + ' ' + url);
+  if (api) {
+    // Log the API URLs
+    console.log(arrow, `${bold('api')}:`, cyan(app + 'api'), gray('or'), cyan(api));
   }
+
+  console.log(arrow, `${gray('press')} ${bold(gray('h + enter'))} ${gray('to show help')}`); // prettier-ignore
+
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  let currentLine = '';
+
+  const start =
+    process.platform == 'darwin' ? 'open' : process.platform == 'win32' ? 'start' : 'xdg-open';
+
+  rl.on('line', input => {
+    let command = input.trim().toLowerCase();
+    if (command === 'h') {
+      console.log('');
+      console.log(yellow(bold('Shortcuts')));
+      console.log(`${gray('press')} ${bold(gray('r + enter'))} ${gray('to restart the app server')}`); // prettier-ignore
+      if (api) {
+        console.log(`${gray('press')} ${bold(gray('a + enter'))} ${gray('to restart the api server')}`); // prettier-ignore
+      }
+      console.log(`${gray('press')} ${bold(gray('u + enter'))} ${gray('to show server urls')}`); // prettier-ignore
+      console.log(`${gray('press')} ${bold(gray('o + enter'))} ${gray('to open in browser')}`); // prettier-ignore
+      console.log(`${gray('press')} ${bold(gray('c + enter'))} ${gray('to clear console')}`); // prettier-ignore
+      console.log(`${gray('press')} ${bold(gray('q + enter'))} ${gray('to quit')}`); // prettier-ignore
+    } else if (command === 'r') {
+      if (options.clearScreen) console.clear();
+      if (appServer) appServer.restart();
+    } else if (command === 'u') {
+      console.log('');
+      console.log(yellow(bold('Server URLs')));
+      console.log(arrow, `${bold('app')}:`, cyan(app));
+      if (api) console.log(arrow, `${bold('api')}:`, cyan(app + 'api'), gray('or'), cyan(api));
+    } else if (command === 'o') {
+      exec(start + ' ' + app);
+    } else if (command === 'c') {
+      console.clear();
+    } else if (command === 'q') {
+      if (options.clearScreen) console.clear();
+      if (appServer) appServer.close();
+      rl.close();
+      process.exit();
+    }
+  });
 }
