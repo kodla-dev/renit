@@ -108,9 +108,23 @@ export function getUriSSR(uri) {
  */
 export function getPathname(uri, store) {
   if (!uri) return uri;
-  const regex = store.options.regex;
+  const { regex } = store.options;
   uri = '/' + uri.replace(/^\/|\/$/g, '');
-  return (regex.test(uri) && uri.replace(regex, '/')).match(/[^\?#]*/)[0];
+  if (regex.test(uri)) uri = uri.replace(regex, '/');
+  return uri.match(/[^\?#]*/)[0];
+}
+
+/**
+ * Fixes the given URI by adjusting proxy and double slashes.
+ *
+ * @param {string} uri - The URI to fix.
+ * @returns {string} The corrected URI.
+ */
+export function fixUriProxy(uri) {
+  const proxy = '/api';
+  if (uri.startsWith(proxy)) uri = uri.replace(proxy, '/');
+  if (uri.startsWith('//')) uri = uri.replace('//', '/');
+  return uri;
 }
 
 /**
@@ -133,24 +147,33 @@ export async function getParams(route, match) {
 }
 
 /**
- * Retrieves and resolves a component based on the route and context provided.
+ * Loads a function or value asynchronously.
  *
- * @param {Object} route - The route object containing information about the route.
- * @param {Object} context - The context object to store the resolved component.
- * @returns {Promise<number>} - A promise that resolves to 1 upon successful retrieval of the component.
+ * @param {Function|any} fn - The function or value to load.
+ * @returns {Promise<any>} A promise that resolves with the loaded value.
  */
-export function getComponent(route, context) {
+export function load(fn) {
   return new Promise(async resolve => {
-    let comp = route.component;
-    // If the component is a function, invoke it with route.meta
-    isFunction(comp) && (comp = comp(route.meta));
-    // Resolve the component, which might be a promise
-    return Promise.resolve(comp).then(async component => {
-      let error = 0;
-      context.component = component.default || component;
-      if (!error) {
-        resolve(1);
-      }
+    isFunction(fn) && (fn = fn());
+    return Promise.resolve(fn).then(async fn => {
+      resolve(fn);
+    });
+  });
+}
+
+/**
+ * Loads a page component asynchronously, resolving it with the provided context.
+ *
+ * @param {Function|any} component - The page component to load.
+ * @param {Object} ctx - The context for the component.
+ * @returns {Promise<any>} A promise that resolves with the loaded component.
+ */
+export function loadPage(component, ctx) {
+  return new Promise(async resolve => {
+    isFunction(component) && (component = component(ctx));
+    return Promise.resolve(component).then(async component => {
+      component = component.default || component;
+      resolve(component);
     });
   });
 }
