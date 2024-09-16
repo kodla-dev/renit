@@ -1,5 +1,5 @@
 import http from 'node:http';
-import { isFunction, isObjects, isString } from '../is/index.js';
+import { isFunction, isString } from '../is/index.js';
 import { length } from '../math/index.js';
 
 /**
@@ -89,61 +89,4 @@ class CreateServer {
  */
 export function createServer(opts = {}) {
   return new CreateServer(opts);
-}
-
-/**
- * Sends a response to the client.
- *
- * @param {http.ServerResponse} res - The server response object.
- * @param {number} [code=200] - The HTTP status code.
- * @param {string|Buffer} [data=''] - The response data.
- * @param {Object} [headers={}] - Additional headers to set.
- */
-export function send(res, code = 200, data = '', headers = {}) {
-  res.writeHead(code, headers);
-  res.end(data || http.STATUS_CODES[code]);
-}
-
-const TYPE = 'content-type'; // Header key for content type
-const OSTREAM = 'application/octet-stream'; // Default content type for binary data
-
-/**
- * Sends a response with a specific content type.
- *
- * @param {http.ServerResponse} res - The server response object.
- * @param {number} [code=200] - The HTTP status code.
- * @param {string|Buffer|Object} [data=''] - The response data.
- * @param {Object} [headers={}] - Additional headers to set.
- */
-export function sendType(res, code = 200, data = '', headers = {}) {
-  let k,
-    obj = {};
-  for (k in headers) {
-    obj[k.toLowerCase()] = headers[k];
-  }
-
-  let type = obj[TYPE] || res.getHeader(TYPE);
-
-  if (!!data && isFunction(data.pipe)) {
-    obj[TYPE] = type || OSTREAM;
-    for (k in obj) {
-      res.setHeader(k, obj[k]);
-    }
-    return data.pipe(res); // Pipe stream data to response
-  }
-
-  if (data instanceof Buffer) {
-    type = type || OSTREAM;
-  } else if (isObjects(data)) {
-    data = JSON.stringify(data);
-    type = type || 'application/json;charset=utf-8';
-  } else {
-    data = data || http.STATUS_CODES[code];
-  }
-
-  obj[TYPE] = type || 'text/plain';
-  obj['content-length'] = Buffer.byteLength(data);
-
-  res.writeHead(code, obj); // Set the status code and headers
-  res.end(data); // Send the response data
 }
