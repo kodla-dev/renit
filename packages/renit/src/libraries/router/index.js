@@ -1,4 +1,4 @@
-import { each, iterate, merge, push } from '../collect/index.js';
+import { each, includes, iterate, join, merge, push } from '../collect/index.js';
 import { event as createEvent } from '../event/index.js';
 import { isObject } from '../is/index.js';
 import { length } from '../math/index.js';
@@ -28,6 +28,12 @@ class Router {
       options: {
         base: '/',
         regex: /^\/+/,
+        has: {
+          lang: false,
+        },
+        languages: [],
+        mode: 1,
+        fallback: undefined,
       },
     };
     // Initialize routing logic
@@ -40,18 +46,52 @@ class Router {
     regex = base == '/' ? regex : new RegExp('^\\' + base + '(?=\\/|$)\\/?', 'i');
     options.regex = regex;
 
+    let languages = options.languages;
+    if (length(languages)) {
+      languages = join('|', languages);
+      options.has.lang = true;
+    }
+
+    const mode = options.mode;
+    const fallback = options.fallback;
+
     each(route => {
-      push(
-        {
-          name: route.name || route.path,
-          path: route.path,
-          regex: routeToRegExp(route.path),
-          page: route.page,
-          option: route.option,
-          method: route.method,
-        },
-        routes
-      );
+      const newRoute = {
+        name: route.name || route.path,
+        path: route.path,
+        regex: {},
+        page: route.page,
+        option: route.option,
+        method: route.method,
+      };
+
+      const multi = isObject(route.path);
+      const basePath = route.path == '/';
+      const path = basePath ? '' : route.path;
+      const force = route.force;
+
+      if (!options.has.lang) {
+        newRoute.regex.path = routeToRegExp(route.path);
+      } else {
+        if ((basePath || force || mode == 2 || mode == 3) && !multi) {
+          newRoute.regex.path = routeToRegExp(route.path);
+        }
+        if (multi) {
+          for (const lang in route.path) {
+            if (mode == 2) newRoute.regex[fallback] = routeToRegExp(path[fallback]);
+            if (force || mode == 3) {
+              newRoute.regex[lang] = routeToRegExp(path[lang]);
+            }
+            if (!force || mode == 3) {
+              newRoute.regex[lang + '$'] = routeToRegExp(`/${lang}` + path[lang]);
+            }
+          }
+        } else {
+          if (languages) newRoute.regex.lang = routeToRegExp(`(${languages})` + path);
+        }
+      }
+
+      push(newRoute, routes);
     }, Routes);
 
     this.store.routes = routeSort(routes);
@@ -83,7 +123,7 @@ export class ClientRouter extends Router {
     await run();
   }
   click(e) {
-    const { store, go } = this;
+    const { store, redirect } = this;
     let x = e.target.closest('a');
     let y = x && x.getAttribute('href');
     if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey || e.button || e.defaultPrevented) {
@@ -92,30 +132,49 @@ export class ClientRouter extends Router {
     if (!y || x.target || x.host !== location.host || y[0] == '#') return;
     if (y[0] != '/' || store.options.regex.test(y)) {
       e.preventDefault();
-      go.call(this, y);
+      redirect.call(this, y);
     }
   }
-  go(uri, replace) {
+  redirect(uri, replace) {
     const store = this.store;
     const { options } = store;
     if (uri[0] == '/' && !options.regex.test(uri)) uri = options.base + uri;
     history[(uri === store.current || replace ? 'replace' : 'push') + 'State'](uri, null, uri);
   }
   async run() {
-    const { event, store } = this;
+    const { event, store, redirect } = this;
     event.emit('exit');
 
     const uri = getUri();
     const pathname = getPathname(uri || location.pathname, store);
-
+    let match;
     if (pathname) {
+      const { routes, options } = store;
       store.current = pathname;
-      let routes = store.routes;
+      const hasLang = options.has.lang;
+      let lang = options.fallback;
       const route = await iterate(
         async i => {
           const route = routes[i];
-          const match = route.regex.pattern.exec(pathname);
-          if (match) return route;
+          if (hasLang) {
+            for (const part in route.regex) {
+              match = route.regex[part].pattern.exec(pathname);
+              if (match) {
+                if (includes(match[1], options.languages)) {
+                  lang = match[1];
+                } else {
+                  const key = part.replace('$', '');
+                  if (includes(key, options.languages)) {
+                    lang = key;
+                  }
+                }
+                return route;
+              }
+            }
+          } else {
+            match = route.regex.path.pattern.exec(pathname);
+            if (match) return route;
+          }
         },
         true,
         length(routes)
@@ -123,7 +182,10 @@ export class ClientRouter extends Router {
       const ctx = {
         option: undefined,
         page: undefined,
+        redirect: redirect.bind(this),
+        routerStore: store,
       };
+      if (hasLang) ctx.language = lang;
       if (!route) {
         event.emit('enter', ctx);
         return false;
@@ -147,17 +209,37 @@ export class ServerRouter extends Router {
   }
 
   async run(uri) {
-    const { event, store } = this;
+    const { store } = this;
     uri = getUriSSR(uri);
     const pathname = getPathname(uri, store);
+    let match;
     if (pathname) {
+      const { routes, options } = store;
       store.current = pathname;
-      let routes = store.routes;
+      const hasLang = options.has.lang;
+      let lang = options.fallback;
       let route = await iterate(
         async i => {
           const route = routes[i];
-          const match = route.regex.pattern.exec(pathname);
-          if (match) return route;
+          if (hasLang) {
+            for (const part in route.regex) {
+              match = route.regex[part].pattern.exec(pathname);
+              if (match) {
+                if (includes(match[1], options.languages)) {
+                  lang = match[1];
+                } else {
+                  const key = part.replace('$', '');
+                  if (includes(key, options.languages)) {
+                    lang = key;
+                  }
+                }
+                return route;
+              }
+            }
+          } else {
+            match = route.regex.path.pattern.exec(pathname);
+            if (match) return route;
+          }
         },
         true,
         length(routes)
@@ -165,7 +247,9 @@ export class ServerRouter extends Router {
       const ctx = {
         option: undefined,
         page: undefined,
+        routerStore: store,
       };
+      if (hasLang) ctx.language = lang;
       if (!route) return ctx;
       store.route = route;
       if (route.option) ctx.option = route.option;
@@ -188,16 +272,17 @@ export class ApiRouter extends Router {
 
   async run(uri) {
     uri = fixUriProxy(uri);
-    const { event, store, method } = this;
+    const { store, method } = this;
     uri = getUriSSR(uri);
     const pathname = getPathname(uri, store);
+    let match;
     if (pathname) {
       store.current = pathname;
       let routes = store.routes;
       let route = await iterate(
         async i => {
           const route = routes[i];
-          const match = route.regex.pattern.exec(pathname);
+          match = route.regex.path.pattern.exec(pathname);
           if (match) return route;
         },
         true,

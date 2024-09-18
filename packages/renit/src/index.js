@@ -41,9 +41,12 @@ function api() {
     config.setRequest(req);
     config.res = res;
     router.setMethod(req.method);
+    config.init();
 
     const ctx = await router.run(config.url);
     merge(ctx, config);
+
+    await config.enter();
 
     if (config.run) {
       await config.run(config);
@@ -55,14 +58,25 @@ function api() {
  * Client-Side Rendering (CSR) mode: sets up a router and mounts components.
  */
 function csr() {
-  const router = new ClientRouter(config.router.routes, { base: config.base });
+  const router = new ClientRouter(config.router.routes, {
+    base: config.base,
+    languages: config.i18n.languages,
+    mode: config.router.url.mode,
+    fallback: config.i18n.fallback,
+  });
   let app;
   let target = config.router.target || document.body;
 
+  config.init();
+
   // On entering a route, mount the page
   router.on('enter', async ctx => {
-    if (ctx.page) {
-      app = await mount(target, ctx.page, ctx.option, true);
+    merge(ctx, config);
+
+    await config.enter();
+
+    if (config.page) {
+      app = await mount(target, config.page, config.option, true);
     } else {
       target.innerHTML = _404();
     }
@@ -81,15 +95,25 @@ function csr() {
  * Server-Side Rendering (SSR) mode: sets up a router and returns the component's DOM.
  */
 function ssr() {
-  const router = new ServerRouter(config.router.routes, { base: config.base });
+  const router = new ServerRouter(config.router.routes, {
+    base: config.base,
+    languages: config.i18n.languages,
+    mode: config.router.url.mode,
+    fallback: config.i18n.fallback,
+  });
+
   const content = (content, template) => template.replace(`<!--app-->`, content);
 
   return async (req, res, template) => {
     config.setRequest(req);
     config.res = res;
 
+    config.init();
+
     const ctx = await router.run(config.url);
     merge(ctx, config);
+
+    await config.enter();
 
     if (config.page) {
       let data = RAW_EMPTY;

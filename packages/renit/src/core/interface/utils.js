@@ -238,6 +238,7 @@ const getDefaultConfig = (main, type, command, render) => {
         hmr: {
           port: 5004,
         },
+        preTransformRequests: false,
       },
       preview: {
         port: PREVIEW_PORT,
@@ -398,8 +399,6 @@ export function printUrls(options) {
     input: process.stdin,
     output: process.stdout,
   });
-
-  let currentLine = '';
 
   const start =
     process.platform == 'darwin' ? 'open' : process.platform == 'win32' ? 'start' : 'xdg-open';

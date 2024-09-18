@@ -25,8 +25,13 @@ export default async function () {
 
   // Use the Vite server's middlewares to handle API requests.
   app.use(dev.middlewares, async (req, res, next) => {
-    const { default: run } = await dev.ssrLoadModule(indexJsPath());
-    await run(req, res);
+    try {
+      const { default: run } = await dev.ssrLoadModule(indexJsPath());
+      await run(req, res);
+    } catch (error) {
+      dev.ssrFixStacktrace(error);
+      next(error);
+    }
   });
 
   // Start the server and listen on the specified port.
