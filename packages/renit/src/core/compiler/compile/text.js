@@ -1,8 +1,9 @@
-import { map } from '../../../libraries/collect/index.js';
+import { includes, map } from '../../../libraries/collect/index.js';
 import { isArray } from '../../../libraries/is/index.js';
 import { DOM_TEXT_SELECTOR, RAW_WHITESPACE, RGX_WHITESPACE } from '../../define.js';
 import { TextSpot } from '../spot/text.js';
-import { $var } from '../utils/index.js';
+import { simpleBracesConvert } from '../utils/braces.js';
+import { $el, $ltr, $var } from '../utils/index.js';
 import { compactTextNode, isSSR } from '../utils/node.js';
 
 export default {
@@ -32,10 +33,10 @@ export default {
   },
 
   /**
-   * Processes a text node containing curly braces, adding its reference,
+   * Processes a text node containing braces, adding its reference,
    * content, and dependencies to the figure.
    */
-  CurlyBracesText({ node, component, figure, options }) {
+  BracesText({ node, component, figure, options }) {
     const ssr = isSSR(options);
 
     if (ssr) figure.startBlock();
@@ -54,5 +55,52 @@ export default {
     figure.addSpot(new TextSpot(node, options));
 
     if (ssr) figure.endBlock();
+  },
+
+  BracketsText({ node, figure, template, options }) {
+    const ssr = isSSR(options);
+
+    let fn;
+    if (node.link) {
+      fn = 'link';
+      template.link = true;
+    }
+    if (node.translate) {
+      fn = 'translate';
+      template.translate = true;
+    }
+
+    const fnValue = includes('(', node.value);
+    let open, name, param; // prettier-ignore
+
+    if (fnValue) {
+      open = node.value.indexOf('(');
+      name = node.value.slice(0, open).trim();
+      param = node.value.slice(open).trim();
+    } else {
+      node.value = includes('{', node.value) ? simpleBracesConvert(node.value) : node.value;
+    }
+
+    if (node.literals || ssr) {
+      if (fnValue) {
+        figure.appendBlock($var(`${fn}(${$ltr(name)})${param}`));
+      } else {
+        figure.appendBlock($var(`${fn}(${$ltr(node.value)})`));
+      }
+      return;
+    }
+
+    node.reference = figure.addReference();
+    figure.appendBlock(DOM_TEXT_SELECTOR);
+
+    figure.addSpot({
+      generate() {
+        if (fnValue) {
+          return `$.text(${$el(node.reference)},${fn}(${$ltr(name)})${param});`;
+        } else {
+          return `$.text(${$el(node.reference)},${fn}(${$ltr(node.value)}));`;
+        }
+      },
+    });
   },
 };

@@ -2,10 +2,10 @@ import { each } from '../../../libraries/collect/index.js';
 import { RAW_EMPTY, RAW_WHITESPACE } from '../../define.js';
 import { $el, $escape, $ltr, $var, adaptDefine } from '../utils/index.js';
 import {
+  isBracesAttribute,
+  isBracesText,
   isClassAttribute,
   isClassOrIdAttribute,
-  isCurlyBracesAttribute,
-  isCurlyBracesText,
   isElementNode,
   isStringAttribute,
   isTextNode,
@@ -65,7 +65,7 @@ export class StaticSpot {
           } else {
             content += value.content;
           }
-        } else if (isCurlyBracesAttribute(value)) {
+        } else if (isBracesAttribute(value)) {
           content += $var(value.content.trim());
         }
       }, node.value);
@@ -75,6 +75,6 @@ export class StaticSpot {
 
     this.type = type;
     this.content = content;
-    this.reference = isCurlyBracesText(node) ? node.reference : parent.reference;
+    this.reference = isBracesText(node) ? node.reference : parent.reference;
   }
 }

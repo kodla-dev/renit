@@ -339,21 +339,30 @@ export function isStringAttribute(node) {
 }
 
 /**
- * Checks if a node is a CurlyBracesAttribute.
+ * Checks if a node is a StringText.
  * @param {Object} node - The node to check.
- * @returns {boolean} - Returns true if the node is a CurlyBracesAttribute, otherwise false.
+ * @returns {boolean} - Returns true if the node is a StringText, otherwise false.
  */
-export function isCurlyBracesAttribute(node) {
-  return node.type == 'CurlyBracesAttribute';
+export function isStringText(node) {
+  return node.type == 'StringText';
 }
 
 /**
- * Checks if a node is a CurlyBracesText.
+ * Checks if a node is a BracesAttribute.
  * @param {Object} node - The node to check.
- * @returns {boolean} - Returns true if the node is a CurlyBracesText, otherwise false.
+ * @returns {boolean} - Returns true if the node is a BracesAttribute, otherwise false.
  */
-export function isCurlyBracesText(node) {
-  return node.type == 'CurlyBracesText';
+export function isBracesAttribute(node) {
+  return node.type == 'BracesAttribute';
+}
+
+/**
+ * Checks if a node is a BracesText.
+ * @param {Object} node - The node to check.
+ * @returns {boolean} - Returns true if the node is a BracesText, otherwise false.
+ */
+export function isBracesText(node) {
+  return node.type == 'BracesText';
 }
 
 /**

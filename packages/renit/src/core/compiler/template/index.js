@@ -1,5 +1,7 @@
-import { each, push } from '../../../libraries/collect/index.js';
+import { each, join, push } from '../../../libraries/collect/index.js';
 import { isEmpty } from '../../../libraries/is/index.js';
+import { length } from '../../../libraries/math/index.js';
+import { RAW_COMMA } from '../../define.js';
 import { createSource } from '../source.js';
 import { generateJavaScript } from '../utils/script.js';
 
@@ -19,6 +21,10 @@ export class Template {
     this.sourceCss = {};
     /** @type {Object} Top script statements */
     this.topScriptStatement = {};
+    /** @type {Boolean} Need link config */
+    this.link = false;
+    /** @type {Boolean} Need translate config */
+    this.translate = false;
   }
 
   /**
@@ -55,6 +61,13 @@ export class Template {
    */
   generateRuntime() {
     this.sourceJs.add('import * as $ from "renit/runtime";\n');
+
+    const configs = [];
+    if (this.link) push('link', configs);
+    if (this.translate) push('translate', configs);
+    if (length(configs)) {
+      this.sourceJs.add(`import {${join(RAW_COMMA, configs)}} from "renit/config";\n`);
+    }
   }
 
   /**

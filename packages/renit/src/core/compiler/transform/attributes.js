@@ -1,6 +1,7 @@
 import { isEmpty } from '../../../libraries/is/index.js';
 import { visit } from '../../../libraries/to/index.js';
-import { containsCurlyBraces, getContentCurlyBraces, parseCurlyBraces } from '../utils/curly.js';
+import { containsBraces, getContentBraces, parseBraces } from '../utils/braces.js';
+import { hasBrackets, parseBrackets } from '../utils/brackets.js';
 import { setNodeParam } from '../utils/index.js';
 
 export function attributes(ast) {
@@ -10,8 +11,16 @@ export function attributes(ast) {
       let hasParentReference = false;
 
       if (!isEmpty(value)) {
-        if (containsCurlyBraces(value)) {
-          const parsed = parseCurlyBraces(value, 'attribute');
+        if (hasBrackets(value)) {
+          const parsed = parseBrackets(value);
+          if (parsed.link) {
+            node.type = 'LinkAttribute';
+            node.value = parsed.value;
+            node.literals = parsed.literals;
+            hasParentReference = true;
+          }
+        } else if (containsBraces(value)) {
+          const parsed = parseBraces(value, 'attribute');
           node.value = parsed.values;
           hasParentReference = parsed.reference;
         }
@@ -28,10 +37,10 @@ export function attributes(ast) {
       }
 
       if (!isEmpty(value)) {
-        if (!containsCurlyBraces(value)) {
+        if (!containsBraces(value)) {
           value = `{${value}}`;
         }
-        const parsed = parseCurlyBraces(value, 'attribute');
+        const parsed = parseBraces(value, 'attribute');
         node.value = parsed.values;
       }
 
@@ -45,10 +54,10 @@ export function attributes(ast) {
       }
 
       if (!isEmpty(value)) {
-        if (!containsCurlyBraces(value)) {
+        if (!containsBraces(value)) {
           value = `{${value}}`;
         }
-        const parsed = parseCurlyBraces(value, 'attribute');
+        const parsed = parseBraces(value, 'attribute');
         node.value = parsed.values;
       }
 
@@ -62,10 +71,10 @@ export function attributes(ast) {
       }
 
       if (!isEmpty(value)) {
-        if (!containsCurlyBraces(value)) {
+        if (!containsBraces(value)) {
           value = `{${value}}`;
         }
-        const parsed = parseCurlyBraces(value, 'attribute');
+        const parsed = parseBraces(value, 'attribute');
         node.value = parsed.values;
       }
 
@@ -75,8 +84,8 @@ export function attributes(ast) {
       setParentReference(node);
     },
     ActionAttribute: node => {
-      if (containsCurlyBraces(node.value)) {
-        node.value = getContentCurlyBraces(node.value);
+      if (containsBraces(node.value)) {
+        node.value = getContentBraces(node.value);
       }
       setParentReference(node);
     },

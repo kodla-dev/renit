@@ -4,7 +4,7 @@ import { size } from '../../../libraries/math/index.js';
 import { sub } from '../../../libraries/string/index.js';
 import { visit } from '../../../libraries/to/index.js';
 import { RAW_EMPTY, RAW_WHITESPACE } from '../../define.js';
-import { getContentCurlyBraces } from '../utils/curly.js';
+import { getContentBraces } from '../utils/braces.js';
 import {
   findDependencies,
   forExpressionAnalysis,
@@ -59,7 +59,7 @@ function fixBlock(node, isFor = false) {
     }, node.attributes);
 
     value = join(RAW_WHITESPACE, values); // Join collected values with whitespace
-    if (value.trim().startsWith('{')) value = getContentCurlyBraces(value); // Handle special cases
+    if (value.trim().startsWith('{')) value = getContentBraces(value); // Handle special cases
   }
   node.attributes = [];
   if (isEmpty(value)) value = 'true';

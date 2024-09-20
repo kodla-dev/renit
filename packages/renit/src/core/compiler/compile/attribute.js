@@ -18,13 +18,14 @@ import { InputSpot } from '../spot/input.js';
 import { ModifierSpot, ModifiersSpot } from '../spot/modifier.js';
 import { RefSpot } from '../spot/ref.js';
 import { StaticSpot } from '../spot/static.js';
-import { $escape, $str, $var } from '../utils/index.js';
+import { simpleBracesConvert } from '../utils/braces.js';
+import { $el, $escape, $ltr, $str, $var } from '../utils/index.js';
 import {
   hasSuffix,
   isAttribute,
+  isBracesAttribute,
   isClassAttribute,
   isClassOrIdAttribute,
-  isCurlyBracesAttribute,
   isModifierAttribute,
   isPrefixAttribute,
   isPrefixBind,
@@ -46,15 +47,12 @@ export default {
     if (isArray(value)) {
       // Check if all values are literals
       const onlyLiterals = !some(
-        val => isCurlyBracesAttribute(val) && val.literals == false,
+        val => isBracesAttribute(val) && val.literals == false,
         node.value
       );
 
       // Check if all values are static
-      const onlyStatic = !some(
-        val => isCurlyBracesAttribute(val) && val.static == false,
-        node.value
-      );
+      const onlyStatic = !some(val => isBracesAttribute(val) && val.static == false, node.value);
 
       if (onlyLiterals) {
         let content = '';
@@ -73,7 +71,7 @@ export default {
             } else {
               content += value.content;
             }
-          } else if (isCurlyBracesAttribute(value)) {
+          } else if (isBracesAttribute(value)) {
             if (ssr) {
               content += $var($escape(value.content.trim()));
             } else {
@@ -136,9 +134,9 @@ export default {
   },
 
   /**
-   * Compiles a curly braces attribute node, adding dependencies to the component.
+   * Compiles a braces attribute node, adding dependencies to the component.
    */
-  CurlyBracesAttribute({ node, component }) {
+  BracesAttribute({ node, component }) {
     component.addDependencies(node.dependencies, node.content);
   },
 
@@ -247,5 +245,23 @@ export default {
     if (ssr) return;
     component.addFunctionDependencies(node.name);
     figure.addSpot(new ActionSpot(parent, node));
+  },
+  LinkAttribute({ parent, node, figure, template, options }) {
+    template.link = true;
+    const ssr = isSSR(options);
+    const literals = node.literals;
+
+    if (literals || ssr) {
+      figure.appendBlock(node.name + '=');
+      node.value = includes('{', node.value) ? simpleBracesConvert(node.value) : node.value;
+      figure.appendBlock(`"${$var(`link(${$ltr(node.value)})`)}"`);
+      figure.appendBlock(RAW_WHITESPACE);
+      return;
+    }
+
+    figure.addSpot({
+      generate: () =>
+        `$.attribute(${$el(parent.reference)},${$str(node.name)},link(${$ltr(node.value)}));`,
+    });
   },
 };

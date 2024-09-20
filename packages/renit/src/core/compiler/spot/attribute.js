@@ -14,7 +14,7 @@ import { size } from '../../../libraries/math/index.js';
 import { RAW_COMMA, RAW_EMPTY } from '../../define.js';
 import { $el, $lamb, $lambda, $ltr, $str, $var, adaptDefine } from '../utils/index.js';
 import {
-  isCurlyBracesAttribute,
+  isBracesAttribute,
   isIdentifier,
   isStringAttribute,
   isStyleAttribute,
@@ -66,7 +66,7 @@ export class AttributeSpot {
     if (stringValues) {
       push($str(values), contents);
     } else {
-      const onlyOne = every(value => isCurlyBracesAttribute(value), values) && size(values) == 1;
+      const onlyOne = every(value => isBracesAttribute(value), values) && size(values) == 1;
       this.onlyOne = onlyOne;
       if (onlyOne) {
         let value = values[0];
@@ -95,7 +95,7 @@ export class AttributeSpot {
             } else {
               push(trimVal, contents);
             }
-          } else if (isCurlyBracesAttribute(value)) {
+          } else if (isBracesAttribute(value)) {
             if (!isIdentifier(value.expression) && isStyleAttribute(name)) {
               updateLiteral(value.expression, component.changedStyles);
               value.content = generateJavaScript(value.expression);
