@@ -173,6 +173,7 @@ export function parseExports(ast) {
  * @returns {Array} - An array of unique dependencies.
  */
 export function findDependencies(ast, content) {
+  // console.log(JSON.stringify(ast, 0, 2));
   let dependencies = [];
   const memberExpressions = [];
   let hasParameters = false;
@@ -205,6 +206,11 @@ export function findDependencies(ast, content) {
     },
     UnaryExpression(node) {
       if (isIdentifier(node.argument)) push(node.argument.name, dependencies);
+    },
+    ObjectExpression(node) {
+      each(property => {
+        if (isIdentifier(property.value)) push(property.value.name, dependencies);
+      }, node.properties);
     },
   });
 

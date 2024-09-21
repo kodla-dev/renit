@@ -13,13 +13,13 @@ import { isArray, isEmpty, isUndefined } from '../../../libraries/is/index.js';
 import { RAW_WHITESPACE } from '../../define.js';
 import { ActionSpot } from '../spot/action.js';
 import { AttributeSpot } from '../spot/attribute.js';
+import { BracketsSpot } from '../spot/brackets.js';
 import { EventSpot } from '../spot/event.js';
 import { InputSpot } from '../spot/input.js';
 import { ModifierSpot, ModifiersSpot } from '../spot/modifier.js';
 import { RefSpot } from '../spot/ref.js';
 import { StaticSpot } from '../spot/static.js';
-import { simpleBracesConvert } from '../utils/braces.js';
-import { $el, $escape, $ltr, $str, $var } from '../utils/index.js';
+import { $escape, $str, $var } from '../utils/index.js';
 import {
   hasSuffix,
   isAttribute,
@@ -246,22 +246,8 @@ export default {
     component.addFunctionDependencies(node.name);
     figure.addSpot(new ActionSpot(parent, node));
   },
-  LinkAttribute({ parent, node, figure, template, options }) {
-    template.link = true;
-    const ssr = isSSR(options);
-    const literals = node.literals;
-
-    if (literals || ssr) {
-      figure.appendBlock(node.name + '=');
-      node.value = includes('{', node.value) ? simpleBracesConvert(node.value) : node.value;
-      figure.appendBlock(`"${$var(`link(${$ltr(node.value)})`)}"`);
-      figure.appendBlock(RAW_WHITESPACE);
-      return;
-    }
-
-    figure.addSpot({
-      generate: () =>
-        `$.attribute(${$el(parent.reference)},${$str(node.name)},link(${$ltr(node.value)}));`,
-    });
+  LinkAttribute({ parent, node, figure, component, template, options }) {
+    const bracketsSpot = new BracketsSpot(parent, node, figure, component, template, options);
+    bracketsSpot.bootstrap();
   },
 };

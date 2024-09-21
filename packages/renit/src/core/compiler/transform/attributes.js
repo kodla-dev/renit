@@ -17,7 +17,7 @@ export function attributes(ast) {
             node.type = 'LinkAttribute';
             node.value = parsed.value;
             node.literals = parsed.literals;
-            hasParentReference = true;
+            if (!node.literals) hasParentReference = true;
           }
         } else if (containsBraces(value)) {
           const parsed = parseBraces(value, 'attribute');

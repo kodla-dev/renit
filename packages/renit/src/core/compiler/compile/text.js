@@ -1,9 +1,9 @@
-import { includes, map } from '../../../libraries/collect/index.js';
+import { map } from '../../../libraries/collect/index.js';
 import { isArray } from '../../../libraries/is/index.js';
 import { DOM_TEXT_SELECTOR, RAW_WHITESPACE, RGX_WHITESPACE } from '../../define.js';
+import { BracketsSpot } from '../spot/brackets.js';
 import { TextSpot } from '../spot/text.js';
-import { simpleBracesConvert } from '../utils/braces.js';
-import { $el, $ltr, $var } from '../utils/index.js';
+import { $var } from '../utils/index.js';
 import { compactTextNode, isSSR } from '../utils/node.js';
 
 export default {
@@ -57,67 +57,8 @@ export default {
     if (ssr) figure.endBlock();
   },
 
-  BracketsText({ node, figure, template, options }) {
-    const ssr = isSSR(options);
-
-    const value = node.value;
-
-    let fnName;
-    if (node.link) {
-      fnName = 'link';
-      template.link = true;
-    }
-    if (node.translate) {
-      fnName = 'translate';
-      template.translate = true;
-    }
-
-    const fnValue = includes('(', value);
-    let name, fn, param, dynamic; // prettier-ignore
-
-    if (fnValue) {
-      const open = value.indexOf('(');
-      name = value.slice(0, open).trim();
-      fn = value.slice(open).trim();
-    } else {
-      if (node.link) {
-        dynamic = includes('{', value);
-        node.value = dynamic ? simpleBracesConvert(value) : value;
-      } else if (node.translate) {
-        if (includes(':', value)) {
-          const mark = value.indexOf(':');
-          name = value.slice(0, mark).trim();
-          param = value.slice(mark).trim().substring(1);
-        }
-      }
-    }
-
-    if (node.literals || ssr) {
-      if (fnValue) {
-        figure.appendBlock($var(`${fnName}(${$ltr(name)})${fn}`));
-      } else {
-        figure.appendBlock($var(`${fnName}(${$ltr(node.value)})`));
-      }
-      return;
-    }
-
-    node.reference = figure.addReference();
-    figure.appendBlock(DOM_TEXT_SELECTOR);
-
-    figure.addSpot({
-      generate() {
-        if (fnValue) {
-          return `$.Text(${$el(node.reference)},()=>${fnName}(${$ltr(name)})${fn});`;
-        } else if (param) {
-          return `$.Text(${$el(node.reference)},()=>${fnName}(${$ltr(name)},${param}));`;
-        } else {
-          if (dynamic) {
-            return `$.Text(${$el(node.reference)},()=>${fnName}(${$ltr(node.value)}));`;
-          } else {
-            return `$.text(${$el(node.reference)},${fnName}(${$ltr(node.value)}));`;
-          }
-        }
-      },
-    });
+  BracketsText({ parent, node, figure, component, template, options }) {
+    const bracketsSpot = new BracketsSpot(parent, node, figure, component, template, options);
+    bracketsSpot.bootstrap();
   },
 };
