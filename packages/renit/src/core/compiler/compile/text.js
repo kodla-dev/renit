@@ -60,32 +60,43 @@ export default {
   BracketsText({ node, figure, template, options }) {
     const ssr = isSSR(options);
 
-    let fn;
+    const value = node.value;
+
+    let fnName;
     if (node.link) {
-      fn = 'link';
+      fnName = 'link';
       template.link = true;
     }
     if (node.translate) {
-      fn = 'translate';
+      fnName = 'translate';
       template.translate = true;
     }
 
-    const fnValue = includes('(', node.value);
-    let open, name, param; // prettier-ignore
+    const fnValue = includes('(', value);
+    let name, fn, param, dynamic; // prettier-ignore
 
     if (fnValue) {
-      open = node.value.indexOf('(');
-      name = node.value.slice(0, open).trim();
-      param = node.value.slice(open).trim();
+      const open = value.indexOf('(');
+      name = value.slice(0, open).trim();
+      fn = value.slice(open).trim();
     } else {
-      node.value = includes('{', node.value) ? simpleBracesConvert(node.value) : node.value;
+      if (node.link) {
+        dynamic = includes('{', value);
+        node.value = dynamic ? simpleBracesConvert(value) : value;
+      } else if (node.translate) {
+        if (includes(':', value)) {
+          const mark = value.indexOf(':');
+          name = value.slice(0, mark).trim();
+          param = value.slice(mark).trim().substring(1);
+        }
+      }
     }
 
     if (node.literals || ssr) {
       if (fnValue) {
-        figure.appendBlock($var(`${fn}(${$ltr(name)})${param}`));
+        figure.appendBlock($var(`${fnName}(${$ltr(name)})${fn}`));
       } else {
-        figure.appendBlock($var(`${fn}(${$ltr(node.value)})`));
+        figure.appendBlock($var(`${fnName}(${$ltr(node.value)})`));
       }
       return;
     }
@@ -96,9 +107,15 @@ export default {
     figure.addSpot({
       generate() {
         if (fnValue) {
-          return `$.text(${$el(node.reference)},${fn}(${$ltr(name)})${param});`;
+          return `$.Text(${$el(node.reference)},()=>${fnName}(${$ltr(name)})${fn});`;
+        } else if (param) {
+          return `$.Text(${$el(node.reference)},()=>${fnName}(${$ltr(name)},${param}));`;
         } else {
-          return `$.text(${$el(node.reference)},${fn}(${$ltr(node.value)}));`;
+          if (dynamic) {
+            return `$.Text(${$el(node.reference)},()=>${fnName}(${$ltr(node.value)}));`;
+          } else {
+            return `$.text(${$el(node.reference)},${fnName}(${$ltr(node.value)}));`;
+          }
         }
       },
     });
