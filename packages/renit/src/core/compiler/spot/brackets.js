@@ -1,5 +1,14 @@
 import { pipe } from '../../../helpers/index.js';
-import { each, includes, join, map, push, some, unique } from '../../../libraries/collect/index.js';
+import {
+  each,
+  includes,
+  join,
+  map,
+  push,
+  some,
+  split,
+  unique,
+} from '../../../libraries/collect/index.js';
 import { isEmpty } from '../../../libraries/is/index.js';
 import { ucfirst } from '../../../libraries/string/index.js';
 import { DOM_TEXT_SELECTOR, RAW_COMMA, RAW_EMPTY } from '../../define.js';
@@ -25,9 +34,10 @@ export class BracketsSpot {
     this.has = {
       braces: includes('{', this.value),
       fn: includes('(', this.value),
-      parameter: includes(':', this.value),
+      parameter: includes('|', this.value),
     };
     this.parameter = RAW_EMPTY;
+    this.lang = RAW_EMPTY;
     this.dependencies = [];
   }
 
@@ -42,13 +52,17 @@ export class BracketsSpot {
       this.name = value.slice(0, open).trim();
       this.value = value.slice(open).trim();
     } else if (has.parameter) {
-      const mark = value.indexOf(':');
-      this.name = value.slice(0, mark).trim();
-      this.parameter = value.slice(mark).trim().substring(1);
+      const splited = split('|', value);
+      this.name = splited[0];
+      this.parameter = splited[1];
+      this.lang = splited[2] || RAW_EMPTY;
     }
 
     if (link) {
-      if (has.braces) {
+      if (has.parameter && includes('{', this.parameter)) {
+        this.dependencies = findDependencies(javaScriptToAST(`fn(${this.parameter})`), value);
+        component.addDependencies(this.dependencies);
+      } else if (has.braces) {
         const match = value.match(/{(.*?)}/g);
         if (match) {
           this.dependencies = pipe(
@@ -62,7 +76,7 @@ export class BracketsSpot {
     } else if (translate) {
       if (has.fn) {
         this.dependencies = findDependencies(javaScriptToAST(value), value);
-      } else if (has.parameter) {
+      } else if (has.parameter && includes('{', this.parameter)) {
         this.dependencies = findDependencies(javaScriptToAST(`fn(${this.parameter})`), value);
       }
       component.addDependencies(this.dependencies);
@@ -90,15 +104,34 @@ export class BracketsSpot {
   }
 
   createLink() {
-    let { localFn, value, has } = this;
-    value = has.braces ? simpleBracesConvert(value) : value;
+    let { name, parameter, localFn, value, has, lang } = this;
+    if (has.parameter) {
+      const param = [];
+      if (!includes('{', parameter)) {
+        push('{}', param);
+        parameter = $str(parameter);
+      }
+      push(parameter, param);
+      if (lang) push($str(lang), param);
+      return `${localFn}(${$ltr(name)},${join(RAW_COMMA, param)})`;
+    }
+    if (has.braces) value = simpleBracesConvert(value);
     return `${localFn}(${$ltr(value)})`;
   }
 
   createTranslate() {
-    let { name, value, localFn, has, parameter } = this;
+    let { name, value, localFn, has, parameter, lang } = this;
     if (has.fn) return `${localFn}(${$ltr(name)})${value}`;
-    if (has.parameter) return `${localFn}(${$ltr(name)},${parameter})`;
+    if (has.parameter) {
+      const param = [];
+      if (!includes('{', parameter)) {
+        push('{}', param);
+        parameter = $str(parameter);
+      }
+      push(parameter, param);
+      if (lang) push($str(lang), param);
+      return `${localFn}(${$ltr(name)},${join(RAW_COMMA, param)})`;
+    }
     return `${localFn}(${$ltr(value)})`;
   }
 
