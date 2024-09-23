@@ -102,7 +102,8 @@ function ssr() {
     fallback: config.i18n.fallback,
   });
 
-  const content = (content, template) => template.replace(`<!--app-->`, content);
+  const plant = (search, content, template) => template.replace(search, content);
+  const content = (content, template) => plant('<!--app-->', content, template);
 
   return async (req, res, template) => {
     config.setRequest(req);
@@ -129,6 +130,7 @@ function ssr() {
       if (dom.length) data += dom;
       template = template.replace('</head>', head + '</head>');
       data = content(data, template);
+      data = plant('lang=""', `lang="${config.i18n.language}"`, data);
       config.html(data, 200);
     } else {
       config.html(content(_404(), template), 404);
