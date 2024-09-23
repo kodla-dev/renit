@@ -57,7 +57,7 @@ class Router {
 
     each(route => {
       const newRoute = {
-        name: route.name || route.path,
+        name: route.name,
         path: route.path,
         regex: {},
         page: route.page,

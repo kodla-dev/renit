@@ -1,5 +1,5 @@
-import { loop, sort, split } from '../collect/index.js';
-import { isFunction, isUndefined } from '../is/index.js';
+import { loop, sort, split, values } from '../collect/index.js';
+import { isFunction, isObject, isUndefined } from '../is/index.js';
 import { length } from '../math/index.js';
 
 /**
@@ -10,9 +10,9 @@ import { length } from '../math/index.js';
  */
 function toValue(str) {
   if (str == '*') return 1e11; // Wildcard paths have the highest priority
-  if (/^\:(.*)\?/.test(str)) return 1111; // Optional parameters have moderate priority
-  if (/^\:(.*)\./.test(str)) return 11; // Parameters with dots have lower priority
-  if (/^\:/.test(str)) return 111; // Regular parameters have low priority
+  if (/^:(.*)\?/.test(str)) return 1111; // Optional parameters have moderate priority
+  if (/^:(.*)\./.test(str)) return 11; // Parameters with dots have lower priority
+  if (/^:/.test(str)) return 111; // Regular parameters have low priority
   return 1; // Static segments have the lowest priority
 }
 
@@ -42,11 +42,12 @@ export function routeSort(routes) {
   let cache = {};
 
   routes = sort((a, b) => {
+    a = a.path;
+    b = b.path;
+    if (isObject(a)) a = values(a)[0];
+    if (isObject(b)) b = values(b)[0];
     // Compare routes by their ranks and sort them
-    return (
-      (cache[b.path] = cache[b.path] || toRank(b.path)) -
-      (cache[a.path] = cache[a.path] || toRank(a.path))
-    );
+    return (cache[b] = cache[b] || toRank(b)) - (cache[a] = cache[a] || toRank(a));
   }, routes);
 
   return routes;
@@ -97,7 +98,7 @@ export function getUri(uri) {
  * @returns {string} - The URI without the protocol and host.
  */
 export function getUriSSR(uri) {
-  return uri.replace(/^.*\/\/[^\/]+/, '');
+  return uri.replace(/^.*\/\/[^/]+/, '');
 }
 
 /**
@@ -111,7 +112,7 @@ export function getPathname(uri, store) {
   const { regex } = store.options;
   uri = '/' + uri.replace(/^\/|\/$/g, '');
   if (regex.test(uri)) uri = uri.replace(regex, '/');
-  return uri.match(/[^\?#]*/)[0];
+  return uri.match(/[^?#]*/)[0];
 }
 
 /**
@@ -153,9 +154,9 @@ export async function getParams(route, match) {
  * @returns {Promise<any>} A promise that resolves with the loaded value.
  */
 export function load(fn) {
-  return new Promise(async resolve => {
+  return new Promise(resolve => {
     isFunction(fn) && (fn = fn());
-    return Promise.resolve(fn).then(async fn => {
+    return Promise.resolve(fn).then(fn => {
       resolve(fn);
     });
   });
@@ -169,9 +170,9 @@ export function load(fn) {
  * @returns {Promise<any>} A promise that resolves with the loaded component.
  */
 export function loadPage(component, ctx) {
-  return new Promise(async resolve => {
+  return new Promise(resolve => {
     isFunction(component) && (component = component(ctx));
-    return Promise.resolve(component).then(async component => {
+    return Promise.resolve(component).then(component => {
       component = component.default || component;
       resolve(component);
     });
