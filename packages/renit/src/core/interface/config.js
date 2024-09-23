@@ -53,10 +53,9 @@ function i18nConfig() {
     fallbacks: undefined,
     user: undefined,
     files: undefined,
-    async loader(name) {
-      if (!name) name = config.i18n.language;
+    async load(name) {
       let files = config.i18n.files[name];
-      if (isObject(files)) return;
+      if (!files || isObject(files)) return;
       if (isFunction(files)) files = files();
       let lang = {};
       if (isArray(files)) {
@@ -85,10 +84,19 @@ const config = {
   charset: 'utf-8', // Default charset for responses.
   router: routerConfig(), // Router configuration.
   i18n: i18nConfig(), // Internationalization configuration
-  async loader() {
-    await config.i18n.loader();
-  },
 };
+
+if (app) {
+  config.loader = async () => {
+    const { i18n } = config;
+    const { load, language, fallback, fallbacks } = i18n;
+    await load(fallback);
+    await load(language);
+    if (fallbacks && fallbacks[language]) {
+      await load(fallbacks[language]);
+    }
+  };
+}
 
 if (client) {
   if (!config.baseUrl) config.baseUrl = location.origin;
@@ -116,7 +124,12 @@ if (client) {
           config.redirect(config.base + path, true);
         }
       }
+
+      if (config.i18n.language != config.language) {
+        document.documentElement.lang = config.language;
+      }
       config.i18n.language = config.language;
+
       config.loader().then(() => {
         resolve();
       });
@@ -395,13 +408,32 @@ export function link(key, params = {}, lang) {
  */
 export function translate(key, params, lang) {
   const { i18n } = config;
-  let { language, files } = i18n;
+  let { language, files, fallback, fallbacks } = i18n;
   if (lang) language = lang;
-  const tree = files[language];
-  const val = dot(tree, key, '');
+  let tree = files[language];
+  if (!tree) {
+    if (fallbacks && fallbacks[language]) tree = files[fallbacks[language]];
+    else tree = files[fallback];
+  }
+  let val = dot(tree, key, '');
+  if (!val) {
+    if (fallbacks && fallbacks[language]) tree = files[fallbacks[language]];
+    else tree = files[fallback];
+    val = dot(tree, key, '');
+  }
   if (isString(val)) return supplant(val, params, tree);
   if (isFunction(val)) return val(params);
   return val;
+}
+
+/**
+ * Loads the specified language into the i18n configuration.
+ *
+ * @param {string} lang - The language code to load.
+ * @returns {Promise<void>} - A promise that resolves when the language is loaded.
+ */
+export async function loadLanguage(lang) {
+  await config.i18n.load(lang);
 }
 
 export default config;
