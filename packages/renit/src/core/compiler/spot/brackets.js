@@ -57,6 +57,10 @@ export class BracketsSpot {
       this.name = splited[0];
       this.parameter = splited[1];
       this.lang = splited[2] || RAW_EMPTY;
+
+      if (this.lang || !includes('{', this.parameter)) {
+        template.loadLanguage.push(this.lang || this.parameter);
+      }
     }
 
     if (link) {

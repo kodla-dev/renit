@@ -3,6 +3,7 @@ import { isEmpty } from '../../../libraries/is/index.js';
 import { length } from '../../../libraries/math/index.js';
 import { RAW_COMMA } from '../../define.js';
 import { createSource } from '../source.js';
+import { $str } from '../utils/index.js';
 import { generateJavaScript } from '../utils/script.js';
 
 /**
@@ -25,6 +26,8 @@ export class Template {
     this.link = false;
     /** @type {Boolean} Need translate config */
     this.translate = false;
+    /** @type {Boolean} Need loadLanguage config */
+    this.loadLanguage = [];
   }
 
   /**
@@ -69,6 +72,7 @@ export class Template {
   generateImports() {
     let link = 'link';
     let translate = 'translate';
+    let loadLanguage = 'loadLanguage';
     const config = 'renit/config';
 
     each(importStatement => {
@@ -79,10 +83,18 @@ export class Template {
     }, this.importStatements);
 
     const configs = [];
+    const hasLoadLanguage = !isEmpty(this.loadLanguage);
     if (this.link && link) push('link', configs);
     if (this.translate && translate) push('translate', configs);
-    if (length(configs) && (link || translate)) {
+    if (hasLoadLanguage && loadLanguage) push('loadLanguage', configs);
+    if (length(configs) && (link || translate || loadLanguage)) {
       this.sourceJs.add(`import {${join(RAW_COMMA, configs)}} from "${config}";\n`);
+    }
+
+    if (hasLoadLanguage) {
+      each(language => {
+        this.sourceJs.add(`await loadLanguage(${$str(language)});\n`);
+      }, this.loadLanguage);
     }
   }
 
