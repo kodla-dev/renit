@@ -21,6 +21,7 @@ export class BracketsSpot {
   constructor(parent, node, figure, component, template, options) {
     this.reference = parent.reference;
     this.name = node.name;
+    this.nodeName = node.name;
     this.value = node.value;
     this.type = node.type == 'LinkAttribute' ? 1 : 2;
     this.link = node.link || this.type == 1;
@@ -96,8 +97,8 @@ export class BracketsSpot {
   }
 
   generateLiterals() {
-    let { name, type, figure, link, translate } = this;
-    if (type == 1) figure.appendBlock(name + '="');
+    let { nodeName, type, figure, link, translate } = this;
+    if (type == 1) figure.appendBlock(nodeName + '="');
     if (link) figure.appendBlock($var(this.createLink()));
     if (translate) figure.appendBlock($var(this.createTranslate()));
     if (type == 1) figure.appendBlock('"');
@@ -136,7 +137,7 @@ export class BracketsSpot {
   }
 
   generate(component) {
-    const { type, name, reference, link, translate, dependencies } = this;
+    const { nodeName, type, reference, link, translate, dependencies } = this;
     const param = [$el(reference)];
     const hasDependencies = !isEmpty(dependencies);
     let fn;
@@ -145,7 +146,7 @@ export class BracketsSpot {
     let content = RAW_EMPTY;
 
     if (type == 1) {
-      push($str(name), param);
+      push($str(nodeName), param);
     }
 
     if (link) content = this.createLink();
