@@ -1,4 +1,4 @@
-import { each, join, push } from '../../../libraries/collect/index.js';
+import { each, includes, join, push } from '../../../libraries/collect/index.js';
 import { isEmpty } from '../../../libraries/is/index.js';
 import { length } from '../../../libraries/math/index.js';
 import { RAW_COMMA } from '../../define.js';
@@ -61,22 +61,29 @@ export class Template {
    */
   generateRuntime() {
     this.sourceJs.add('import * as $ from "renit/runtime";\n');
-
-    const configs = [];
-    if (this.link) push('link', configs);
-    if (this.translate) push('translate', configs);
-    if (length(configs)) {
-      this.sourceJs.add(`import {${join(RAW_COMMA, configs)}} from "renit/config";\n`);
-    }
   }
 
   /**
    * Generates the import statements from the importStatements array.
    */
   generateImports() {
+    let link = 'link';
+    let translate = 'translate';
+    const config = 'renit/config';
+
     each(importStatement => {
-      this.sourceJs.add(generateJavaScript(importStatement));
+      const js = generateJavaScript(importStatement);
+      if (includes(link, js) && includes(config, js)) link = false;
+      if (includes(translate, js) && includes(config, js)) translate = false;
+      this.sourceJs.add(js);
     }, this.importStatements);
+
+    const configs = [];
+    if (this.link && link) push('link', configs);
+    if (this.translate && translate) push('translate', configs);
+    if (length(configs) && (link || translate)) {
+      this.sourceJs.add(`import {${join(RAW_COMMA, configs)}} from "${config}";\n`);
+    }
   }
 
   /**
