@@ -1,7 +1,9 @@
-import { includes, iterate, merge } from '../../libraries/collect/index.js';
-import { isString } from '../../libraries/is/index.js';
+import { dot, includes, iterate, merge, walk } from '../../libraries/collect/index.js';
+import { isArray, isFunction, isObject, isString } from '../../libraries/is/index.js';
 import { length } from '../../libraries/math/index.js';
 import { sendType } from '../../libraries/server/utils.js';
+import { supplant } from '../../libraries/string/index.js';
+import { routeToPath } from '../../libraries/to/index.js';
 import { pickLanguage } from './language.js';
 
 /**
@@ -48,7 +50,27 @@ function i18nConfig() {
     language: undefined,
     languages: [],
     fallback: undefined,
+    fallbacks: undefined,
     user: undefined,
+    files: undefined,
+    async loader(name) {
+      if (!name) name = config.i18n.language;
+      let files = config.i18n.files[name];
+      if (isObject(files)) return;
+      if (isFunction(files)) files = files();
+      let lang = {};
+      if (isArray(files)) {
+        await walk(async file => {
+          file = await file;
+          lang = Object.assign(lang, file.default);
+        }, files);
+      } else {
+        files = await files;
+        files = files.default;
+        lang = files;
+      }
+      config.i18n.files[name] = lang;
+    },
   };
 }
 
@@ -63,6 +85,9 @@ const config = {
   charset: 'utf-8', // Default charset for responses.
   router: routerConfig(), // Router configuration.
   i18n: i18nConfig(), // Internationalization configuration
+  async loader() {
+    await config.i18n.loader();
+  },
 };
 
 if (client) {
@@ -92,7 +117,9 @@ if (client) {
         }
       }
       config.i18n.language = config.language;
-      resolve();
+      config.loader().then(() => {
+        resolve();
+      });
     });
   };
 }
@@ -101,7 +128,7 @@ if (api) {
   config.init = () => {
     if (includes('#', config.base)) throw "Hash-based routing doesn't work on the api.";
   };
-  config.enter = async req => {
+  config.enter = async () => {
     return new Promise(resolve => {
       resolve();
     });
@@ -124,7 +151,7 @@ if (server) {
    * @param {Object} req - The request object.
    * @returns {Promise<void>} A promise that resolves after checking and possibly redirecting.
    */
-  config.enter = async req => {
+  config.enter = async () => {
     return new Promise(resolve => {
       const pathname = config.url;
       if (!pathname.startsWith(config.base)) {
@@ -132,7 +159,9 @@ if (server) {
         config.redirect(config.base + path);
       }
       config.i18n.language = config.language;
-      resolve();
+      config.loader().then(() => {
+        resolve();
+      });
     });
   };
 }
@@ -241,77 +270,138 @@ function solveLanguage(config, accept) {
   }
 }
 
+// Links cache
 const links = new Map();
 
-const p = a => a.split('/').filter(b => b);
+// Path split
+const pathSplit = a => a.split('/').filter(b => b);
 
-function _link(path) {
-  if (links.has(path)) return links.get(path);
-
-  const { base, baseUrl, router, routerStore } = config;
-  const { link, url } = router;
-  const { mode } = url;
+/**
+ * Generates a new link based on the provided path and configuration settings.
+ * Caches the result for future calls with the same path.
+ *
+ * @returns {string} The generated link with optional language and base URL handling.
+ */
+export function link(key, params = {}, lang) {
+  let name, path; // prettier-ignore
+  if (!key.startsWith('/')) name = key;
+  else path = key;
 
   const newPath = [];
+
+  const { router, base, baseUrl, routerStore, i18n } = config;
   const hasLang = config.language;
-  const { language, fallback } = config.i18n;
+  const { link, url } = router;
+  const { mode } = url;
+  const { routes } = routerStore;
+  let { language, fallback, fallbacks } = i18n;
+
+  if (fallbacks && fallbacks[language]) fallback = fallbacks[language];
 
   if (link.baseUrl) newPath.push(baseUrl);
-  if (base != '/') newPath.push(...p(base));
+  if (base != '/') newPath.push(...pathSplit(base));
+  if (lang) language = lang;
 
-  if (!path || path == '/') {
+  if (!key || path == '/') {
     if (hasLang) newPath.push(language);
     return newPath.join('/');
   }
 
-  if (hasLang) {
-    const { routes } = routerStore;
-    if (mode == 1) path = '/' + fallback + (path.startsWith('/') ? path : '/' + path);
-    iterate(
-      i => {
-        const route = routes[i];
-        for (const part in route.regex) {
-          const match = route.regex[part].pattern.exec(path);
-          if (match) {
-            if (isString(route.path)) {
-              newPath.push(...p(path));
-            } else {
-              let lng = language;
-              if (mode == 1 || mode) lng = lng + '$';
-              if (mode == 3 && includes('$', part)) lng + '$';
-              const { keys } = route.regex[lng];
-              let params = {};
+  if (name) {
+    const cKey = language + key + JSON.stringify(params);
+    if (links.has(cKey)) return links.get(cKey);
+
+    const route = routes.find(route => route.name == name);
+    if (isString(route.path)) path = route.path;
+    else {
+      if (route.path[language]) path = route.path[language];
+      else {
+        language = fallback;
+        path = route.path[language];
+      }
+    }
+    path = routeToPath(path, params);
+    path = path.substring(1);
+    if (!path) {
+      if (hasLang) newPath.push(language);
+    } else {
+      if (hasLang && (mode == 1 || (mode == 2 && fallback != language))) newPath.push(language);
+      newPath.push(path);
+    }
+  } else {
+    const cKey = language + key;
+    if (links.has(cKey)) return links.get(cKey);
+
+    if (hasLang) {
+      if (mode == 1) path = '/' + fallback + (path.startsWith('/') ? path : '/' + path);
+      iterate(
+        i => {
+          const route = routes[i];
+          for (const part in route.regex) {
+            const match = route.regex[part].pattern.exec(path);
+            if (match) {
+              if (isString(route.path)) return newPath.push(...pathSplit(path));
+              const findRegex = lng => {
+                if (mode == 1 || mode) lng = lng + '$';
+                if (mode == 3 && includes('$', part)) lng + '$';
+                return route.regex[lng];
+              };
+              let regex = findRegex(language);
+              if (!regex) {
+                language = fallback;
+                regex = findRegex(language);
+              }
+              const { keys } = regex;
               for (let i = 0; i < length(keys); ) {
                 params[keys[i]] = match[++i] || null;
               }
-              let convert = route.path[language].replace(
-                /(\/|^)([:*][^/]*?)(\?)?(?=[/.]|$)/g,
-                (x, l, k, o) => {
-                  x = params[k == '*' ? k : k.substring(1)];
-                  return x ? '/' + x : o || k == '*' ? '' : '/' + k;
-                }
-              );
+              let convert = routeToPath(route.path[language], params);
               if (mode == 1 || (mode == 2 && fallback != language)) {
                 convert = '/' + language + convert;
               }
-              newPath.push(...p(convert));
+              newPath.push(...pathSplit(convert));
+              return;
             }
-            return route;
           }
-        }
-      },
-      true,
-      length(routes)
-    );
-  } else {
-    newPath.push(...p(path));
+        },
+        true,
+        length(routes)
+      );
+    } else {
+      newPath.push(...pathSplit(path));
+    }
   }
 
   let newLink = newPath.join('/');
-  if (hasLang) path = language + path;
-  links.set(path, newLink);
+  if (!link.baseUrl) newLink = '/' + newLink;
+
+  if (name) {
+    key = language + key + JSON.stringify(params);
+  } else {
+    key = language + key;
+  }
+
+  links.set(key, newLink);
   return newLink;
 }
 
-export const link = _link, l = _link, $l = _link; // prettier-ignore
+/**
+ * Translates a key using the provided language and parameters.
+ *
+ * @param {string} key - The key for the translation string.
+ * @param {Object} params - Parameters to replace in the translation string.
+ * @param {string} lang - The language to use for translation.
+ * @returns {string|Function} - The translated string or function result.
+ */
+export function translate(key, params, lang) {
+  const { i18n } = config;
+  let { language, files } = i18n;
+  if (lang) language = lang;
+  const tree = files[language];
+  const val = dot(tree, key, '');
+  if (isString(val)) return supplant(val, params, tree);
+  if (isFunction(val)) return val(params);
+  return val;
+}
+
 export default config;
