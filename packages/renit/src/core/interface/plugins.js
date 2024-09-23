@@ -11,7 +11,7 @@ import { fixError, removeRoot } from './utils.js';
  * @returns {Array<Object>} An array with a single Vite plugin object.
  */
 export function renit(options) {
-  let config;
+  // let config;
   let cache = {};
   let content = {};
   return [
@@ -23,9 +23,9 @@ export function renit(options) {
        * Called once the Vite configuration is resolved.
        * @param {Object} resolvedConfig - The final Vite configuration object.
        */
-      async configResolved(resolvedConfig) {
-        config = resolvedConfig;
-      },
+      // async configResolved(resolvedConfig) {
+      // config = resolvedConfig;
+      // },
 
       /**
        * Modifies the index HTML to replace the custom `<renit>` tag.
@@ -98,7 +98,7 @@ export function renit(options) {
           try {
             cs = compilerStyle(code, options.app);
           } catch (error) {
-            throw error;
+            throw fixError(error);
           }
           if (cs.code && cs.code.length) results.code = cs.code;
           return results;

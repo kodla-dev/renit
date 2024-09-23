@@ -17,7 +17,7 @@ import { sub } from '../../string/index.js';
 
 const routeRgx = /(\/|^)([:*][^/]*?)(\?)?(?=[/.]|$)/g;
 const uriRgx =
-  /^(?:([^:\/?#]+):\/\/)?((?:([^\/?#@]*)@)?([^\/?#:]*)(?:\:(\d*))?)?([^?#]*)(?:\?([^#]*))?(?:#((?:.|\n)*))?/i;
+  /^(?:([^:/?#]+):\/\/)?((?:([^/?#@]*)@)?([^/?#:]*)(?::(\d*))?)?([^?#]*)(?:\?([^#]*))?(?:#((?:.|\n)*))?/i;
 
 /**
  * Parses a string based on specific delimiters and returns an object representation.
@@ -181,7 +181,7 @@ export function routeToPath(route, values) {
 export function parseUri(uri) {
   const parts = uri.match(uriRgx);
   const auth = (parts[3] || '').split(':');
-  const host = length(auth) ? (parts[2] || '').replace(/(.*\@)/, '') : parts[2];
+  const host = length(auth) ? (parts[2] || '').replace(/(.*@)/, '') : parts[2];
   return {
     uri: parts[0],
     protocol: parts[1],
