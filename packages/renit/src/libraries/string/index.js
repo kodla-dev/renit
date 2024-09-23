@@ -1,6 +1,6 @@
 import { RAW_EMPTY } from '../../core/define.js';
 import { pipe } from '../../helpers/index.js';
-import { join, map } from '../collect/index.js';
+import { dot, join, map } from '../collect/index.js';
 import { isString, isUndefined } from '../is/index.js';
 
 /**
@@ -57,6 +57,37 @@ export function sub(start = 1, end, collect) {
 
   if (end) return collect.substring(start, end);
   return collect.substring(start);
+}
+
+// supplant placeholders
+const RGX = /{(.*?)}/g;
+
+/**
+ * Replaces placeholders in a string with values from an object or tree.
+ *
+ * @param {string} str - The string with placeholders (e.g., "{key}").
+ * @param {Object} mix - The object containing replacement values.
+ * @param {Object} tree - The secondary object for deep value lookup.
+ * @returns {string} - The string with placeholders replaced by corresponding values.
+ */
+export function supplant(str, mix, tree) {
+  return str.replace(RGX, (x, key, y) => {
+    x = 0;
+    y = mix;
+    const akey = key.trim().split('.');
+    const count = akey.length;
+    if (count > 0) {
+      var val = dot(tree, key, '');
+      if (val) {
+        y = val;
+      } else {
+        while (y && x < count) {
+          y = y[akey[x++]];
+        }
+      }
+    }
+    return y != null ? y : '';
+  });
 }
 
 /**
