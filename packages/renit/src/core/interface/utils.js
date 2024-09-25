@@ -213,6 +213,7 @@ const getDefaultConfig = (main, type, command, render) => {
         alias: {
           '@config': src('config'),
           '@controller': src('controller'),
+          '@language': src('language'),
           '@page': src('pages'),
         },
         extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json', '.nit'],

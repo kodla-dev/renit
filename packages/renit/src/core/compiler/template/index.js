@@ -73,22 +73,22 @@ export class Template {
     let link = 'link';
     let translate = 'translate';
     let loadLanguage = 'loadLanguage';
-    const config = 'renit/config';
+    const renit = 'renit';
 
     each(importStatement => {
       const js = generateJavaScript(importStatement);
-      if (includes(link, js) && includes(config, js)) link = false;
-      if (includes(translate, js) && includes(config, js)) translate = false;
+      if (includes(link, js) && includes(renit, js)) link = false;
+      if (includes(translate, js) && includes(renit, js)) translate = false;
       this.sourceJs.add(js);
     }, this.importStatements);
 
-    const configs = [];
+    const imports = [];
     const hasLoadLanguage = !isEmpty(this.loadLanguage);
-    if (this.link && link) push('link', configs);
-    if (this.translate && translate) push('translate', configs);
-    if (hasLoadLanguage && loadLanguage) push('loadLanguage', configs);
-    if (length(configs) && (link || translate || loadLanguage)) {
-      this.sourceJs.add(`import {${join(RAW_COMMA, configs)}} from "${config}";\n`);
+    if (this.link && link) push('link', imports);
+    if (this.translate && translate) push('translate', imports);
+    if (hasLoadLanguage && loadLanguage) push('loadLanguage', imports);
+    if (length(imports) && (link || translate || loadLanguage)) {
+      this.sourceJs.add(`import {${join(RAW_COMMA, imports)}} from "${renit}";\n`);
     }
 
     if (hasLoadLanguage) {
