@@ -1,6 +1,6 @@
 import { each, includes, iterate, join, merge, push } from '../collect/index.js';
 import { event as createEvent } from '../event/index.js';
-import { isObject } from '../is/index.js';
+import { isEqual, isObject } from '../is/index.js';
 import { length } from '../math/index.js';
 import { routeToRegExp } from '../to/index.js';
 import {
@@ -63,6 +63,7 @@ class Router {
         page: route.page,
         option: route.option,
         method: route.method,
+        remount: route.remount,
       };
 
       const multi = isObject(route.path);
@@ -143,8 +144,6 @@ export class ClientRouter extends Router {
   }
   async run() {
     const { event, store, redirect } = this;
-    event.emit('exit');
-
     const uri = getUri();
     const pathname = getPathname(uri || location.pathname, store);
     let match;
@@ -179,6 +178,12 @@ export class ClientRouter extends Router {
         true,
         length(routes)
       );
+
+      let load = true;
+      if (store.route && isEqual(store.route.page, route.page) && !route.remount) {
+        load = false;
+      }
+      if (load) event.emit('exit');
       const ctx = {
         option: undefined,
         page: undefined,
@@ -190,10 +195,14 @@ export class ClientRouter extends Router {
         event.emit('enter', ctx);
         return false;
       }
-      store.route = route;
       if (route.option) ctx.option = route.option;
-      if (route.page) ctx.page = await loadPage(route.page, ctx);
-      event.emit('enter', ctx);
+      if (load) {
+        if (route.page) ctx.page = await loadPage(route.page, ctx);
+        event.emit('enter', ctx);
+      } else {
+        event.emit('update', ctx);
+      }
+      store.route = route;
     }
   }
 }

@@ -82,6 +82,12 @@ function csr() {
     }
   });
 
+  router.on('update', async ctx => {
+    merge(ctx, config);
+    await config.enter();
+    if (app) app.update();
+  });
+
   // On exiting a route, destroy the page
   router.on('exit', () => {
     if (app) app.destroy();
