@@ -15,6 +15,7 @@ import {
   iterate,
   map,
   merge,
+  some,
   sort,
   split,
   walk,
@@ -519,6 +520,23 @@ export function translate(key, params, lang) {
  */
 export async function loadLanguage(lang) {
   await kit.i18n.load(lang);
+}
+
+/**
+ * Checks if the current route is active.
+ *
+ * @param {string|string[]} name - The route name or array of names to check.
+ * @param {boolean} [starts=false] - If true, checks if the current route starts with the given name(s).
+ * @returns {boolean} - True if the current route matches the name or condition.
+ */
+export function active(name, starts = false) {
+  const current = kit.routerStore.route.name;
+  if (isArray(name)) {
+    if (starts) return some(n => current.startsWith(n), name);
+    return includes(current, name);
+  }
+  if (starts) return current.startsWith(name);
+  return current == name;
 }
 
 /**
