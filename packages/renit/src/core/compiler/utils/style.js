@@ -99,6 +99,7 @@ const cssVariablesModules = options => ({
         });
         global.variables[value] = key + newValue;
         declaration.value.name = key + newValue;
+        declaration.value.value = changeVarIdent(declaration.value.value);
       }
     }
 
