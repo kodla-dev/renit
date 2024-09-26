@@ -21,6 +21,7 @@ export class ModifierSpot {
     this.multiple = false;
     this.fn = RAW_EMPTY;
     this.needBrackets = false;
+    this.dynamic = false;
   }
 
   generate(component) {
@@ -37,6 +38,7 @@ export class ModifierSpot {
     let content = '';
     if (isArray(values)) {
       const value = values[0];
+      if (value.dynamic) this.dynamic = true;
       content = value.content.trim();
       if (!isIdentifier(value.expression)) this.needBrackets = true;
       if (isEmpty(value.dependencies)) {
@@ -89,6 +91,7 @@ export class ModifierSpot {
       fn,
       multiple,
       needBrackets,
+      dynamic,
     } = this;
     const hasDependencies = !isEmpty(dependencies);
     let isLambda = false;
@@ -105,6 +108,8 @@ export class ModifierSpot {
 
     if (needBrackets) content = `!!(${content})`;
     else content = `!!${content}`;
+
+    if (dynamic) isLambda = true;
 
     push($lambda(isLambda, content), parameters);
 
