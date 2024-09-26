@@ -15,11 +15,14 @@ import { RAW_COMMA, RAW_EMPTY } from '../../define.js';
 import { $el, $lamb, $lambda, $ltr, $str, $var, adaptDefine } from '../utils/index.js';
 import {
   isBracesAttribute,
+  isClassAttribute,
+  isClassOrIdAttribute,
   isIdentifier,
   isStringAttribute,
   isStyleAttribute,
 } from '../utils/node.js';
 import { checkDependencies, generateJavaScript, updateLiteral } from '../utils/script.js';
+import { updateStyleAttribute } from '../utils/style.js';
 
 export class AttributeSpot {
   constructor(parent, node, ssr) {
@@ -57,13 +60,23 @@ export class AttributeSpot {
    * Initializes the attribute spot by processing values and dependencies.
    */
   init(component) {
-    const { reference, name, values, ssr } = this;
+    let { node, reference, name, values, ssr } = this;
     this.reference = $el(reference);
     this.define = adaptDefine(name);
     let contents = [];
     const stringValues = isString(values);
 
     if (stringValues) {
+      if (isClassOrIdAttribute(node)) {
+        let type = 'id';
+        if (isClassAttribute(node)) type = 'class';
+        values = updateStyleAttribute(
+          values,
+          type,
+          component.changedStyles,
+          component.options.component
+        );
+      }
       push($str(values), contents);
     } else {
       const onlyOne = every(value => isBracesAttribute(value), values) && size(values) == 1;
@@ -88,8 +101,18 @@ export class AttributeSpot {
       } else {
         each(value => {
           if (isStringAttribute(value)) {
-            const trimVal = value.content.trim();
+            let trimVal = value.content.trim();
             if (!trimVal.length) return;
+            if (isClassOrIdAttribute(node)) {
+              let type = 'id';
+              if (isClassAttribute(node)) type = 'class';
+              trimVal = updateStyleAttribute(
+                trimVal,
+                type,
+                component.changedStyles,
+                component.options.component
+              );
+            }
             if (ssr) {
               push($str(trimVal), contents);
             } else {
