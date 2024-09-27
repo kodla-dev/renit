@@ -246,8 +246,8 @@ export default {
     component.addFunctionDependencies(node.name);
     figure.addSpot(new ActionSpot(parent, node));
   },
-  LinkAttribute({ parent, node, figure, component, template, options }) {
-    const bracketsSpot = new BracketsSpot(parent, node, figure, component, template, options);
+  LinkAttribute({ parent, node, figure, template, options }) {
+    const bracketsSpot = new BracketsSpot(parent, node, figure, template, options);
     bracketsSpot.bootstrap();
   },
 };

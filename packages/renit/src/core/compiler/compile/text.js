@@ -57,8 +57,8 @@ export default {
     if (ssr) figure.endBlock();
   },
 
-  BracketsText({ parent, node, figure, component, template, options }) {
-    const bracketsSpot = new BracketsSpot(parent, node, figure, component, template, options);
+  BracketsText({ parent, node, figure, template, options }) {
+    const bracketsSpot = new BracketsSpot(parent, node, figure, template, options);
     bracketsSpot.bootstrap();
   },
 };

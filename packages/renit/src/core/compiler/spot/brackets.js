@@ -1,24 +1,11 @@
-import { pipe } from '../../../helpers/index.js';
-import {
-  each,
-  includes,
-  join,
-  map,
-  push,
-  some,
-  split,
-  unique,
-} from '../../../libraries/collect/index.js';
-import { isEmpty } from '../../../libraries/is/index.js';
-import { ucfirst } from '../../../libraries/string/index.js';
+import { includes, join, push, split } from '../../../libraries/collect/index.js';
 import { DOM_TEXT_SELECTOR, RAW_COMMA, RAW_EMPTY } from '../../define.js';
-import { getContentBraces, simpleBracesConvert } from '../utils/braces.js';
-import { $el, $lamb, $lambda, $ltr, $str, $var } from '../utils/index.js';
+import { simpleBracesConvert } from '../utils/braces.js';
+import { $el, $lamb, $ltr, $str, $var } from '../utils/index.js';
 import { isSSR } from '../utils/node.js';
-import { findDependencies, javaScriptToAST } from '../utils/script.js';
 
 export class BracketsSpot {
-  constructor(parent, node, figure, component, template, options) {
+  constructor(parent, node, figure, template, options) {
     this.reference = parent.reference;
     this.name = node.name;
     this.nodeName = node.name;
@@ -28,7 +15,6 @@ export class BracketsSpot {
     this.translate = node.translate;
     this.literals = node.literals;
     this.figure = figure;
-    this.component = component;
     this.template = template;
     this.ssr = isSSR(options);
     this.localFn = this.link ? 'link' : 'translate';
@@ -39,11 +25,10 @@ export class BracketsSpot {
     };
     this.parameter = RAW_EMPTY;
     this.lang = RAW_EMPTY;
-    this.dependencies = [];
   }
 
   bootstrap() {
-    const { value, ssr, link, translate, template, figure, component, literals, type, has } = this;
+    const { value, ssr, link, translate, template, figure, literals, type, has } = this;
 
     if (link) template.link = true;
     if (translate) template.translate = true;
@@ -61,30 +46,6 @@ export class BracketsSpot {
       if (this.lang || !includes('{', this.parameter)) {
         template.loadLanguage.push(this.lang || this.parameter);
       }
-    }
-
-    if (link) {
-      if (has.parameter && includes('{', this.parameter)) {
-        this.dependencies = findDependencies(javaScriptToAST(`fn(${this.parameter})`), value);
-        component.addDependencies(this.dependencies);
-      } else if (has.braces) {
-        const match = value.match(/{(.*?)}/g);
-        if (match) {
-          this.dependencies = pipe(
-            match,
-            map(a => getContentBraces(a)),
-            unique
-          );
-          component.addDependencies(this.dependencies);
-        }
-      }
-    } else if (translate) {
-      if (has.fn) {
-        this.dependencies = findDependencies(javaScriptToAST(value), value);
-      } else if (has.parameter && includes('{', this.parameter)) {
-        this.dependencies = findDependencies(javaScriptToAST(`fn(${this.parameter})`), value);
-      }
-      component.addDependencies(this.dependencies);
     }
 
     if (ssr || literals) {
@@ -140,13 +101,10 @@ export class BracketsSpot {
     return `${localFn}(${$ltr(value)})`;
   }
 
-  generate(component) {
-    const { nodeName, type, reference, link, translate, dependencies } = this;
+  generate() {
+    const { nodeName, type, reference, link, translate } = this;
     const param = [$el(reference)];
-    const hasDependencies = !isEmpty(dependencies);
     let fn;
-    let isLambda = false;
-    let needDependencies = false;
     let content = RAW_EMPTY;
 
     if (type == 1) {
@@ -156,18 +114,10 @@ export class BracketsSpot {
     if (link) content = this.createLink();
     if (translate) content = this.createTranslate();
 
-    if (type == 1) fn = 'attribute';
-    else if (type == 2) fn = 'text';
+    if (type == 1) fn = 'Attribute';
+    else if (type == 2) fn = 'Text';
 
-    if (hasDependencies) {
-      isLambda = some(dep => includes(dep, component.updatedDependencies), dependencies);
-      if (isLambda) needDependencies = true;
-    }
-
-    push($lambda(isLambda, content), param);
-    if (needDependencies) each(dep => push($lamb(dep), param), dependencies);
-    if (isLambda) fn = ucfirst(fn);
-
+    push($lamb(content), param);
     return `$.${fn}(${join(RAW_COMMA, param)});`;
   }
 }
