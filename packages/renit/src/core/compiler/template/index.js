@@ -72,6 +72,7 @@ export class Template {
   generateImports() {
     let link = 'link';
     let translate = 'translate';
+    let check = 'check';
     let loadLanguage = 'loadLanguage';
     const renit = 'renit';
 
@@ -79,15 +80,20 @@ export class Template {
       const js = generateJavaScript(importStatement);
       if (includes(link, js) && includes(renit, js)) link = false;
       if (includes(translate, js) && includes(renit, js)) translate = false;
+      if (includes(check, js) && includes(renit, js)) check = false;
       this.sourceJs.add(js);
     }, this.importStatements);
 
     const imports = [];
     const hasLoadLanguage = !isEmpty(this.loadLanguage);
+
+    const { generate, $ } = this.options;
+
     if (this.link && link) push('link', imports);
     if (this.translate && translate) push('translate', imports);
     if (hasLoadLanguage && loadLanguage) push('loadLanguage', imports);
-    if (length(imports) && (link || translate || loadLanguage)) {
+    if (generate == 'csr' && $.kit == true && check) push('check', imports);
+    if (length(imports)) {
       this.sourceJs.add(`import {${join(RAW_COMMA, imports)}} from "${renit}";\n`);
     }
 

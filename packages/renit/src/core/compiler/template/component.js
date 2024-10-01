@@ -227,6 +227,7 @@ export class Component {
     const src = this.sourceJs;
     const Interface = this.interface;
     const ssr = this.ssr;
+    const kit = this.options.$.kit;
 
     if (!ssr) {
       if (Interface.has.updated || this.hasUpdate) {
@@ -236,8 +237,10 @@ export class Component {
       }
     }
 
+    if (kit && !ssr) this.current = true;
     if (this.current) src.add(`const $current = $.current;\n`);
     if (this.context) src.add(`const $context = $.context;\n`);
+    if (kit & !ssr) src.add(`$current.c = () => check();\n`);
 
     if (Interface.has.props) src.add(Interface.raw.props);
     if (Interface.has.script) src.add(Interface.raw.script);
