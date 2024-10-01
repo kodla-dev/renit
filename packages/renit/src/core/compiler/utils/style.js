@@ -251,7 +251,7 @@ const cssAtVariables = options => ({
       light: rule => attrRule(rule, 'data-theme', 'light'),
       dark: rule => attrRule(rule, 'data-theme', 'dark'),
       ltr: rule => attrRule(rule, 'dir', 'ltr'),
-      rtl: rule => attrRule(rule, 'rtl'),
+      rtl: rule => attrRule(rule, 'dir', 'rtl'),
       screen(rule) {
         if (isString(rule.prelude.value) && rule.prelude.value in options.css.breakpoints.sizes) {
           let unit = options.css.breakpoints.unit;
@@ -474,8 +474,7 @@ export function compilerStyle(css, options) {
   ];
 
   if (options.$.kit) {
-    visitors = [cssModules(options), cssVariablesModules(options)];
-    customAtRules = {};
+    visitors = [cssModules(options), cssVariablesModules(options), cssAtVariables(options)];
   }
   // Compose visitors for processing CSS modules and variables
   const visitor = composeVisitors(visitors);
