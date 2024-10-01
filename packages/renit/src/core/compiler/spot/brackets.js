@@ -1,7 +1,7 @@
 import { includes, join, push, split } from '../../../libraries/collect/index.js';
 import { DOM_TEXT_SELECTOR, RAW_COMMA, RAW_EMPTY } from '../../define.js';
 import { simpleBracesConvert } from '../utils/braces.js';
-import { $el, $lamb, $ltr, $str, $var } from '../utils/index.js';
+import { $el, $lamb, $ltr, $str, $var, adaptDefine } from '../utils/index.js';
 import { isSSR } from '../utils/node.js';
 
 export class BracketsSpot {
@@ -28,7 +28,7 @@ export class BracketsSpot {
   }
 
   bootstrap() {
-    const { value, ssr, link, translate, template, figure, literals, type, has } = this;
+    const { nodeName, value, ssr, link, translate, template, figure, literals, type, has } = this;
 
     if (link) template.link = true;
     if (translate) template.translate = true;
@@ -46,6 +46,21 @@ export class BracketsSpot {
       if (this.lang || !includes('{', this.parameter)) {
         template.loadLanguage.push(this.lang || this.parameter);
       }
+    }
+
+    if (ssr && type == 1) {
+      const that = this;
+      figure.startBlock();
+      figure.addSpot({
+        generate() {
+          const param = ['$parent'];
+          push(adaptDefine(nodeName), param);
+          push(that.createLink(), param);
+          return `$parent = $.ssrAttribute(${join(RAW_COMMA, param)});`;
+        },
+      });
+      figure.endBlock();
+      return;
     }
 
     if (ssr || literals) {
