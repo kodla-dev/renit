@@ -31,11 +31,15 @@ export class ComponentSpot {
       props: RAW_EMPTY,
     };
     this.fn = RAW_EMPTY;
+    this.dependencies = [];
+    this.dynamic = false;
   }
 
   bootstrap() {
-    const { blocks } = this;
+    const { blocks, attributes } = this;
+    const dependencies = [];
     const localProps = [];
+
     each(block => {
       if (!isEmpty(block.attributes)) {
         each(attribute => {
@@ -44,11 +48,28 @@ export class ComponentSpot {
       }
     }, blocks);
 
+    each(attribute => {
+      if (isArray(attribute.value)) {
+        each(value => {
+          if (value.dynamic) this.dynamic = true;
+          if (!isEmpty(value.dependencies)) {
+            push(value.dependencies, 1, dependencies);
+          } else {
+            push(value.content, dependencies);
+          }
+        }, attribute.value);
+      }
+    }, attributes);
+
     const hasLocalProps = !isEmpty(localProps);
+    const hasDependencies = !isEmpty(dependencies);
+    this.dependencies = dependencies;
 
     return {
       localProps,
       hasLocalProps,
+      hasDependencies,
+      dependencies,
     };
   }
 
@@ -68,7 +89,7 @@ export class ComponentSpot {
   }
 
   init(component) {
-    let { reference, attributes, own, ssr } = this;
+    let { reference, attributes, own, ssr, dynamic } = this;
     let isLambda = false;
     reference = $el(reference);
     own.attributes = !isEmpty(attributes);
@@ -115,6 +136,8 @@ export class ComponentSpot {
     }
 
     own.props = !isEmpty(props);
+
+    if (dynamic) isLambda = true;
 
     if (own.props) {
       let rawProps = generateStringObject(props);
