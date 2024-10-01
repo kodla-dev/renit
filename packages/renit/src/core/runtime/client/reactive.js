@@ -118,15 +118,18 @@ export function watch(getContent, onChange, option, dependencies) {
 
   // If no dependencies are provided, use the getContent function as the only dependency
   if (!dependencies || !dependencies.length) {
-    dependencies = [getContent];
-  }
-
-  // Add a new Watch object for each dependency
-  for (let i = 0, n = dependencies.length; i < n; i++) {
-    const watch = new Watch(getContent, onChange, dependencies[i]);
+    const watch = new Watch(getContent, onChange);
     option && Object.assign(watch, option);
     share.cd.watch.push(watch);
     watchers.push(watch);
+  } else {
+    // Add a new Watch object for each dependency
+    for (let i = 0, n = dependencies.length; i < n; i++) {
+      const watch = new Watch(getContent, onChange, dependencies[i]);
+      option && Object.assign(watch, option);
+      share.cd.watch.push(watch);
+      watchers.push(watch);
+    }
   }
 
   return watchers;
@@ -247,7 +250,7 @@ function tracker(cd, flag) {
       const watchLength = cd.watch.length;
       for (let i = 0; i < watchLength; i++) {
         const watch = cd.watch[i];
-        const value = watch.t();
+        const value = watch.t ? watch.t() : watch.c();
         // If the tracked value has changed, execute the callback
         if (watch.v !== value) {
           flag[0] = 0;
@@ -255,7 +258,7 @@ function tracker(cd, flag) {
             watch.ch(watch, value); // Execute the custom handler if defined
           } else {
             // Execute the callback with the new value
-            watch.cb(watch.c());
+            watch.cb(watch.t ? watch.c() : value);
             watch.v = value;
           }
           changes += flag[0];

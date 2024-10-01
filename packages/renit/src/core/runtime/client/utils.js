@@ -209,7 +209,7 @@ export function compare(w, value) {
     w.v = value;
     if (!w.idle) w.cb(value);
   }
-  w.idle = false;
+  w.idle && (w.idle = false);
 }
 
 /**
@@ -252,7 +252,7 @@ export function compareArray(a, b) {
  * @returns {*} The value obtained from the executed function.
  */
 export function fire(w) {
-  let value = w.t();
+  let value = w.t ? w.t() : w.c();
   if (w.ch) {
     w.ch(w, value);
   } else {

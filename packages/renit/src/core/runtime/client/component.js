@@ -1,7 +1,7 @@
 import { safe } from '../common.js';
 import { current, setContext, setCurrent, share } from '../share.js';
 import { watch } from './reactive.js';
-import { append, fire } from './utils.js';
+import { append, compare, fire } from './utils.js';
 
 /**
  * Creates a component function that initializes and manages component context.
@@ -54,6 +54,7 @@ function init(component, context, option = {}) {
  */
 export function call(node, component, context, option = {}) {
   const c = init(component, context, option); // Initialize the component
+  checkForKit(c);
   append(node, c.dom); // Append the component DOM to the node
   return c;
 }
@@ -86,7 +87,11 @@ export function callDyn(node, component, context, option = {}, props, ch) {
   }
 
   c = init(component, context, option); // Initialize the component
+  checkForKit(c);
   append(node, c.dom); // Append the component DOM to the node
-
   return c;
+}
+
+function checkForKit(c) {
+  if (c?.c) watch(c.c, () => c.update(), { v: {}, idle: true, ch: compare });
 }
