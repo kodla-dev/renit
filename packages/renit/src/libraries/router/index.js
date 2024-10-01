@@ -52,7 +52,7 @@ class Router {
       options.has.lang = true;
     }
 
-    const mode = options.mode;
+    let mode = options.mode;
     const fallback = options.fallback;
 
     each(route => {
@@ -64,26 +64,27 @@ class Router {
         option: route.option,
         method: route.method,
         remount: route.remount,
+        mode: route.mode,
       };
 
       const multi = isObject(route.path);
       const basePath = route.path == '/';
       const path = basePath ? '' : route.path;
-      const force = route.force;
+      if (route.mode) mode = route.mode;
 
       if (!options.has.lang) {
         newRoute.regex.path = routeToRegExp(route.path);
       } else {
-        if ((basePath || force || mode == 2 || mode == 3) && !multi) {
+        if ((basePath || mode == 2 || mode == 3) && !multi) {
           newRoute.regex.path = routeToRegExp(route.path);
         }
         if (multi) {
           for (const lang in route.path) {
             if (mode == 2) newRoute.regex[fallback] = routeToRegExp(path[fallback]);
-            if (force || mode == 3) {
+            if (mode == 3) {
               newRoute.regex[lang] = routeToRegExp(path[lang]);
             }
-            if (!force || mode == 3) {
+            if (mode == 3) {
               newRoute.regex[lang + '$'] = routeToRegExp(`/${lang}` + path[lang]);
             }
           }

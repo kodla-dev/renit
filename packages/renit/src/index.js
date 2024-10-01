@@ -391,7 +391,7 @@ export function link(key, params = {}, lang) {
   const { router, base, baseUrl, routerStore, i18n } = kit;
   const hasLang = kit.language;
   const { link, url } = router;
-  const { mode } = url;
+  let { mode } = url;
   const { routes } = routerStore;
   let { language, fallback, fallbacks } = i18n;
 
@@ -411,6 +411,7 @@ export function link(key, params = {}, lang) {
     if (links.has(cKey)) return links.get(cKey);
 
     const route = routes.find(route => route.name == name);
+    if (route.mode) mode = route.mode;
     if (isString(route.path)) path = route.path;
     else {
       if (route.path[language]) path = route.path[language];
@@ -537,6 +538,19 @@ export function active(name, starts = false) {
   }
   if (starts) return current.startsWith(name);
   return current == name;
+}
+
+/**
+ * Checks for updates.
+ * If the returned object changes, all components will be updated.
+ *
+ * @returns {Object} - The current language configuration.
+ */
+export function check() {
+  return {
+    l: kit.i18n.language,
+    c: kit.routerStore.current,
+  };
 }
 
 /**
