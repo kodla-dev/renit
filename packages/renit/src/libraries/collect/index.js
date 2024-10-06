@@ -1219,7 +1219,7 @@ export function walk(fn, stop, collect) {
     );
   } else if (isObject(collect)) {
     const object = keys(collect);
-    iterate(
+    return iterate(
       isAsync(fn)
         ? async index => {
             const key = object[index];
