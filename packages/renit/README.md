@@ -1,4 +1,4 @@
-# ![logo](http://kodla.org/renit/symbol-min.svg) Renit · <sub><sup>The small framework with powerful features</sup></sub>
+# ![logo](http://kodla.org/renit/symbol-min.svg) Renit
 
 [![docs](https://img.shields.io/badge/docs-renit.dev-blue?logo=hackthebox&color=006DF9&logoColor=00C3FF)][RENIT]
 &nbsp;[![npm](https://img.shields.io/npm/v/renit.svg)][PACKAGE]
@@ -6,11 +6,21 @@
 &nbsp;[![shaking](https://img.shields.io/badge/tree%20shakeable-blue?color=gray&logo=gumtree&logoColor=72ef36)][SIZE]
 &nbsp;[![license](https://img.shields.io/npm/l/renit.svg?color=008C16)][LICENSE]
 
-_Renit_ is a powerful JavaScript framework with a very small footprint, built for developers who need a simple and elegant toolkit to create full-featured web applications.
+_Renit_ is a small JavaScript framework for developers who need a simple toolkit to create web apps.
+
+### Easy to start
+
+```bash
+npm create renit my-app
+cd my-app
+npm run dev
+# app ➜ http://localhost:5000/
+# api ➜ http://localhost:5000/api or http://localhost:5001/
+```
 
 ### Easy to use
 
-Create the simplest components in the world.
+Make simple components.
 
 ```html
 <div @name="hello">
@@ -23,9 +33,9 @@ Create the simplest components in the world.
 <hello name="everyone" />
 ```
 
-### Tailored for needs
+### Suits your needs
 
-_Renit_ typically encompasses packages that might be needed in every project.
+Includes the right tools for your projects.
 
 ```js
 import { pluck } from 'renit/collect';
@@ -43,13 +53,6 @@ pluck('name', 'detail.date', [
 Documentation lives on [renit.dev][RENIT].
 
 ---
-
-<details>
-<summary>Roadmap</summary>
-
-You may view our [roadmap][ROADMAP] if you'd like to see what we're currently working on.
-
-</details>
 
 <details>
 <summary>Release Notes</summary>
