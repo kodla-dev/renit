@@ -8,8 +8,6 @@
 
 _Renit_ is a small JavaScript framework for developers who need a simple toolkit to create web apps.
 
-### Easy to start
-
 ```bash
 npm create renit my-app
 cd my-app
@@ -17,8 +15,6 @@ npm run dev
 # app ➜ http://localhost:5000/
 # api ➜ http://localhost:5000/api or http://localhost:5001/
 ```
-
-### Easy to use
 
 Make simple components.
 
@@ -33,8 +29,6 @@ Make simple components.
 <hello name="everyone" />
 ```
 
-### Suits your needs
-
 Includes the right tools for your projects.
 
 ```js
@@ -47,8 +41,6 @@ pluck('name', 'detail.date', [
 
 //=> {1879: 'Albert', 1643: 'Isaac'}
 ```
-
-## Documentation
 
 Documentation lives on [renit.dev][RENIT].
 
