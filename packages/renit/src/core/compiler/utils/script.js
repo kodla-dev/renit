@@ -20,6 +20,7 @@ import { isArray, isEmpty, isNull, isString, isUndefined } from '../../../librar
 import { size } from '../../../libraries/math/index.js';
 import { visitCondition, visitFull, visitSimple } from '../../../libraries/to/index.js';
 import { RAW_COMMA, RAW_EMPTY } from '../../define.js';
+import { global } from '../global.js';
 import { createSource } from '../source.js';
 import { ProgramPattern } from './constant.js';
 import { $u } from './index.js';
@@ -429,10 +430,27 @@ export function updateLiteral(ast, changedStyles) {
   // Process the AST to update string literals with changed styles
   visitFull(ast, node => {
     if (isLiteral(node) && isString(node.value)) {
-      const change = changedStyles.find(change => change.old == node.value);
-      if (change) {
-        node.value = change.new;
-        node.raw = JSON.stringify(change.new);
+      if (includes('[.', node.value) || includes('[#', node.value)) {
+        node.value = node.value.replace(/\[([.#])(\w+)\]/g, input => {
+          const value = input.match(/[.#](\w+)\]/)[1];
+          const type = input.startsWith('[.') ? 'class' : 'id';
+          const changeFind = changedStyles.find(
+            change => change.old == value && change.type === type
+          );
+          if (changeFind) {
+            return changeFind.new;
+          } else {
+            const globalFind = global.styles.find(
+              global => global.old == value && global.type == type
+            );
+            if (globalFind) {
+              return globalFind.new;
+            } else {
+              return input;
+            }
+          }
+        });
+        node.raw = JSON.stringify(node.value);
       }
     }
   });
