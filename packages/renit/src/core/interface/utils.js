@@ -240,6 +240,7 @@ const getDefaultConfig = (main, type, command, render) => {
           port: 5004,
         },
         preTransformRequests: false,
+        host: main.host,
       },
       preview: {
         port: PREVIEW_PORT,
