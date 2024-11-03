@@ -289,9 +289,9 @@ export class ForSpot {
     }
 
     if (own.computed) {
-      src.add(`const {${join(RAW_COMMA, as.computed)}} = ${value}[${index}];\n`);
+      src.add(`let {${join(RAW_COMMA, as.computed)}} = ${value}[${index}];\n`);
     } else if (own.as) {
-      src.add(`const ${as.name} = ${value}[${index}];\n`);
+      src.add(`let ${as.name} = ${value}[${index}];\n`);
     }
 
     block = ssrBlockTrim(block);
