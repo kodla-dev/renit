@@ -1,7 +1,8 @@
-import { filter, map } from '../../../libraries/collect/index.js';
+import { filter, has, map } from '../../../libraries/collect/index.js';
 import { isEmpty } from '../../../libraries/is/index.js';
 import { size } from '../../../libraries/math/index.js';
 import { DOM_ELEMENT_SELECTOR, RAW_EMPTY, RAW_WHITESPACE } from '../../define.js';
+import { HTMLVoidTags } from '../utils/constant.js';
 import { isSSR, isStyle } from '../utils/node.js';
 import { addThisStyleAttribute, prepareStyle } from '../utils/style.js';
 
@@ -53,7 +54,8 @@ export default {
 
     // Close the opening tag of the element. If it's a self-closing void element,
     // use '/>', otherwise use '>'.
-    figure.appendBlock(node.voidElement ? '/>' : '>');
+    if (has(node.name, HTMLVoidTags)) figure.appendBlock('>');
+    else figure.appendBlock(node.voidElement ? '/>' : '>');
 
     // Process the children of the element.
     map(child => compile(child), node.children);

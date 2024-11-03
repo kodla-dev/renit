@@ -1,8 +1,9 @@
-import { filter, map } from '../../../libraries/collect/index.js';
+import { filter, has, map } from '../../../libraries/collect/index.js';
 import { isEmpty, isUndefined } from '../../../libraries/is/index.js';
 import { size } from '../../../libraries/math/index.js';
 import { DOM_ELEMENT_SELECTOR, RAW_EMPTY, RAW_WHITESPACE } from '../../define.js';
 import { Component } from '../template/component.js';
+import { HTMLVoidTags } from '../utils/constant.js';
 import { isSSR, isStyle, nodeChildrenTrim } from '../utils/node.js';
 import { addThisStyleAttribute, prepareStyle } from '../utils/style.js';
 
@@ -69,7 +70,8 @@ export default {
     if (!emptyAttributes) component.trimBlock();
 
     // Append closing slash for void elements, otherwise append closing tag
-    component.appendBlock(node.voidElement ? '/>' : '>');
+    if (has(node.name, HTMLVoidTags)) component.appendBlock('>');
+    else component.appendBlock(node.voidElement ? '/>' : '>');
 
     // Compile and append each child node
     map(child => compile(child, component, component), node.children);

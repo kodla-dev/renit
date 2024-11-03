@@ -21,6 +21,16 @@ export const HTMLElements = [
 ];
 
 /**
+ * Array containing names of HTML void tags.
+ * @type {string[]}
+ */
+// prettier-multiline-arrays-next-line-pattern: 7
+export const HTMLVoidTags = [
+  'area', 'base', 'br', 'col', 'embed', 'hr', 'img',
+  'input', 'link', 'meta', 'source', 'track', 'wbr',
+];
+
+/**
  * A list of standard SVG element names.
  *
  * This array contains the names of all standard SVG elements. It can be used
