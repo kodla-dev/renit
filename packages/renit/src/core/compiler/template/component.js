@@ -83,11 +83,13 @@ export class Component {
 
     if (this.interface.has.block) {
       this.generateComponent(() => {
-        this.generateScript();
-        this.generateBlock(() => {
-          this.generateSpots();
-          this.generateStyle();
+        const block = this.generateBlock(src => {
+          this.generateSpots(src);
+          this.generateStyle(src);
         });
+        const script = this.generateScript();
+        this.sourceJs.add(script.toString());
+        this.sourceJs.add(block.toString());
       });
     }
 
@@ -224,7 +226,7 @@ export class Component {
    * Generates the script for the component.
    */
   generateScript() {
-    const src = this.sourceJs;
+    const src = createSource();
     const Interface = this.interface;
     const ssr = this.ssr;
     const kit = this.options.$.kit;
@@ -244,6 +246,7 @@ export class Component {
 
     if (Interface.has.props) src.add(Interface.raw.props);
     if (Interface.has.script) src.add(Interface.raw.script);
+    return src;
   }
 
   /**
@@ -251,7 +254,7 @@ export class Component {
    * @param {Function} body - Function to generate the body of the block.
    */
   generateBlock(body) {
-    const src = this.sourceJs;
+    const src = createSource();
     const ssr = this.ssr;
     let block = this.block;
 
@@ -275,15 +278,15 @@ export class Component {
         src.adds(['let [', this.getElementReferences(), '] = $.reference($parent);\n']);
       }
     }
-    body();
+    body(src);
     src.add(`return $parent;\n`);
+    return src;
   }
 
   /**
    * Generates spots within the component.
    */
-  generateSpots() {
-    const src = this.sourceJs;
+  generateSpots(src) {
     const Interface = this.interface;
 
     if (Interface.has.spots) {
@@ -299,9 +302,8 @@ export class Component {
   /**
    * Generates styles for the component.
    */
-  generateStyle() {
+  generateStyle(src) {
     const ssr = this.ssr;
-    const src = this.sourceJs;
     const Interface = this.interface;
     const options = this.options;
     if (Interface.has.style) {
