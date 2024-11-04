@@ -38,15 +38,6 @@ export class EventSpot {
     this.own = own;
     this.event = $event;
     this.eventName = null;
-    this.needUpdate = false;
-  }
-
-  bootstrap(component) {
-    const { own } = this;
-    if (!has(own.function, component.functionNames)) {
-      this.needUpdate = true;
-      component.hasUpdate = true;
-    }
   }
 
   /**
@@ -83,7 +74,8 @@ export class EventSpot {
    * @returns {string} - The generated arguments as a string.
    */
   generateArguments(component) {
-    let { reference, handler, parameters, eventName, event, own, expression, needUpdate } = this;
+    let { reference, handler, parameters, eventName, event, own, expression } = this;
+    let needUpdate = false;
     let modifierContent;
     if (own.modifier) {
       modifierContent = this.generateModifier();
@@ -91,6 +83,8 @@ export class EventSpot {
 
     push(reference, parameters);
     push(eventName, parameters);
+
+    if (!has(own.function, component.functionNames)) needUpdate = true;
 
     if (own.modifier || own.assignment || needUpdate) {
       const src = createSource();
@@ -121,7 +115,10 @@ export class EventSpot {
         src.add(handler);
       }
 
-      if (needUpdate) src.add($u() + `\n`);
+      if (needUpdate) {
+        src.add($u() + `\n`);
+        component.hasUpdate = true;
+      }
 
       src.add(`}`);
       push(src.toString(), parameters);

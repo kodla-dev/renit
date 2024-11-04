@@ -188,9 +188,7 @@ export default {
       component.addUpdatedDependencies(identifier);
     }
 
-    const eventSpot = new EventSpot(parent, node, modifier, handler, expression, own);
-    eventSpot.bootstrap(component);
-    figure.addSpot(eventSpot);
+    figure.addSpot(new EventSpot(parent, node, modifier, handler, expression, own));
   },
   BindAttribute({ parent, node, component, figure, options }) {
     const ssr = isSSR(options);
