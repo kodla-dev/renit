@@ -1,20 +1,43 @@
-# ![logo](http://kodla.org/renit/symbol-min.svg) Renit
+# ![logo](http://kodla.org/renit/symbol-min.svg) Renit &nbsp;[![test](https://github.com/kodla-dev/renit/actions/workflows/test.yaml/badge.svg?branch=main)][TEST] [![license](https://img.shields.io/npm/l/renit.svg?color=008C16)][LICENSE]
+
+![You have the code](http://kodla.org/renit/banner.jpg 'You have the code')
+
+<p align="center">
+  <br/>
+  <i>Renit</i> is a small JavaScript framework for developers
+  who need a simple toolkit to create web apps.
+  <br/><br/>
+</p>
+
+<div align="center">
 
 [![docs](https://img.shields.io/badge/docs-renit.dev-blue?logo=hackthebox&color=006DF9&logoColor=00C3FF)][RENIT]
 &nbsp;[![npm](https://img.shields.io/npm/v/renit.svg)][PACKAGE]
-&nbsp;[![test](https://github.com/kodla-dev/renit/actions/workflows/test.yaml/badge.svg?branch=main)][TEST]
 &nbsp;[![shaking](https://img.shields.io/badge/tree%20shakeable-blue?color=gray&logo=gumtree&logoColor=72ef36)][SIZE]
-&nbsp;[![license](https://img.shields.io/npm/l/renit.svg?color=008C16)][LICENSE]
 
-_Renit_ is a small JavaScript framework for developers who need a simple toolkit to create web apps.
+</div>
 
-```bash
-npm create renit my-app
-cd my-app
-npm run dev
-# app ➜ http://localhost:5000/
-# api ➜ http://localhost:5000/api or http://localhost:5001/
+## Install
+
+Start with a template.
+
+```shell
+npm init renit
 ```
+
+You can also install manually with this command:
+
+```shell
+npm install -D renit
+```
+
+Use this command to install plugins or add libraries to your project.
+
+```shell
+npm install @renit/{package-name}
+```
+
+## Overview
 
 Make simple components.
 
@@ -41,6 +64,8 @@ pluck('name', 'detail.date', [
 
 //=> {1879: 'Albert', 1643: 'Isaac'}
 ```
+
+---
 
 Documentation lives on [renit.dev][RENIT].
 
