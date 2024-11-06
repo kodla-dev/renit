@@ -1,6 +1,6 @@
 # ![logo](http://kodla.org/renit/symbol.svg?2) Renit &nbsp;[![test](https://github.com/kodla-dev/renit/actions/workflows/test.yaml/badge.svg?branch=main)][TEST]
 
-![You have the code](http://kodla.org/renit/banner.jpg?2 'You have the code')
+![You have the code](http://kodla.org/renit/banner.jpg?3 'You have the code')
 
 <p align="center">
   <br/>
