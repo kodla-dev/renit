@@ -1,6 +1,6 @@
-# ![logo](http://kodla.org/renit/symbol-min.svg) Renit &nbsp;[![test](https://github.com/kodla-dev/renit/actions/workflows/test.yaml/badge.svg?branch=main)][TEST] [![license](https://img.shields.io/npm/l/renit.svg?color=008C16)][LICENSE]
+# ![logo](http://kodla.org/renit/symbol.svg?2) Renit &nbsp;[![test](https://github.com/kodla-dev/renit/actions/workflows/test.yaml/badge.svg?branch=main)][TEST]
 
-![You have the code](http://kodla.org/renit/banner.jpg 'You have the code')
+![You have the code](http://kodla.org/renit/banner.jpg?2 'You have the code')
 
 <p align="center">
   <br/>
@@ -14,6 +14,7 @@
 [![docs](https://img.shields.io/badge/docs-renit.dev-blue?logo=hackthebox&color=006DF9&logoColor=00C3FF)][RENIT]
 &nbsp;[![npm](https://img.shields.io/npm/v/renit.svg)][PACKAGE]
 &nbsp;[![shaking](https://img.shields.io/badge/tree%20shakeable-blue?color=gray&logo=gumtree&logoColor=72ef36)][SIZE]
+&nbsp;[![license](https://img.shields.io/npm/l/renit.svg?color=008C16)][LICENSE]
 
 </div>
 
@@ -34,7 +35,7 @@ npm install -D renit
 Use this command to install plugins or add libraries to your project.
 
 ```shell
-npm install @renit/{package-name}
+npm install @renit/{package}
 ```
 
 ## Overview
