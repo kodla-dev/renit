@@ -1,6 +1,0 @@
-{
-  "compilerOptions": {
-    "module": "NodeNext"
-  },
-  "include": ["./src/"]
-}
