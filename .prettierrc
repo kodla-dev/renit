@@ -24,5 +24,9 @@
       }
     }
   ],
-  "plugins": ["prettier-plugin-organize-imports", "prettier-plugin-multiline-arrays"]
+  "plugins": [
+    "prettier-plugin-organize-imports",
+    "prettier-plugin-multiline-arrays",
+    "prettier-plugin-packagejson"
+  ]
 }
