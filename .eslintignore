@@ -3,4 +3,3 @@ node_modules
 test
 type
 *.d.ts
-package-lock.json
